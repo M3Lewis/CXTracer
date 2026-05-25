@@ -38,3 +38,36 @@ Created a Trellis bugfix task, fixed repeated Conversation/Execution arrow navig
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: Make session loading progressive
+
+**Date**: 2026-05-25
+**Task**: Make session loading progressive
+**Branch**: `master`
+
+### Summary
+
+Implemented lightweight session discovery, lazy summary enrichment, newest-only automatic transcript loading, and batched UI collection population to keep startup and selected transcript loads responsive.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f49f5c7` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
