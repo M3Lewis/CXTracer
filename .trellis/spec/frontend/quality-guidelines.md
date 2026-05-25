@@ -28,10 +28,12 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 - Search/filter changes update visible collections predictably.
 - Raw events remain hidden unless `ShowRawEvents` or the Raw filter is active.
 - Conversation pane contains only user, assistant, and final events.
+- Internal `response_item` records do not produce duplicate user or assistant cards in Conversation.
 - Execution pane contains command, output, diff, tool, and error events.
 - Conversation and Execution arrow buttons continue moving across repeated clicks, not only the first click.
 - Rapid duplicate watcher events for the same path are debounced before UI collections are updated.
 - Debounced live updates still respect `PinSelectedSession`: they update the selected file, but do not auto-switch when pinning is enabled.
+- Small status badges such as `只读` and `History` stay close to text height and do not stretch to fill multiline rows.
 
 ## Verification
 

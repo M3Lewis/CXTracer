@@ -49,6 +49,7 @@ Command handlers should remain in the ViewModel for application behavior.
 - Keep the UI dense and operational.
 - Prefer stable grid dimensions and predictable panes.
 - Use card-like borders for repeated session/event items.
+- Keep small status badges compact: use tight vertical padding, align them to the top of their grid row, and do not let them stretch to the height of adjacent multiline text.
 - Reuse icon resources from `Icons.axaml` instead of duplicating path data.
 
 ## Avoid

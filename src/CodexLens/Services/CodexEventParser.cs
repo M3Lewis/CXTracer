@@ -150,6 +150,9 @@ public sealed class CodexEventParser
         if (ContainsAny(hay, "final_answer", "final_response") || types.Any(t => t.Contains("final")))
             return EventKind.Final;
 
+        if (types.Any(t => t.Contains("response_item")))
+            return EventKind.Raw;
+
         if (roles.Any(r => r == "user" || r == "human") || types.Any(t => t.Contains("user_message") || t == "user"))
             return EventKind.User;
 

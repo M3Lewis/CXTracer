@@ -80,8 +80,9 @@
           </StackPanel>
 
           <Border Grid.Column="1"
-                  CornerRadius="10"
-                  Padding="8,3"
+                  CornerRadius="8"
+                  Padding="6,1"
+                  VerticalAlignment="Top"
                   Background="#FFFFFF"
                   BorderBrush="#E7DCCB"
                   BorderThickness="1">
@@ -115,7 +116,8 @@
 
                   <Border Grid.Column="1"
                           CornerRadius="8"
-                          Padding="6,2"
+                          Padding="6,1"
+                          VerticalAlignment="Top"
                           Background="#F8F8F8"
                           BorderBrush="#E7DCCB"
                           BorderThickness="1">
