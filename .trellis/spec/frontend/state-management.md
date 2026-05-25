@@ -57,6 +57,8 @@ Keep the full event backing list private as `_allEvents`, then project visible c
 - Commands that do IO should return `Task`.
 - Use cancellation when replacing a selected-session load.
 - Use `Dispatcher.UIThread` before mutating observable collections from watcher events.
+- Add large `ObservableCollection` updates in batches and yield to `DispatcherPriority.Background` between batches.
+- Startup may auto-load the newest session, but older sessions should remain metadata-only until explicit selection.
 - Do not use `async void` except framework event handlers.
 
 ## Watcher Event Debounce

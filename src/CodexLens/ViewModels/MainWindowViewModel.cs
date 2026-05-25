@@ -15,6 +15,9 @@ namespace CodexLens.ViewModels;
 
 public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 {
+    private const int SessionBatchSize = 40;
+    private const int EventBatchSize = 40;
+
     private readonly Dictionary<string, CancellationTokenSource> _changeDebouncers = new(StringComparer.OrdinalIgnoreCase);
     private readonly SessionScanner _scanner;
     private readonly SessionReader _reader;
@@ -61,7 +64,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public string SessionCountText => $"{Sessions.Count} sessions";
     public string EventCountText => $"{VisibleEventCount}/{TotalEventCount} events";
-    public string SelectedSessionPath => SelectedSession?.FilePath ?? "未选择 session";
+    public string SelectedSessionPath => SelectedSession?.FilePath ?? "No session selected";
 
     public MainWindowViewModel(SessionScanner scanner, SessionReader reader, SessionWatcher watcher)
     {
@@ -74,14 +77,21 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnRootPathChanged(string value)
     {
-        StatusMessage = Directory.Exists(value) ? "目录存在，点击 Refresh 扫描。" : "目录不存在。请确认 Codex CLI 的 sessions 路径。";
+        StatusMessage = Directory.Exists(value)
+            ? "Directory exists. Click Refresh to scan."
+            : "Directory does not exist. Check the Codex sessions path.";
     }
 
     partial void OnSelectedSessionChanged(SessionInfo? value)
     {
-        if (_selectionChanging || value is null) return;
-        _ = LoadSelectedSessionAsync(value);
         OnPropertyChanged(nameof(SelectedSessionPath));
+
+        if (_selectionChanging || value is null)
+        {
+            return;
+        }
+
+        _ = LoadSelectedSessionAsync(value);
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
@@ -95,38 +105,41 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             IsBusy = true;
             StatusMessage = "Scanning sessions...";
+            ResetEvents();
             Sessions.Clear();
+            OnPropertyChanged(nameof(SessionCountText));
 
             var normalized = NormalizeRoot(RootPath);
             RootPath = normalized;
 
             if (!Directory.Exists(normalized))
             {
-                StatusMessage = $"找不到目录：{normalized}";
+                StatusMessage = $"Directory not found: {normalized}";
                 _watcher.Stop();
                 return;
             }
 
-            var sessions = await Task.Run(() => _scanner.Scan(normalized)).ConfigureAwait(true);
-            foreach (var session in sessions)
-            {
-                Sessions.Add(session);
-            }
+            var sessions = await Task.Run(() => _scanner.ScanLight(normalized)).ConfigureAwait(true);
+            await AddSessionsAsync(sessions).ConfigureAwait(true);
 
             _watcher.Start(normalized);
             StatusMessage = sessions.Count == 0
-                ? "没有找到 .jsonl session。请确认 Codex CLI 是否已经产生 transcript。"
-                : $"已加载 {sessions.Count} 个 session。";
-            OnPropertyChanged(nameof(SessionCountText));
+                ? "No .jsonl sessions found."
+                : $"Loaded {sessions.Count} session entries.";
 
             if (SelectedSession is null && Sessions.Count > 0)
             {
+                _selectionChanging = true;
                 SelectedSession = Sessions[0];
+                _selectionChanging = false;
+                OnPropertyChanged(nameof(SelectedSessionPath));
+
+                await LoadSelectedSessionAsync(Sessions[0]).ConfigureAwait(true);
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"扫描失败：{ex.Message}";
+            StatusMessage = $"Scan failed: {ex.Message}";
         }
         finally
         {
@@ -156,34 +169,49 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private async Task LoadSelectedSessionAsync(SessionInfo session)
     {
         _loadCts?.Cancel();
-        _loadCts = new CancellationTokenSource();
-        var ct = _loadCts.Token;
+
+        var cts = new CancellationTokenSource();
+        _loadCts = cts;
+        var ct = cts.Token;
 
         try
         {
             IsBusy = true;
-            StatusMessage = $"读取 {session.FileName} ...";
-            _allEvents.Clear();
-            ConversationEvents.Clear();
-            ExecutionEvents.Clear();
-            RawEvents.Clear();
+            StatusMessage = $"Reading {session.FileName}...";
+            ResetEvents();
+
+            var summary = await Task.Run(() => _scanner.TryGetSessionSummary(session.FilePath), ct).ConfigureAwait(true);
+            ct.ThrowIfCancellationRequested();
+            if (summary is not null)
+            {
+                session.CopySummaryFrom(summary);
+            }
 
             var events = await _reader.ReadAllAsync(session.FilePath, ct).ConfigureAwait(true);
+            ct.ThrowIfCancellationRequested();
+
+            _allEvents.Clear();
             _allEvents.AddRange(events);
             TotalEventCount = _allEvents.Count;
-            ApplyFilter();
-            StatusMessage = $"正在查看：{session.FileName}";
+            await PopulateVisibleEventsAsync(_allEvents, ct).ConfigureAwait(true);
+            StatusMessage = $"Viewing {session.FileName}";
         }
         catch (OperationCanceledException)
         {
         }
         catch (Exception ex)
         {
-            StatusMessage = $"读取失败：{ex.Message}";
+            StatusMessage = $"Read failed: {ex.Message}";
         }
         finally
         {
-            IsBusy = false;
+            if (ReferenceEquals(_loadCts, cts))
+            {
+                IsBusy = false;
+                _loadCts = null;
+            }
+
+            cts.Dispose();
         }
     }
 
@@ -229,17 +257,24 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 if (!PinSelectedSession)
                 {
                     var target = Sessions.FirstOrDefault(s => PathsEqual(s.FilePath, path));
-                    if (target is not null) SelectedSession = target;
+                    if (target is not null)
+                    {
+                        SelectedSession = target;
+                    }
                 }
                 else
                 {
-                    StatusMessage = $"另一个 session 有更新：{Path.GetFileName(path)}";
+                    StatusMessage = $"Another session changed: {Path.GetFileName(path)}";
                 }
                 return;
             }
 
             var events = await _reader.ReadAppendedAsync(path).ConfigureAwait(true);
-            if (events.Count == 0) return;
+            if (events.Count == 0)
+            {
+                return;
+            }
+
             foreach (var evt in events)
             {
                 _allEvents.Add(evt);
@@ -247,20 +282,22 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             }
 
             TotalEventCount = _allEvents.Count;
-            VisibleEventCount = ConversationEvents.Count + ExecutionEvents.Count + RawEvents.Count;
-            OnPropertyChanged(nameof(EventCountText));
-            StatusMessage = $"实时更新：+{events.Count} events";
+            UpdateVisibleEventCount();
+            StatusMessage = $"Live update: {events.Count} events";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"实时读取失败：{ex.Message}";
+            StatusMessage = $"Live read failed: {ex.Message}";
         }
     }
 
     private void UpsertSession(string path)
     {
         var info = _scanner.TryGetSession(path);
-        if (info is null) return;
+        if (info is null)
+        {
+            return;
+        }
 
         var existing = Sessions.FirstOrDefault(s => PathsEqual(s.FilePath, info.FilePath));
         if (existing is null)
@@ -271,15 +308,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             existing.LastWriteTime = info.LastWriteTime;
             existing.Length = info.Length;
-            existing.EventCount = info.EventCount;
-            if (!string.IsNullOrWhiteSpace(info.FirstPrompt)) existing.FirstPrompt = info.FirstPrompt;
-            if (!string.IsNullOrWhiteSpace(info.ProjectHint)) existing.ProjectHint = info.ProjectHint;
         }
 
         var sorted = Sessions.OrderByDescending(s => s.LastWriteTime).ToList();
         _selectionChanging = true;
         Sessions.Clear();
-        foreach (var session in sorted) Sessions.Add(session);
+        foreach (var session in sorted)
+        {
+            Sessions.Add(session);
+        }
         _selectionChanging = false;
         OnPropertyChanged(nameof(SessionCountText));
     }
@@ -295,13 +332,81 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             AddIfVisible(evt);
         }
 
+        UpdateVisibleEventCount();
+    }
+
+    private async Task AddSessionsAsync(IReadOnlyList<SessionInfo> sessions)
+    {
+        var count = 0;
+        foreach (var session in sessions)
+        {
+            Sessions.Add(session);
+            count++;
+
+            if (count % SessionBatchSize == 0)
+            {
+                OnPropertyChanged(nameof(SessionCountText));
+                await YieldToUiAsync().ConfigureAwait(true);
+            }
+        }
+
+        OnPropertyChanged(nameof(SessionCountText));
+    }
+
+    private async Task PopulateVisibleEventsAsync(
+        IEnumerable<DisplayEvent> events,
+        CancellationToken cancellationToken)
+    {
+        ConversationEvents.Clear();
+        ExecutionEvents.Clear();
+        RawEvents.Clear();
+        UpdateVisibleEventCount();
+
+        var count = 0;
+        foreach (var evt in events)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            AddIfVisible(evt);
+            count++;
+
+            if (count % EventBatchSize == 0)
+            {
+                UpdateVisibleEventCount();
+                await YieldToUiAsync().ConfigureAwait(true);
+            }
+        }
+
+        UpdateVisibleEventCount();
+    }
+
+    private static Task YieldToUiAsync()
+    {
+        return Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background).GetTask();
+    }
+
+    private void ResetEvents()
+    {
+        _allEvents.Clear();
+        ConversationEvents.Clear();
+        ExecutionEvents.Clear();
+        RawEvents.Clear();
+        TotalEventCount = 0;
+        VisibleEventCount = 0;
+        OnPropertyChanged(nameof(EventCountText));
+    }
+
+    private void UpdateVisibleEventCount()
+    {
         VisibleEventCount = ConversationEvents.Count + ExecutionEvents.Count + RawEvents.Count;
         OnPropertyChanged(nameof(EventCountText));
     }
 
     private void AddIfVisible(DisplayEvent evt)
     {
-        if (!PassesFilter(evt)) return;
+        if (!PassesFilter(evt))
+        {
+            return;
+        }
 
         switch (evt.Pane)
         {
@@ -312,7 +417,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 ExecutionEvents.Add(evt);
                 break;
             case EventPane.Raw:
-                if (ShowRawEvents || SelectedFilter == "Raw") RawEvents.Add(evt);
+                if (ShowRawEvents || SelectedFilter == "Raw")
+                {
+                    RawEvents.Add(evt);
+                }
                 break;
         }
     }
@@ -345,14 +453,21 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private static string NormalizeRoot(string value)
     {
-        if (string.IsNullOrWhiteSpace(value)) return SessionScanner.DefaultRootPath();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return SessionScanner.DefaultRootPath();
+        }
+
         value = Environment.ExpandEnvironmentVariables(value.Trim().Trim('"'));
         return Path.GetFullPath(value);
     }
 
     private static bool PathsEqual(string a, string b)
     {
-        return string.Equals(Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar), Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase);
+        return string.Equals(
+            Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar),
+            Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
     }
 
     public void Dispose()
@@ -361,7 +476,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _loadCts?.Dispose();
         _watcher.SessionFileChanged -= OnSessionFileChanged;
         _watcher.Dispose();
-        
+
         lock (_changeDebouncers)
         {
             foreach (var cts in _changeDebouncers.Values)

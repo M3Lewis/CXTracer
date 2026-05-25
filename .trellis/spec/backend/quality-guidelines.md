@@ -22,6 +22,7 @@ Use this checklist when changing services, parser behavior, or transcript IO.
 - Full transcript loads remain async and cancellable.
 - File watcher callbacks marshal to `Dispatcher.UIThread` before mutating observable collections.
 - Long scans stay off the UI thread with `Task.Run` or a better async design.
+- Startup session discovery stays metadata-only for non-newest sessions; do not read every transcript just to populate the list.
 - `SessionReader` serializes `ReadAllAsync` and `ReadAppendedAsync` per file path so `_tailStates` cannot race.
 - Tail offsets advance from `stream.Position` / actual bytes read, not from a later `FileInfo.Length` observation.
 
@@ -37,4 +38,5 @@ Use this checklist when changing services, parser behavior, or transcript IO.
 
 - Run `dotnet build .\CodexLens.sln` after service or ViewModel changes.
 - For parser changes, exercise `samples/sample-rollout.jsonl` or a real copied transcript and check that user/assistant messages do not appear twice.
+- For scanner changes, verify non-selected sessions are listed without reading transcript head lines or line counts.
 - For watcher/tail changes, verify duplicate rapid change events, active appends, partial final lines, and truncation/rotation behavior.

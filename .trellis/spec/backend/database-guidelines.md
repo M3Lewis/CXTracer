@@ -31,15 +31,17 @@ new FileStream(
 
 Current examples:
 
-- `SessionScanner.ReadHeadLines` samples the first lines of a transcript.
-- `SessionScanner.EstimateLineCount` counts newline bytes up to a cap.
+- `SessionScanner.ScanLight` enumerates session files and returns metadata-only `SessionInfo` rows without reading transcript content.
+- `SessionScanner.TryGetSessionSummary` enriches a single selected/newest session by sampling transcript head lines and estimating line count.
+- `SessionScanner.ReadHeadLines` samples the first lines of one transcript.
+- `SessionScanner.EstimateLineCount` counts newline bytes for one selected/newest transcript up to a cap.
 - `SessionReader.OpenReadShared` centralizes shared read access for full reads and tail reads.
 
 ## No Local Persistence Yet
 
 - Do not add EF Core, SQLite, LiteDB, JSON cache files, or search indexes for routine features.
 - Do not persist derived transcript data unless a PRD explicitly asks for local storage.
-- Prefer recomputing summaries from transcript files; the current max scan is capped at 300 files.
+- Prefer lightweight metadata scans for session lists. Read transcript content only for the newest startup session or for a user-selected session.
 
 ## Tail State
 

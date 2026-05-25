@@ -29,7 +29,7 @@ public sealed partial class SessionInfo : ObservableObject
         get
         {
             var prompt = string.IsNullOrWhiteSpace(FirstPrompt) ? FileName : FirstPrompt.Trim();
-            return prompt.Length <= 68 ? prompt : prompt[..68] + "…";
+            return prompt.Length <= 68 ? prompt : prompt[..68] + "...";
         }
     }
 
@@ -37,8 +37,8 @@ public sealed partial class SessionInfo : ObservableObject
     {
         get
         {
-            var project = string.IsNullOrWhiteSpace(ProjectHint) ? "未知项目" : ProjectHint;
-            return $"{LastWriteTime.LocalDateTime:g} · {project}";
+            var project = string.IsNullOrWhiteSpace(ProjectHint) ? "Unknown project" : ProjectHint;
+            return $"{LastWriteTime.LocalDateTime:g} - {project}";
         }
     }
 
@@ -51,6 +51,31 @@ public sealed partial class SessionInfo : ObservableObject
             if (age.TotalMinutes < 5) return "Active";
             return "History";
         }
+    }
+
+    partial void OnLastWriteTimeChanged(DateTimeOffset value)
+    {
+        OnPropertyChanged(nameof(DisplaySubtitle));
+        OnPropertyChanged(nameof(StatusText));
+    }
+
+    partial void OnFirstPromptChanged(string value)
+    {
+        OnPropertyChanged(nameof(DisplayTitle));
+    }
+
+    partial void OnProjectHintChanged(string value)
+    {
+        OnPropertyChanged(nameof(DisplaySubtitle));
+    }
+
+    public void CopySummaryFrom(SessionInfo source)
+    {
+        LastWriteTime = source.LastWriteTime;
+        Length = source.Length;
+        FirstPrompt = source.FirstPrompt;
+        ProjectHint = source.ProjectHint;
+        EventCount = source.EventCount;
     }
 
     public static SessionInfo FromFile(FileInfo file)
