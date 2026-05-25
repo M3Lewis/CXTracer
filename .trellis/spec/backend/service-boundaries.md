@@ -1,68 +1,49 @@
 # Service Boundaries
 
-This document defines what each backend layer may know and do.
+Codex Lens has local services rather than backend layers. The important boundary is between filesystem/parsing work and presentation state.
 
-## Domain
+## Services
 
-The Domain layer owns:
+Services may use filesystem APIs, JSON APIs, and plain model types.
 
-- entities
-- value objects
-- invariants
-- domain exceptions
-- business-facing interfaces
+- `SessionScanner` discovers transcript files and creates `SessionInfo` summaries.
+- `SessionReader` reads complete files and appended chunks into `DisplayEvent` lists.
+- `SessionWatcher` wraps `FileSystemWatcher` and raises normalized session change events.
+- `CodexEventParser` parses one JSONL line and classifies it into conversation, execution, or raw panes.
 
-The Domain layer must not know:
+Services should not know about:
 
-- EF Core
-- Avalonia or SukiUI
-- serialization frameworks
-- filesystem paths or HTTP clients
+- Avalonia controls or visual tree objects
+- `MainWindow`
+- SukiUI controls
+- UI selection, filters, or scroll position
 
-## Application
+## Models
 
-The Application layer owns:
+Models hold display data and simple derived properties.
 
-- use-case orchestration
-- transaction-level business workflows
-- coordination between repositories and domain services
-- DTOs that cross process or layer boundaries
+- `DisplayEvent` contains pane/kind/title/text/raw JSON and brush properties used by the current UI.
+- `SessionInfo` contains file metadata, prompt/project summaries, and status text.
+- `EventKind` and `EventPane` define parser output categories.
 
-Application may depend on domain contracts, but not on concrete infrastructure implementations.
+`DisplayEvent` currently references `Avalonia.Media` brushes. Treat this as presentation-model coupling in the single desktop project, not as a domain model pattern to spread into services.
 
-## Infrastructure
+## ViewModel
 
-The Infrastructure layer owns:
+`MainWindowViewModel` owns:
 
-- `DbContext`
-- repository implementations
-- migrations and entity configurations
-- file storage
-- external service clients
-- logging sinks and platform integrations
+- observable collections bound by `MainWindow.axaml`
+- `RootPath`, search text, selected filter, selected session, busy/status flags
+- refresh/load/clear/default-root commands
+- filter application and live update coordination
+- marshaling watcher events back to `Dispatcher.UIThread`
 
-Infrastructure implements abstractions defined elsewhere. It should not become a second business layer.
+## View
 
-## Desktop / Presentation
+Code-behind is allowed only for view-only behavior that requires Avalonia visual tree access. Current example: `MainWindow.axaml.cs` scrolls to adjacent rendered message cards by inspecting `ContentPresenter` containers.
 
-The Desktop layer owns:
+## Avoid
 
-- ViewModels
-- user-triggered command orchestration
-- shell-level adapters that bridge UI concerns to application services
-- composition root code
-
-The Desktop layer may call application services, but it must not implement persistence rules itself.
-
-## Data Shape Rules
-
-- persistence entities are not UI models
-- application DTOs are not EF configuration objects
-- ViewModels should project data for the screen instead of exposing infrastructure objects directly
-
-## Forbidden Patterns
-
-- ViewModel directly depending on `DbContext`
-- repository returning EF tracking objects to the UI
-- infrastructure service throwing raw provider errors without translation or context
-- business rules duplicated separately in ViewModels and repositories
+- Calling `Directory`, `File`, or `JsonDocument` directly from AXAML code-behind.
+- Moving visual tree logic into `MainWindowViewModel`.
+- Adding a repository or domain layer for the current transcript viewer behavior.

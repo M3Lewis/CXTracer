@@ -1,80 +1,59 @@
-# Components & Controls
+# Components and Controls
 
-These guidelines define how desktop screens should be composed with Avalonia and SukiUI controls.
+The current UI is a dense desktop inspection tool, not a landing page or wizard. Screens should prioritize readable transcript data, stable panes, and direct controls.
 
-## View Composition
+## Current Composition
 
-- Use `SukiWindow` for the application shell.
-- Use `UserControl` for pages, panels, and reusable view fragments.
-- Keep code-behind minimal; layout, resources, and bindings belong in AXAML.
-- Give each page a dedicated ViewModel with a compiled binding context.
+`MainWindow.axaml` uses:
 
-## Navigation
+- `Grid` for the overall shell and two-pane layout
+- `Border` for grouped tool areas and event cards
+- `TextBox` for root path and search
+- `Button`, `ToggleButton`, `CheckBox`, `ComboBox`, and `ProgressBar` for controls
+- `ListBox` for sessions
+- `ItemsControl` inside `ScrollViewer` for event streams
+- `GridSplitter` between conversation and execution panes
+- `Expander` for raw events
 
-`SukiSideMenu` is the preferred primary navigation control for desktop applications.
+## Binding Pattern
+
+Bind controls directly to `MainWindowViewModel` properties and generated commands:
 
 ```xml
-<suki:SukiSideMenu IsSearchEnabled="True">
-    <suki:SukiSideMenu.Items>
-        <suki:SukiSideMenuItem Header="Dashboard" Classes="Compact">
-            <suki:SukiSideMenuItem.Icon>
-                <!-- icon -->
-            </suki:SukiSideMenuItem.Icon>
-            <suki:SukiSideMenuItem.PageContent>
-                <views:DashboardView />
-            </suki:SukiSideMenuItem.PageContent>
-        </suki:SukiSideMenuItem>
-    </suki:SukiSideMenu.Items>
-</suki:SukiSideMenu>
+<TextBox Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+<Button Content="Refresh" Command="{Binding RefreshCommand}" />
+<ComboBox ItemsSource="{Binding FilterOptions}" SelectedItem="{Binding SelectedFilter}" />
 ```
 
-## SukiSideMenu Rules
+Use typed data templates for item models:
 
-- Every `SukiSideMenuItem` must define `PageContent`.
-- Use `HeaderContent` for user or workspace context.
-- Use `FooterContent` for settings, account, or low-frequency actions.
-- Keep the shell ViewModel responsible for current page state and menu item selection.
+```xml
+<DataTemplate x:DataType="models:DisplayEvent">
+    <TextBlock Text="{Binding Title}" />
+</DataTemplate>
+```
 
-SukiUI documents that missing `PageContent` can trigger runtime visual tree exceptions. Treat it as required.
+## View-Only Events
 
-## Control Selection
+Click handlers are acceptable only for behavior that needs rendered controls, such as the current up/down scroll buttons:
 
-Prefer SukiUI controls when they cover the use case directly:
+- `ConversationUp_Click`
+- `ConversationDown_Click`
+- `ExecutionUp_Click`
+- `ExecutionDown_Click`
 
-- `SukiSideMenu` for shell navigation
-- `SettingsLayout` for dense preference screens
-- `InfoBar` for inline status that should remain visible in the page
-- dialog host for blocking confirmation or structured interaction
-- toast host for transient feedback
+Command handlers should remain in the ViewModel for application behavior.
 
-Use plain Avalonia controls when:
+## Visual Style
 
-- SukiUI does not provide a stronger option
-- the screen needs basic primitives like `Grid`, `StackPanel`, `ContentControl`, `ItemsControl`, or `Border`
+- Keep the UI dense and operational.
+- Prefer stable grid dimensions and predictable panes.
+- Use card-like borders for repeated session/event items.
+- Reuse icon resources from `Icons.axaml` instead of duplicating path data.
 
-## Reusable Controls
+## Avoid
 
-Create reusable desktop controls when:
-
-- the same AXAML fragment appears in three or more places
-- the interaction pattern is repeated across multiple screens
-- the control carries local styling that should remain consistent
-
-Keep reusable controls narrow. A control should either:
-
-- present one concept clearly, or
-- package one interaction pattern cleanly
-
-## Layout Guidance
-
-- Use `Grid` for structured page layout.
-- Use `StackPanel` only for simple linear groups.
-- Keep toolbar actions compact and aligned with desktop density expectations.
-- Avoid giant empty hero layouts; desktop tools should surface usable content immediately.
-
-## Forbidden Patterns
-
-- Navigation pages implemented as code-behind-only views
-- `SukiSideMenuItem` without `PageContent`
-- Business logic embedded in converters or view code-behind
-- Custom styled clones of controls that SukiUI already provides
+- Adding `SukiSideMenu` unless the app gains real navigation pages.
+- Moving filter/search/refresh behavior into code-behind.
+- Creating custom controls for one-off layout fragments.
+- Adding decorative backgrounds that reduce transcript readability.

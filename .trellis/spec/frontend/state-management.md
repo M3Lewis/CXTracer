@@ -1,68 +1,72 @@
-# MVVM & State Management
+# MVVM and State Management
 
-The frontend follows strict MVVM with CommunityToolkit.Mvvm.
+Codex Lens uses CommunityToolkit.Mvvm and a single shell ViewModel.
 
-## ViewModel Style
+## ViewModel Pattern
 
-Use source generators to keep ViewModels compact and explicit.
+`MainWindowViewModel` is a `sealed partial` class deriving from `ObservableObject`.
+
+Use source-generated observable properties:
 
 ```csharp
-public partial class DashboardViewModel : ObservableObject
+[ObservableProperty]
+private string _searchText = string.Empty;
+```
+
+Use source-generated commands:
+
+```csharp
+[RelayCommand]
+private async Task RefreshAsync()
 {
-    [ObservableProperty]
-    private bool isLoading;
-
-    [ObservableProperty]
-    private string? currentTitle;
-
-    [RelayCommand]
-    private async Task RefreshAsync()
-    {
-        // Load data
-    }
+    // UI operation
 }
 ```
 
 ## State Ownership
 
-- **View**: layout, resources, visual states, and view-only interaction
-- **ViewModel**: UI state, commands, validation, and navigation selection
-- **Service**: persistence, I/O, domain operations, and cross-screen coordination
+`MainWindowViewModel` owns UI state:
 
-## Local vs Shared State
+- `RootPath`
+- `SearchText`
+- `SelectedFilter`
+- `SelectedSession`
+- `StatusMessage`
+- `IsBusy`
+- `ShowRawEvents`
+- `PinSelectedSession`
+- event counts
+- observable event/session collections
 
-- keep page-local flags such as `IsBusy`, `IsExpanded`, and current selection inside the page ViewModel
-- keep shell state such as active page, current workspace, or theme preference in shell-level ViewModels or desktop services
-- keep persisted business state in application or infrastructure services, not in Views
+Services own IO and parsing. Views own visuals and view-only scroll mechanics.
 
-## Navigation State
+## Collections
 
-When using `SukiSideMenu`, the shell ViewModel owns:
+Use `ObservableCollection<T>` for collections bound to the UI:
 
-- the menu item collection
-- the current page selection
-- any search or filter state for navigation
+- `Sessions`
+- `ConversationEvents`
+- `ExecutionEvents`
+- `RawEvents`
+- `FilterOptions`
 
-Page ViewModels should not know about the visual structure of the side menu.
+Keep the full event backing list private as `_allEvents`, then project visible collections in `ApplyFilter()`.
 
-## Dependency Injection
+## Async and UI Thread
 
-Use constructor injection for ViewModels and UI services.
+- Commands that do IO should return `Task`.
+- Use cancellation when replacing a selected-session load.
+- Use `Dispatcher.UIThread` before mutating observable collections from watcher events.
+- Do not use `async void` except framework event handlers.
 
-- register page ViewModels as transient unless reuse is required
-- register shared desktop coordinators as singleton only when their lifecycle is intentionally app-wide
-- keep service dependencies explicit
+## Boundary Rules
 
-## Async Rules
+- ViewModels may depend on services and model types.
+- ViewModels should not reference `SukiWindow`, `ScrollViewer`, `ItemsControl`, or visual tree types.
+- Code-behind should not own app state.
 
-- prefer `[RelayCommand]` returning `Task`
-- avoid `async void` except for framework event handlers
-- surface failure to the user through dialog, toast, or inline status
+## Avoid
 
-## Boundary Rule
-
-ViewModels must not hold references to concrete Avalonia controls, windows, or the visual tree.
-
-Shell-level desktop ViewModels may expose `ISukiDialogManager` and `ISukiToastManager` as presentation-boundary objects when they are used only to bind `SukiWindow.Hosts`.
-
-If a non-UI layer needs user feedback, route that request through a UI-facing abstraction or a shell-owned coordinator instead of calling Suki APIs directly.
+- Adding global state stores for the current single-window app.
+- Using static mutable state for selected session or root path.
+- Updating observable collections from background threads.

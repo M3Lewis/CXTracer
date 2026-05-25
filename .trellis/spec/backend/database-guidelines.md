@@ -1,66 +1,58 @@
-# Database Guidelines
+# Data and Persistence Guidelines
 
-Data persistence uses EF Core with local-first, desktop-friendly patterns.
+Codex Lens does not use a database. The app is a read-only viewer over Codex CLI transcript JSONL files.
 
-## DbContext Placement
+## Source of Truth
 
-`DbContext` belongs in Infrastructure. It should not be referenced by Views or ViewModels.
+- Transcript files live outside the repository, usually under `%USERPROFILE%\.codex\sessions`.
+- Users may also point the app at WSL or UNC session roots.
+- The app must treat those files as externally owned and actively written by Codex CLI.
 
-## Entity Configuration
+## Read-Only Contract
 
-Prefer Fluent API via `IEntityTypeConfiguration<T>` to keep entity classes clean.
+Allowed operations:
+
+- `Directory.EnumerateFiles(rootPath, "*.jsonl", SearchOption.AllDirectories)`
+- `FileInfo` metadata reads
+- `FileSystemWatcher` for change notifications
+- `FileStream` opened with `FileAccess.Read`
+
+Required sharing mode for transcript reads:
 
 ```csharp
-public class UserSettings
-{
-    public int Id { get; set; }
-    public string Theme { get; set; } = "Blue";
-}
-
-public class UserSettingsConfiguration : IEntityTypeConfiguration<UserSettings>
-{
-    public void Configure(EntityTypeBuilder<UserSettings> builder)
-    {
-        builder.HasKey(x => x.Id);
-        builder.Property(x => x.Theme).HasMaxLength(50);
-    }
-}
+new FileStream(
+    filePath,
+    FileMode.Open,
+    FileAccess.Read,
+    FileShare.ReadWrite | FileShare.Delete,
+    bufferSize: 64 * 1024,
+    options: FileOptions.SequentialScan);
 ```
 
-## Repository Rules
+Current examples:
 
-- materialize results inside repositories or application services
-- return domain objects, DTOs, or concrete collections
-- do not leak `IQueryable<T>` beyond infrastructure
-- pass `CancellationToken` through async database calls when available
+- `SessionScanner.ReadHeadLines` samples the first lines of a transcript.
+- `SessionScanner.EstimateLineCount` counts newline bytes up to a cap.
+- `SessionReader.OpenReadShared` centralizes shared read access for full reads and tail reads.
 
-## Async Rules
+## No Local Persistence Yet
 
-Use asynchronous EF methods by default:
+- Do not add EF Core, SQLite, LiteDB, JSON cache files, or search indexes for routine features.
+- Do not persist derived transcript data unless a PRD explicitly asks for local storage.
+- Prefer recomputing summaries from transcript files; the current max scan is capped at 300 files.
 
-- `ToListAsync`
-- `FirstOrDefaultAsync`
-- `SingleAsync`
-- `SaveChangesAsync`
+## Tail State
 
-Avoid sync-over-async data access in desktop commands.
+`SessionReader` keeps in-memory tail state per file path:
 
-## Migrations
+- byte offset
+- pending partial UTF-8 line
+- last parsed line number
 
-- keep migrations in the infrastructure project
-- create a migration for every schema change
-- review generated migrations before committing
-- never treat migrations as disposable generated noise
+This state is process-local and should not be serialized.
 
-## Transactions
+## Avoid
 
-Use explicit transactions only when one logical operation spans multiple writes that must succeed or fail together.
-
-Do not wrap every repository method in its own transaction by habit.
-
-## Forbidden Patterns
-
-- `DbContext` in ViewModels
-- `IQueryable` returned to desktop code
-- business logic encoded inside entity configuration classes
-- unbounded table reads for UI screens that need paging or filtering
+- Writing markers, locks, indexes, or metadata beside Codex session files.
+- Opening transcript files without `FileShare.ReadWrite | FileShare.Delete`.
+- Treating Codex JSONL as a stable public API; parser logic must stay tolerant.

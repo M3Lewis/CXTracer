@@ -1,45 +1,30 @@
 # Logging Guidelines
 
-Use structured logging throughout the application. Prefer `ILogger<T>` abstractions even when Serilog is the underlying sink.
+Codex Lens currently has no application logging pipeline. `Program.BuildAvaloniaApp()` uses Avalonia's `LogToTrace()` for framework diagnostics.
 
-## Log Levels
+## Current Policy
 
-- `Debug`: execution tracing useful during development
-- `Information`: startup, shutdown, configuration load, major business events
-- `Warning`: recoverable failures, retries, degraded behavior
-- `Error`: operation failures that affect the user or correctness
-- `Fatal`: process-terminating failures
+- User-facing operation failures are reported through `MainWindowViewModel.StatusMessage`.
+- Malformed transcript lines are preserved as raw display events by `CodexEventParser`.
+- No transcript contents are written to logs.
 
-## Message Template Rules
+## When Adding Logging
 
-Use semantic templates, not string interpolation.
+If a feature needs durable diagnostics, prefer `ILogger<T>` and keep logging behind service boundaries.
 
-```csharp
-logger.LogInformation("Loaded {Count} tracks for user {UserId}", count, userId);
-```
+Useful log candidates:
 
-Avoid:
+- scan start/end with root path and file count
+- watcher start/stop and watcher errors
+- transcript read failures with file path and exception type
+- parser classification failures without dumping full transcript content by default
 
-```csharp
-logger.LogInformation($"Loaded {count} tracks for user {userId}");
-```
+## Sensitive Data
 
-## What to Log
+Codex transcript files can contain prompts, commands, paths, and tool outputs. Do not log full raw JSONL lines, command output, diffs, or assistant responses unless a diagnostic feature explicitly asks the user to export them.
 
-Good candidates:
+## Avoid
 
-- composition root and startup milestones
-- persistence failures
-- external integration failures
-- retries, fallbacks, and degraded modes
-- destructive or security-relevant user actions
-
-## What Not to Log
-
-- secrets, tokens, passwords, raw connection strings
-- full payloads by default when they contain user or sensitive data
-- duplicate logs for the same exception at every layer
-
-## Boundary Rule
-
-Lower layers log technical context. Upper layers log user-impact context. Do not spam both with the same event unless each adds materially different information.
+- Adding Serilog or another logging stack just for routine UI status messages.
+- Logging the same exception in both a service and the ViewModel unless each adds distinct context.
+- Writing logs under `%USERPROFILE%\.codex` or beside transcript files.

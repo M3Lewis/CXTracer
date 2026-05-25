@@ -1,58 +1,48 @@
-# .NET Backend Guidelines
+# Codex Lens Service Guidelines
 
-Production backend guidelines for desktop applications built with .NET 8, Clean Architecture, Entity Framework Core, and dependency injection.
+Backend here means the local service/model code that reads Codex transcript files. This project is a single .NET 8 Avalonia desktop app, not a web backend and not an EF Core application.
 
 ## Structure
 
 ### [Directory Structure](./directory-structure.md)
 
-Recommended solution layout for Domain, Application, Infrastructure, and Desktop composition roots.
-
-### [Dependency Injection](./dependency-injection.md)
-
-How to register services, control lifetimes, and avoid service locator patterns in business code.
+Current source layout and where parser, reader, watcher, and model code belongs.
 
 ### [Service Boundaries](./service-boundaries.md)
 
-Rules for separating domain logic, application orchestration, infrastructure, and UI-facing adapters.
+How `Services/`, `Models/`, and `ViewModels/` divide filesystem, parsing, and presentation responsibilities.
 
 ### [Database Guidelines](./database-guidelines.md)
 
-EF Core, SQLite-friendly persistence patterns, repository boundaries, and migration rules.
+Persistence policy for this app: no database, no indexes, and read-only access to Codex session JSONL files.
+
+### [Dependency Injection](./dependency-injection.md)
+
+Current manual composition pattern in `App.axaml.cs` and when a DI container would be worth adding.
 
 ### [Error Handling](./error-handling.md)
 
-Expected failure modeling, exception propagation, and user-facing error mapping.
+How filesystem and malformed JSONL failures are handled without hiding real bugs.
 
 ### [Logging Guidelines](./logging-guidelines.md)
 
-Structured logging conventions for services, persistence, startup, and background work.
+Current logging posture and where future diagnostics should go.
 
 ### [Quality Checklist](./quality-guidelines.md)
 
-Review checklist for async behavior, nullability, layering, tests, and forbidden backend patterns.
+Review checklist for IO sharing, cancellation, parser tolerance, and read-only guarantees.
 
 ## Tech Stack
 
-- **Runtime**: .NET 8
-- **Persistence**: EF Core with SQLite-friendly patterns
-- **DI**: Microsoft.Extensions.DependencyInjection
-- **Logging**: Serilog or `ILogger<T>`-compatible structured logging
-- **Architecture**: Clean Architecture / layered desktop application
-
-## Usage
-
-These guidelines are intended to be used as:
-
-1. **Project bootstrap rules** for new .NET desktop solutions
-2. **Implementation reference** for services, persistence, and composition roots
-3. **Code review checklist** for layering, async correctness, and logging
-4. **Onboarding material** for engineers new to this project shape
+- .NET 8, nullable enabled, implicit usings enabled
+- Avalonia 11.3.14 and SukiUI 6.1.1
+- CommunityToolkit.Mvvm 8.4.0
+- `System.Text.Json`, `FileStream`, `FileSystemWatcher`
 
 ## Core Rules
 
-- Domain and application logic must not depend on Avalonia or SukiUI types.
-- `DbContext` and EF entities belong to Infrastructure, not ViewModels.
-- `IServiceProvider` access is restricted to composition roots and framework boundary adapters.
-- Repositories and services return materialized results, not `IQueryable`.
-- All I/O and database work should be asynchronous unless a library makes that impossible.
+- Never write to, delete from, or launch anything inside the Codex CLI session tree.
+- Read transcript files with `FileShare.ReadWrite | FileShare.Delete` so active Codex sessions can keep writing.
+- Keep parser and filesystem work in `Services/`; keep mutable display state in `ViewModels/`; keep display records in `Models/`.
+- Do not introduce EF Core, repositories, HTTP APIs, or a DI container unless a feature actually needs them.
+- Prefer focused, readable service methods over generic infrastructure abstractions.

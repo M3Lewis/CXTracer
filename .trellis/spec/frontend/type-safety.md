@@ -1,52 +1,48 @@
-# Type Safety & Binding Rules
+# Type Safety and Bindings
 
-These rules keep Avalonia bindings explicit and reduce runtime failures, especially in release and AOT-sensitive builds.
+The project enables nullable reference types and Avalonia compiled bindings by default.
 
-## Compiled Bindings
+## Project Settings
 
-Every view should declare its ViewModel type explicitly.
+`CodexLens.csproj` includes:
 
 ```xml
-<UserControl
-    xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:vm="using:MyApp.ViewModels.Pages"
-    x:Class="MyApp.Views.Pages.DashboardView"
-    x:DataType="vm:DashboardViewModel"
-    x:CompileBindings="True">
-
-    <TextBlock Text="{Binding CurrentTitle}" />
-</UserControl>
+<Nullable>enable</Nullable>
+<LangVersion>latest</LangVersion>
+<ImplicitUsings>enable</ImplicitUsings>
+<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 ```
 
-## Required Rules
+## AXAML Binding Rules
 
-- set `x:DataType` on every view that binds to a ViewModel
-- enable `x:CompileBindings="True"` on reusable views and pages
-- prefer strongly typed properties and commands over object bags or magic strings
+Set `x:DataType` on bound views and templates.
 
-## Commands
+Current examples:
 
-- use `[RelayCommand]` or equivalent strongly typed command generation
-- prefer `Task`-returning commands for async work
-- do not hide exceptions inside fire-and-forget UI code
+- `MainWindow.axaml` sets `x:DataType="vm:MainWindowViewModel"`.
+- session item templates set `x:DataType="models:SessionInfo"`.
+- event item templates set `x:DataType="models:DisplayEvent"`.
 
-## Converters
+## Model and ViewModel Rules
 
-Converters should stay small and presentation-only.
+- Use `required` init properties for model values that must exist.
+- Use nullable annotations for optional values such as `SessionInfo? SelectedSession`.
+- Keep optional timestamp as `DateTimeOffset?`.
+- Prefer concrete typed collections over `object` bags.
 
-- format, map, or normalize values
-- do not trigger I/O
-- do not mutate application state
+## Command Rules
 
-## View Resolution
+- Use `[RelayCommand]` from CommunityToolkit.Mvvm.
+- Async commands should return `Task`.
+- Keep generated command names predictable: `RefreshAsync` becomes `RefreshCommand`, `OpenDefaultRoot` becomes `OpenDefaultRootCommand`.
 
-If the application uses a `ViewLocator`, keep the mapping strategy centralized and predictable. Do not spread reflection-based type guessing across feature code.
+## Parser Rules
 
-## Version Compatibility
+Codex transcript JSONL is not a stable public API. Parser code should use `System.Text.Json`, tolerate missing keys, and classify with explicit enums rather than dynamic objects.
 
-SukiUI and Avalonia version mismatches can break type resolution and window setup.
+## Avoid
 
-- keep Avalonia and SukiUI versions aligned intentionally
-- prefer the released NuGet package unless a required fix exists only in CI builds
-- when upgrading, verify `SukiTheme` and `SukiWindow` still resolve and render correctly
+- Disabling compiled bindings to make an AXAML error disappear.
+- Using `dynamic` for transcript parsing.
+- Exposing mutable service internals directly to AXAML.
+- Ignoring nullable warnings in new code.

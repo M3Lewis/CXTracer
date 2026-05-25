@@ -1,47 +1,56 @@
 # Error Handling
 
-Backend error handling should preserve intent, context, and stack traces.
+The app reads files owned by another process and parses an unstable JSONL format. Error handling should preserve the read-only contract, keep the UI responsive, and avoid hiding defects outside expected boundaries.
 
-## Classify Failures
+## Expected Failures
 
-Separate failures into two groups:
+Expected failures include:
 
-- **expected failures**: validation errors, missing records, rule violations
-- **unexpected failures**: provider crashes, I/O failures, corrupted state, unknown exceptions
+- missing or invalid session root path
+- active transcript files changing while being read
+- malformed or partial JSONL lines
+- file watcher events for files that no longer exist
+- a transcript being truncated or rotated
 
-Expected failures should be modeled deliberately with domain exceptions, result types, or explicit error contracts.
+Current examples:
 
-## Exception Rules
+- `MainWindowViewModel.RefreshAsync` reports a missing root path in `StatusMessage` and stops the watcher.
+- `CodexEventParser.ParseLine` converts malformed JSON into a raw `DisplayEvent` titled `Parse error`.
+- `SessionReader.ReadAppendedAsync` resets tail state when a file length shrinks.
+- `SessionScanner.TryGetSession` returns `null` for missing or non-JSONL files.
 
-- catch only exceptions you can handle or enrich
-- use `throw;` when rethrowing to preserve the stack trace
-- log unexpected failures once, at the boundary that owns the recovery decision
+## Catch Rules
 
-## User-Facing Mapping
+- Catch exceptions at UI operation boundaries when the app can show a meaningful status message.
+- Catch malformed JSON at the line parser boundary and keep the raw line visible.
+- Do not catch broad exceptions inside low-level helpers unless the helper's contract explicitly allows a fallback.
 
-Application and infrastructure layers may raise technical failures, but desktop-facing services must translate them into:
-
-- meaningful dialog text
-- actionable toast or status messages
-- structured logs with enough context for diagnosis
-
-## Good Pattern
+Accepted narrow fallback:
 
 ```csharp
-try
+private static int EstimateLineCount(string filePath, int maxLines)
 {
-    await repository.SaveAsync(entity, cancellationToken);
-}
-catch (DbUpdateException ex)
-{
-    logger.LogError(ex, "Failed to persist settings for profile {ProfileId}", profileId);
-    throw new SettingsPersistenceException(profileId, ex);
+    try
+    {
+        // best-effort scan
+    }
+    catch
+    {
+        return 0;
+    }
 }
 ```
 
-## Forbidden Patterns
+This is acceptable because line count is only a summary hint.
 
-- swallowing exceptions
-- catching `Exception` and continuing silently
-- throwing raw provider exceptions across every layer without translation
-- user-facing messages built directly from exception text
+## Cancellation
+
+- Long reads accept `CancellationToken`.
+- Selection changes cancel the previous load through `_loadCts`.
+- `OperationCanceledException` may be swallowed at the ViewModel boundary because it represents a superseded UI operation.
+
+## Avoid
+
+- Swallowing exceptions in parser classification or UI commands without a user-visible status.
+- Retrying filesystem reads in a tight loop.
+- Replacing raw parse failures with empty events; raw visibility is part of diagnosis.

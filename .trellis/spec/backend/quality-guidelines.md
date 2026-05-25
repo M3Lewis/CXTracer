@@ -1,46 +1,35 @@
-# Backend Quality Checklist
+# Service Quality Checklist
 
-Use this checklist during implementation and review.
+Use this checklist when changing services, parser behavior, or transcript IO.
 
-## Layering
+## Read-Only Safety
 
-- domain and application code do not reference Avalonia or SukiUI
-- infrastructure owns persistence and external integrations
-- ViewModels do not depend on `DbContext` or repositories directly unless the architecture explicitly requires it
+- No code writes to, deletes from, or creates files under the selected sessions root.
+- Transcript files are opened with `FileAccess.Read`.
+- Active files are opened with `FileShare.ReadWrite | FileShare.Delete`.
+- Generated caches or indexes are not introduced without explicit product scope.
 
-## Async and Cancellation
+## Parser Behavior
 
-- I/O and database work is asynchronous
-- public async methods accept `CancellationToken` when practical
-- no sync-over-async in feature code
+- Unknown JSONL shapes fall back to raw events instead of crashing.
+- Reasoning and plan events stay out of the conversation pane unless raw is enabled.
+- User, assistant, final, command, output, diff, tool, and error classification remain covered.
+- New parser heuristics are based on keys/types first; avoid overmatching arbitrary free text.
 
-## Dependency Injection
+## Async and UI Responsiveness
 
-- constructor injection is used for concrete dependencies
-- no static service provider access in business logic
-- lifetime choices are intentional and documented by code shape
+- Full transcript loads remain async and cancellable.
+- File watcher callbacks marshal to `Dispatcher.UIThread` before mutating observable collections.
+- Long scans stay off the UI thread with `Task.Run` or a better async design.
 
-## Persistence
+## Resource Management
 
-- no `IQueryable` leaks out of infrastructure
-- migrations exist for schema changes
-- entity configuration is separated from domain rules
+- Streams and readers are disposed with `using` / `await using`.
+- `SessionWatcher.Stop()` detaches event handlers before disposing.
+- `MainWindowViewModel.Dispose()` cancels load state and disposes the watcher.
 
-## Reliability
+## Verification
 
-- exceptions are either handled meaningfully or allowed to fail fast
-- logs are structured and contextual
-- user-facing errors are translated at the desktop boundary
-
-## Testing
-
-- nullability is enabled
-- application services have focused unit tests where logic is non-trivial
-- repository behavior or mapping has integration coverage when it carries risk
-
-## Forbidden Patterns
-
-- `throw ex;`
-- `catch (Exception) { }`
-- EF Core usage in AXAML code-behind
-- business logic spread across ViewModel, repository, and converter in parallel
+- Run `dotnet build .\CodexLens.sln` after service or ViewModel changes.
+- For parser changes, exercise `samples/sample-rollout.jsonl` or a real copied transcript.
+- For watcher/tail changes, verify active append behavior with a file that is still writable.

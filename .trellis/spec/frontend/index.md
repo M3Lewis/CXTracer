@@ -1,70 +1,57 @@
-# Avalonia + SukiUI Frontend Guidelines
+# Codex Lens Avalonia Frontend Guidelines
 
-Production frontend guidelines for desktop applications built with Avalonia, SukiUI, and CommunityToolkit.Mvvm.
+Frontend here means the Avalonia/SukiUI desktop presentation layer in `src/CodexLens`.
 
 ## Structure
 
 ### [Directory Structure](./directory-structure.md)
 
-Recommended folders for Views, ViewModels, controls, UI services, and assets.
+Current single-window layout and where Views, ViewModels, icons, and UI-only code belong.
 
 ### [App Shell & Hosts](./app-shell-hosts.md)
 
-How to bootstrap `SukiTheme`, replace `Window` with `SukiWindow`, and place dialog and toast hosts correctly.
+Current `App.axaml` and `MainWindow` setup with `SukiTheme` and `SukiWindow`.
 
 ### [Theming & Windowing](./theming-windowing.md)
 
-Theme color, locale, base theme switching, background styles, and title bar customization.
+Project theme choices, hardcoded palette reality, and how to evolve it safely.
 
 ### [Components & Controls](./component-guidelines.md)
 
-View composition rules and when to use `SukiSideMenu`, `SettingsLayout`, dialogs, toasts, and inline status controls.
+How the current dense two-pane transcript UI is composed.
 
-### [Behaviors & Attached Properties](./hook-guidelines.md)
+### [Behaviors & View Logic](./hook-guidelines.md)
 
-Avalonia equivalents for reusable view logic that should not live in code-behind.
+Avalonia equivalents for hooks and the current code-behind exception for scroll navigation.
 
 ### [State Management](./state-management.md)
 
-Strict MVVM guidance for commands, navigation state, shared state, and service boundaries.
+CommunityToolkit.Mvvm patterns used by `MainWindowViewModel`.
 
 ### [Notifications & Dialogs](./notifications-and-dialogs.md)
 
-How to expose and use `ISukiDialogManager` and `ISukiToastManager` without breaking MVVM boundaries.
+Current status-message approach and when Suki dialogs/toasts would be appropriate.
 
 ### [Type Safety](./type-safety.md)
 
-Compiled bindings, AOT-safe patterns, converters, and version compatibility constraints.
+Compiled bindings, `x:DataType`, source-generated properties/commands, and nullable rules.
 
 ### [Quality Checklist](./quality-guidelines.md)
 
-Review checklist for shell setup, bindings, theming, performance, and forbidden patterns.
-
-### [Common Issues / Pitfalls](../big-question/index.md)
-
-Known SukiUI setup and runtime failure modes that should be checked first during diagnosis.
+Build and review checklist for UI changes.
 
 ## Tech Stack
 
-- **UI Framework**: Avalonia 11
-- **UI Library**: SukiUI 6
-- **MVVM Toolkit**: CommunityToolkit.Mvvm
-- **DI**: Microsoft.Extensions.DependencyInjection
-- **Language**: C# / AXAML
-
-## Usage
-
-These guidelines are intended to be used as:
-
-1. **Project bootstrap rules** for new Avalonia + SukiUI apps
-2. **Implementation reference** while building desktop screens and flows
-3. **Code review checklist** for MVVM, bindings, and host setup
-4. **Onboarding material** for engineers new to Avalonia or SukiUI
+- Avalonia 11.3.14
+- SukiUI 6.1.1
+- CommunityToolkit.Mvvm 8.4.0
+- C# latest, nullable enabled
+- AXAML compiled bindings enabled in the project file
 
 ## Core Rules
 
-- Use `SukiWindow` as the desktop shell, not plain `Window`.
-- Initialize `SukiTheme` in `App.axaml` and always set `ThemeColor`.
-- Put `SukiDialogHost` and `SukiToastHost` only inside `SukiWindow.Hosts`.
-- Prefer SukiUI controls and theme resources over custom styling.
-- Keep ViewModels UI-agnostic except for intentional desktop presentation managers.
+- Keep `MainWindow` as a `SukiWindow`.
+- Keep `SukiTheme Locale="zh-CN" ThemeColor="Blue"` registered in `App.axaml`.
+- Use `x:DataType` for bound views and templates.
+- Keep business and IO logic out of AXAML code-behind.
+- Preserve the desktop tool layout: dense, scan-friendly, and immediately usable.

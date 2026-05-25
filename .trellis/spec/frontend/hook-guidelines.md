@@ -1,64 +1,34 @@
-# Behaviors & Attached Properties
+# Behaviors and View Logic
 
-Avalonia does not use React-style hooks. Reusable view logic should be expressed with bindings, commands, behaviors, or attached properties.
+Avalonia has no React hooks. Use bindings, commands, attached properties, behaviors, or narrowly scoped code-behind depending on the job.
 
-## Use the Smallest Tool That Fits
+## Preferred Order
 
-- use a **binding** when the UI only needs data projection
-- use a **converter** for small value transformation
-- use an **attached property** to extend control state or metadata
-- use a **behavior** for declarative event-driven interaction
-- use **code-behind** only for view-only glue that cannot reasonably be expressed another way
+1. Binding to ViewModel state for data and control values.
+2. `[RelayCommand]` for user actions that affect app state.
+3. Converter or computed property for simple presentation formatting.
+4. Attached property or behavior when the same view-only interaction is reused.
+5. Code-behind only when visual tree access is necessary.
 
-## Attached Properties
+## Current Code-Behind Exception
 
-Use attached properties for lightweight control extensions.
+`MainWindow.axaml.cs` scrolls to adjacent rendered message cards. This belongs in code-behind because it needs:
 
-```csharp
-public static readonly AttachedProperty<bool> IsSpecialFocusedProperty =
-    AvaloniaProperty.RegisterAttached<MyBehaviorHost, Control, bool>("IsSpecialFocused");
-```
+- named `ItemsControl` and `ScrollViewer` instances
+- `GetVisualDescendants()`
+- `ContentPresenter` containers
+- translated coordinates inside the current viewport
+- direct `ScrollViewer.Offset` updates
 
-Good use cases:
+Keep this logic view-only. It must not call services, parse JSON, mutate transcript state, or know about selected sessions.
 
-- opt-in control state
-- small styling toggles
-- metadata that multiple styles or templates consume
+## When to Extract
 
-## Behaviors
+Extract to a behavior or attached property only when the same scroll interaction is reused by another view. Until then, keeping it local to `MainWindow.axaml.cs` is clearer.
 
-Use `Avalonia.Xaml.Behaviors` when a control needs reusable interaction logic without code-behind event handlers.
+## Avoid
 
-```xml
-<Button Content="Open">
-    <Interaction.Behaviors>
-        <EventTriggerBehavior EventName="PointerEntered">
-            <InvokeCommandAction Command="{Binding HoverCommand}" />
-        </EventTriggerBehavior>
-    </Interaction.Behaviors>
-</Button>
-```
-
-Good use cases:
-
-- event-to-command bridging
-- pointer interaction
-- focus and keyboard interaction
-- small visual behaviors reused across screens
-
-## Code-Behind Boundary
-
-Code-behind should normally contain only `InitializeComponent()`.
-
-Acceptable exceptions:
-
-- wiring a view-only platform concern
-- a framework integration that cannot be bound declaratively
-- temporary debugging that is removed before merge
-
-## Forbidden Patterns
-
-- calling domain services directly from behaviors
-- large feature logic in converters
-- page-specific event handlers copied across multiple views
-- treating code-behind as the default interaction model
+- Event handlers for refresh, filtering, file IO, or parser work.
+- Behaviors that call domain/services directly.
+- Converters with side effects or IO.
+- Nested callbacks when a named private method would be clearer.

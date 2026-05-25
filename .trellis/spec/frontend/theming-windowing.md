@@ -1,85 +1,52 @@
-# Theming & Windowing
+# Theming and Windowing
 
-SukiUI should own the visual language of the desktop application. Prefer its built-in theme APIs and resources over custom styling.
+The current visual design is a light, dense desktop tool built on SukiUI.
 
-## Base Theme Switching
+## Current Theme
 
-Use `SukiTheme.GetInstance()` to switch light and dark mode.
-
-```csharp
-var theme = SukiTheme.GetInstance();
-
-theme.ChangeBaseTheme(ThemeVariant.Dark);
-theme.ChangeBaseTheme(ThemeVariant.Light);
-theme.SwitchBaseTheme();
-```
-
-You may subscribe to `OnBaseThemeChanged` when the application needs to react to theme changes.
-
-## Color Theme Switching
-
-Use Suki color themes instead of hardcoded accent brushes.
-
-```csharp
-var theme = SukiTheme.GetInstance();
-
-theme.ChangeColorTheme(SukiColor.Red);
-theme.SwitchColorTheme();
-
-var customTheme = new SukiColorTheme("Purple", Colors.Purple, Colors.DarkBlue);
-theme.AddColorTheme(customTheme);
-theme.ChangeColorTheme(customTheme);
-```
-
-## Window Background Styles
-
-`SukiWindow` supports three built-in background modes:
-
-- `Flat`: best default for dense, work-focused tools
-- `Gradient`: use when the app needs more visual depth
-- `Bubble`: use selectively; it is the most decorative option
+`App.axaml` sets:
 
 ```xml
-<suki:SukiWindow BackgroundStyle="Flat">
-    <!-- content -->
-</suki:SukiWindow>
+<Application RequestedThemeVariant="Light">
+    <Application.Styles>
+        <suki:SukiTheme Locale="zh-CN" ThemeColor="Blue" />
+    </Application.Styles>
+</Application>
 ```
 
-## Performance Rules
+`MainWindow.axaml` sets `BackgroundStyle="Flat"` and fixed startup dimensions:
 
-SukiUI background animation is visually strong but not free.
+- `Width="1380"`
+- `Height="860"`
+- `MinWidth="1080"`
+- `MinHeight="640"`
 
-- Enable background animation only when it materially improves the experience.
-- Avoid animated backgrounds on data-heavy screens.
-- Prefer `Flat` backgrounds for long-running dashboards, editors, and productivity tools.
+## Current Palette Reality
 
-## Title Bar and Shell Features
+The UI currently uses literal light colors for surfaces, borders, event cards, and badges. Examples include:
 
-Use built-in `SukiWindow` slots before creating custom chrome.
+- main surface `#FBF7EF`
+- panel surface `#FFFDF8`
+- border `#E7DCCB`
+- event-kind colors on `DisplayEvent`
 
-- `LogoContent` for app branding
-- `MenuItems` for window-level actions
-- `RightWindowTitleBarControls` for compact utility controls
+Document this as current reality. Do not pretend the app is fully dynamic-theme ready.
 
-## Resource Usage
+## Change Rules
 
-Prefer Suki theme resources and dynamic resources over literal color values.
+- Preserve readability for long transcript text.
+- Keep `BackgroundStyle="Flat"` unless there is a clear UX reason to change it.
+- If adding dark mode, first replace hardcoded surface and event colors with theme-aware resources.
+- Keep event-kind color mapping centralized on `DisplayEvent` or a deliberate presentation styling layer.
 
-Good:
+## Window Rules
 
-```xml
-<Border Background="{DynamicResource SukiBackgroundBrush}" />
-```
+- Main shell stays `SukiWindow`.
+- Code-behind constructor should only call `InitializeComponent()`.
+- Title, minimum size, and shell background belong in AXAML.
 
-Avoid:
+## Avoid
 
-```xml
-<Border Background="#1E1E1E" />
-```
-
-## Forbidden Patterns
-
-- Hardcoded light/dark colors for standard surfaces
-- Custom title bars when `SukiWindow` already provides the needed chrome
-- Background animation enabled by default across the whole product
-- Shader-based backgrounds without a clear design or performance reason
+- Mixing another Avalonia theme package into the active app theme.
+- Adding animated/decorative backgrounds to the transcript workspace.
+- Hardcoding more colors in scattered AXAML fragments without considering centralization.

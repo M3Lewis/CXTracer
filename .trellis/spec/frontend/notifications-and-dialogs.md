@@ -1,72 +1,41 @@
-# Notifications & Dialogs
+# Notifications and Dialogs
 
-SukiUI provides first-class hosts and manager APIs for dialogs and toasts. Use them through MVVM-friendly managers instead of static shell calls.
+Codex Lens currently uses inline status instead of modal dialogs or toast notifications.
 
-## Preferred Host Setup
+## Current Feedback Pattern
 
-Declare hosts once in `MainWindow` or the root `SukiWindow`.
+`MainWindowViewModel.StatusMessage` is displayed in the footer. `IsBusy` drives the footer `ProgressBar`.
 
-```xml
-<suki:SukiWindow.Hosts>
-    <suki:SukiDialogHost Manager="{Binding DialogManager}" />
-    <suki:SukiToastHost Manager="{Binding ToastManager}" />
-</suki:SukiWindow.Hosts>
-```
+Current examples:
 
-## Preferred ViewModel Surface
+- scan start: `Scanning sessions...`
+- missing root: status explains that the directory was not found
+- read/load failures: status includes the operation failure
+- live updates: status reports appended event count or another updated session
 
-Expose managers from the shell or desktop presentation layer.
+This fits the current app because operations are low-risk and non-destructive.
 
-```csharp
-public class ShellViewModel
-{
-    public ISukiDialogManager DialogManager { get; } = new SukiDialogManager();
-    public ISukiToastManager ToastManager { get; } = new SukiToastManager();
-}
-```
+## When to Add Dialogs
 
-## Dialog Usage
+Use a dialog only for blocking decisions or explicit confirmation, for example:
 
-Use dialogs for blocking confirmation, destructive actions, and structured user decisions.
+- changing a setting that affects many files
+- exporting sensitive transcript data
+- confirming a future destructive operation
 
-```csharp
-DialogManager.CreateDialog()
-    .WithTitle("Delete file")
-    .WithContent("This action cannot be undone.")
-    .WithActionButton("Cancel", _ => { }, true)
-    .WithActionButton("Delete", _ => Delete(), true, "Flat", "Accent")
-    .TryShow();
-```
+If dialogs are added, declare `SukiDialogHost` under `SukiWindow.Hosts` and expose the manager from the shell ViewModel.
 
-Recommended dialog capabilities:
+## When to Add Toasts
 
-- explicit title
-- clear action buttons
-- dismissal policy defined intentionally
-- message-box type when severity matters
+Use toasts for transient background events that should not replace the footer status, for example:
 
-## Toast Usage
+- background session root became unavailable
+- export completed
+- live session switched because pinning is off
 
-Use toasts for transient feedback, background progress, and short-lived action prompts.
+## Avoid
 
-```csharp
-ToastManager.CreateToast()
-    .WithTitle("Saved")
-    .WithContent("Settings were updated successfully.")
-    .OfType(NotificationType.Success)
-    .Dismiss().After(TimeSpan.FromSeconds(3))
-    .Queue();
-```
-
-## Selection Rules
-
-- use **dialog** for blocking decisions or multi-step acknowledgment
-- use **toast** for transient success, warning, or background progress
-- use **InfoBar** when the message must remain visible in the page layout
-
-## Boundary Rules
-
-- hosts belong only in `SukiWindow.Hosts`
-- non-UI layers must not instantiate or manage Suki controls directly
-- avoid static global manager singletons unless the app shell itself intentionally owns them
-- do not call dialog or toast APIs from code-behind for business workflows
+- Showing modal dialogs for routine parse failures.
+- Calling dialog/toast APIs from service classes.
+- Adding global static notification managers.
+- Logging or displaying full raw transcript content in error messages unless the raw pane is explicitly opened.

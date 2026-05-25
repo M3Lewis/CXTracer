@@ -1,85 +1,58 @@
-# Backend Directory Structure
+# Service Directory Structure
 
-Recommended solution organization for a desktop application with clean separations between business logic, persistence, and UI composition.
-
-## Standard Structure
+Codex Lens is currently a single-project desktop app:
 
 ```text
-src/
-├── MyApp.Domain/
-│   ├── Entities/
-│   ├── ValueObjects/
-│   ├── Enums/
-│   ├── Interfaces/
-│   └── Exceptions/
-├── MyApp.Application/
-│   ├── Services/
-│   ├── UseCases/
-│   ├── DTOs/
-│   ├── Commands/
-│   ├── Queries/
-│   └── Abstractions/
-├── MyApp.Infrastructure/
-│   ├── Persistence/
-│   │   ├── AppDbContext.cs
-│   │   ├── Configurations/
-│   │   ├── Migrations/
-│   │   └── Repositories/
-│   ├── Logging/
-│   ├── Files/
-│   ├── Http/
-│   └── DependencyInjection.cs
-└── MyApp.Desktop/
-    ├── App.axaml.cs
-    ├── Program.cs
-    ├── Views/
-    ├── ViewModels/
-    ├── Services/
-    └── DependencyInjection.cs
+src/CodexLens/
+  App.axaml
+  App.axaml.cs
+  Program.cs
+  Icons/
+    Icons.axaml
+  Models/
+    DisplayEvent.cs
+    EventKind.cs
+    EventPane.cs
+    SessionFileChangedEventArgs.cs
+    SessionInfo.cs
+  Services/
+    CodexEventParser.cs
+    SessionReader.cs
+    SessionScanner.cs
+    SessionWatcher.cs
+  ViewModels/
+    MainWindowViewModel.cs
+  Views/
+    MainWindow.axaml
+    MainWindow.axaml.cs
 ```
 
-## Layer Responsibilities
+## Responsibilities
 
-- `Domain`: core business rules, entities, value objects, and contracts
-- `Application`: use-case orchestration and business workflows
-- `Infrastructure`: EF Core, file I/O, external APIs, and concrete implementations
-- `Desktop`: Avalonia/SukiUI shell, ViewModels, and composition root wiring
+- `Services/` owns transcript IO, JSONL parsing, scanning, tailing, and file watching.
+- `Models/` owns simple data objects and display projection objects used by the UI.
+- `ViewModels/` owns screen state, commands, filtering, selection, and UI-thread coordination.
+- `Views/` owns AXAML layout and view-only behavior such as scrolling within visible item containers.
+- `Icons/Icons.axaml` owns reusable vector path resources loaded from `App.axaml`.
 
-## Dependency Direction
+## Current Examples
 
-Allowed dependency flow:
+- `Services/SessionScanner.cs` enumerates `*.jsonl` files and builds `SessionInfo` summaries.
+- `Services/SessionReader.cs` reads whole transcript files and appended chunks while preserving tail state.
+- `Services/CodexEventParser.cs` classifies unknown Codex JSONL shapes into display events.
+- `ViewModels/MainWindowViewModel.cs` orchestrates refresh, selection, filters, and live updates.
+- `Views/MainWindow.axaml.cs` contains scroll navigation glue that needs Avalonia visual tree access.
 
-```text
-Desktop -> Application -> Domain
-Desktop -> Infrastructure -> Domain
-Application -> Domain
-Infrastructure -> Domain
-```
+## Placement Rules
 
-Not allowed:
+- New transcript parsing logic belongs in `CodexEventParser` or a narrowly named service under `Services/`.
+- New file access code belongs in a service, not in a ViewModel or code-behind.
+- New user-visible state belongs in `MainWindowViewModel` until there are multiple screens that justify splitting ViewModels.
+- New display-only fields belong on model types only when they are reused by bindings.
 
-- `Domain -> Infrastructure`
-- `Domain -> Desktop`
-- `Application -> Desktop`
+## Avoid
 
-## Composition Roots
-
-Keep registration code close to the layer that owns the implementation.
-
-- `Infrastructure/DependencyInjection.cs` registers repositories, persistence, and integration services
-- `Desktop/DependencyInjection.cs` registers ViewModels, window services, and shell-level UI adapters
-- `App.axaml.cs` or startup code composes the full container
-
-## Naming Conventions
-
-- interfaces use `I*`
-- repository implementations end with `Repository`
-- application services end with `Service`
-- use-case handlers should describe the business action, not the transport
-
-## Forbidden Patterns
-
-- putting EF Core entities in the desktop project
-- placing ViewModels in application or infrastructure projects
-- mixing composition root code with business service implementations
-- flat solutions where every service, repository, and entity lives in one folder
+- Adding Clean Architecture projects before there is a real domain boundary.
+- Putting JSON parsing or filesystem traversal in AXAML code-behind.
+- Creating generic `Utils` folders for unrelated helpers.
+- Tracking `bin/` or `obj/` output; root `.gitignore` excludes both.

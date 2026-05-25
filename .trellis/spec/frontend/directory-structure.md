@@ -1,68 +1,62 @@
-# Avalonia + SukiUI Directory Structure
+# Frontend Directory Structure
 
-Recommended directory organization for the desktop presentation layer.
-
-## Standard Structure
+The current UI is intentionally small: one Suki window, one ViewModel, and supporting models/services.
 
 ```text
-src/
-├── MyApp.Desktop/
-│   ├── App.axaml
-│   ├── App.axaml.cs
-│   ├── Program.cs
-│   ├── Views/
-│   │   ├── MainWindow.axaml
-│   │   ├── MainWindow.axaml.cs
-│   │   ├── Pages/
-│   │   ├── Dialogs/
-│   │   └── Controls/
-│   ├── ViewModels/
-│   │   ├── Shell/
-│   │   ├── Pages/
-│   │   ├── Dialogs/
-│   │   └── Controls/
-│   ├── Services/
-│   │   ├── ThemeService.cs
-│   │   ├── NavigationService.cs
-│   │   └── Notifications/
-│   ├── Behaviors/
-│   ├── AttachedProperties/
-│   ├── Converters/
-│   ├── Styles/
-│   └── Assets/
-├── MyApp.Application/
-├── MyApp.Domain/
-└── MyApp.Infrastructure/
+src/CodexLens/
+  App.axaml
+  App.axaml.cs
+  Program.cs
+  Icons/Icons.axaml
+  Views/MainWindow.axaml
+  Views/MainWindow.axaml.cs
+  ViewModels/MainWindowViewModel.cs
+  Models/
+  Services/
 ```
 
-## Folder Responsibilities
+## Views
 
-- `Views/`: AXAML and code-behind for windows, pages, dialogs, and reusable controls
-- `ViewModels/`: state, commands, validation, navigation state, and presentation logic
-- `Services/`: desktop-only orchestration such as theming, notifications, and shell coordination
-- `Behaviors/`: reusable interaction logic that should stay declarative in AXAML
-- `AttachedProperties/`: small control extensions and view-only state
-- `Converters/`: lightweight formatting logic for bindings
-- `Styles/`: shared resource dictionaries and control styles
+`Views/MainWindow.axaml` owns:
 
-## Naming Conventions
+- the `SukiWindow` shell
+- sessions root toolbar
+- session list
+- conversation pane
+- execution pane
+- raw events expander
+- status/progress footer
 
-- views end with `View` or `Window`
-- view models end with `ViewModel`
-- dialogs use `*DialogView` and `*DialogViewModel` when they are first-class features
-- reusable controls use domain names, not generic labels such as `CustomControl1`
+`Views/MainWindow.axaml.cs` owns only view-only scroll behavior that requires rendered visual tree access.
 
-## Shell Separation
+## ViewModels
 
-Keep shell-specific files easy to find:
+`ViewModels/MainWindowViewModel.cs` owns:
 
-- `MainWindow` owns `SukiWindow`
-- shell navigation ViewModel lives under `ViewModels/Shell/`
-- dialog and toast manager wiring stays close to the shell
+- observable collections for sessions and display events
+- selected session and filter state
+- search and raw visibility state
+- busy and status text
+- refresh, clear search, and default-root commands
+- live update handling from `SessionWatcher`
 
-## Forbidden Patterns
+## Icons and Resources
 
-- putting all Views and ViewModels into one flat folder
-- mixing dialog ViewModels with domain services
-- storing shared styles inside individual page folders
-- keeping behaviors and attached properties inside random code-behind files
+`Icons/Icons.axaml` stores reusable path resources loaded from `App.axaml`.
+
+Use static resources for repeated vector paths, as seen with `IconChevronUp` and `IconChevronDown`. Avoid duplicating inline path data across buttons.
+
+## When to Split
+
+Split files only when a new feature creates a real boundary:
+
+- a reusable visual fragment used in more than one place
+- a second top-level screen or dialog
+- a ViewModel section with independent lifecycle or tests
+- shared converters or attached properties used by multiple views
+
+## Avoid
+
+- Creating `Pages/`, `Controls/`, `Converters/`, or `Behaviors/` folders before there is code to put in them.
+- Moving service logic into `Views/`.
+- Splitting `MainWindowViewModel` just to make it look layered.

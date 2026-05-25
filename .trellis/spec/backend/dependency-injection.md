@@ -1,52 +1,43 @@
-# Dependency Injection
+# Dependency Composition
 
-The project uses `Microsoft.Extensions.DependencyInjection` as the single service registration mechanism.
+The project currently uses manual composition, not `Microsoft.Extensions.DependencyInjection`.
 
-## Composition Root Rule
+## Current Pattern
 
-Build the container only at application startup.
-
-Typical composition sequence:
-
-1. infrastructure registrations
-2. application registrations
-3. desktop registrations
-4. container build
-
-## Lifetime Guidance
-
-- **Singleton**: stateless services, app-wide coordinators, configuration providers
-- **Transient**: ViewModels, short-lived handlers, per-operation services
-- **Scoped**: use deliberately for units of work or explicit operation scopes; desktop apps do not get request scopes automatically
-
-## Acceptable `IServiceProvider` Usage
-
-`IServiceProvider` access is allowed only at framework boundaries such as:
-
-- startup/bootstrap
-- `ViewLocator`-style adapters
-- factory abstractions that exist specifically to create runtime objects
-
-## Forbidden Usage
-
-- domain services calling `App.Services`
-- repositories resolving dependencies ad hoc from the container
-- ViewModels pulling arbitrary services from a static provider
-- passing `IServiceProvider` through application logic as a hidden dependency
-
-## Registration Style
-
-Prefer explicit extension methods per layer:
+`App.axaml.cs` creates the service graph when the classic desktop lifetime is available:
 
 ```csharp
-services
-    .AddApplication()
-    .AddInfrastructure(configuration)
-    .AddDesktop();
+var parser = new CodexEventParser();
+var scanner = new SessionScanner(parser);
+var reader = new SessionReader(parser);
+var watcher = new SessionWatcher();
+desktop.MainWindow = new MainWindow
+{
+    DataContext = new MainWindowViewModel(scanner, reader, watcher)
+};
 ```
 
-This keeps the bootstrap readable and prevents startup logic from turning into an unstructured list.
+This is acceptable for the current app because there is one window, one ViewModel, and four concrete services.
 
-## Desktop-Specific Note
+## Rules
 
-If `ViewLocator` or a similar Avalonia adapter must resolve Views from DI, keep that exception narrow and document it. It is a framework bridge, not a license to use service location elsewhere.
+- Keep dependencies explicit through constructors.
+- Do not introduce a static service locator.
+- Do not pass `IServiceProvider` into ViewModels or services.
+- Add a DI container only when the composition graph becomes large enough that manual construction hurts clarity.
+
+## Lifetime Notes
+
+- `CodexEventParser` is stateless and can be shared.
+- `SessionScanner` depends on the parser and is stateless across scans.
+- `SessionReader` owns tail state and should be shared for the active window.
+- `SessionWatcher` owns a `FileSystemWatcher` and must be disposed by the ViewModel.
+
+## If DI Is Added Later
+
+Use one composition root and preserve the same lifetimes:
+
+- parser and scanner: singleton or shared service
+- reader: singleton for the active app session
+- watcher: singleton or owned by the shell ViewModel
+- ViewModels: constructed with explicit service dependencies

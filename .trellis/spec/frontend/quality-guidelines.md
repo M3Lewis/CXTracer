@@ -1,48 +1,44 @@
-# Avalonia + SukiUI Quality Checklist
+# Frontend Quality Checklist
 
-Use this checklist during implementation and review.
+Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 
-## Shell Setup
+## Shell and Theme
 
-- `App.axaml` registers `SukiTheme`
-- `ThemeColor` is explicitly set
-- the main desktop shell derives from `SukiWindow`
-- dialog and toast hosts are declared only in `SukiWindow.Hosts`
+- `App.axaml` still registers `SukiTheme` with explicit `ThemeColor`.
+- `MainWindow.axaml` remains a `suki:SukiWindow`.
+- `MainWindow.axaml.cs` derives from `SukiWindow`.
+- New dialog/toast hosts, if any, are under `SukiWindow.Hosts`.
 
-## MVVM
+## Binding and Types
 
-- ViewModels expose state and commands, not visual tree references
-- code-behind is empty or limited to view-only glue
-- repeated interaction logic is moved to behaviors or attached properties
+- Bound views and data templates have `x:DataType`.
+- New ViewModel state uses `[ObservableProperty]` where appropriate.
+- New commands use `[RelayCommand]`.
+- Nullable warnings are addressed rather than suppressed.
 
-## Controls and Navigation
+## MVVM Boundaries
 
-- `SukiSideMenuItem` always includes `PageContent`
-- page navigation state lives in the shell ViewModel
-- SukiUI controls are preferred over one-off styled replacements
+- IO and parsing stay in `Services/`.
+- ViewModels do not reference visual tree controls.
+- Code-behind remains view-only.
+- Services do not depend on Avalonia/SukiUI controls.
 
-## Bindings and Commands
+## UI Behavior
 
-- views use compiled bindings with `x:DataType`
-- asynchronous actions use `Task`-returning relay commands
-- converters stay lightweight and deterministic
+- Search/filter changes update visible collections predictably.
+- Raw events remain hidden unless `ShowRawEvents` or the Raw filter is active.
+- Conversation pane contains only user, assistant, and final events.
+- Execution pane contains command, output, diff, tool, and error events.
 
-## Theming
+## Verification
 
-- no hardcoded standard surface colors
-- theme changes use `SukiTheme.GetInstance()`
-- background style choice matches the product's density and performance needs
+- Run `dotnet build .\CodexLens.sln` after UI changes.
+- For layout changes, run the app and load `samples/sample-rollout.jsonl` or a copied real transcript.
+- For live-update changes, verify a file append updates the selected session without switching when `PinSelectedSession` is true.
 
-## Performance
+## Avoid
 
-- background animation is disabled unless it adds clear value
-- no heavy logic in converters or UI thread callbacks
-- long-running operations surface progress or busy state
-
-## Forbidden Patterns
-
-- `async void` commands
-- static window references for feature logic
-- hosts placed inside page controls
-- plain `Window` used as the main app shell
-- missing `ThemeColor` on `SukiTheme`
+- `async void` commands.
+- Business behavior in AXAML click handlers.
+- Disabling compiled bindings to bypass errors.
+- New UI that writes to the Codex sessions directory.
