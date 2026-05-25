@@ -22,6 +22,18 @@ Avalonia has no React hooks. Use bindings, commands, attached properties, behavi
 
 Keep this logic view-only. It must not call services, parse JSON, mutate transcript state, or know about selected sessions.
 
+### Scroll Arrow Targeting
+
+For message-card arrow navigation, choose the target by direction rather than by
+computing a generic "current item" and adding `+1` or `-1`.
+
+- Down arrow: choose the first rendered card whose top is below the viewport's top tolerance.
+- Up arrow: choose the last rendered card whose top is above the viewport's top tolerance.
+- If no target exists, clamp to the last or first card.
+
+This avoids repeated clicks selecting the same card after a scroll aligns the
+previous target near the top padding.
+
 ## When to Extract
 
 Extract to a behavior or attached property only when the same scroll interaction is reused by another view. Until then, keeping it local to `MainWindow.axaml.cs` is clearer.

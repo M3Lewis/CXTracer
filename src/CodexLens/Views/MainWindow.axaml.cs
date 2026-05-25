@@ -53,12 +53,7 @@ public partial class MainWindow : SukiWindow
                 return;
             }
 
-            var anchorIndex = GetTopVisibleIndex(scrollViewer, containers);
-
-            var targetIndex = anchorIndex < 0
-                ? direction > 0 ? 0 : containers.Count - 1
-                : Math.Clamp(anchorIndex + direction, 0, containers.Count - 1);
-
+            var targetIndex = GetAdjacentIndex(scrollViewer, containers, direction);
             ScrollContainerToTop(scrollViewer, containers[targetIndex]);
         }, DispatcherPriority.Background);
     }
@@ -74,17 +69,27 @@ public partial class MainWindow : SukiWindow
                 x.DataContext is DisplayEvent)
             .OrderBy(x =>
             {
-                var p = x.TranslatePoint(new Point(0, 0), itemsControl);
-                return p?.Y ?? double.MaxValue;
+                var point = x.TranslatePoint(new Point(0, 0), itemsControl);
+                return point?.Y ?? double.MaxValue;
             })
             .ToList();
     }
 
-    private static int GetTopVisibleIndex(
+    private static int GetAdjacentIndex(
+        ScrollViewer scrollViewer,
+        IReadOnlyList<ContentPresenter> containers,
+        int direction)
+    {
+        return direction > 0
+            ? GetNextIndex(scrollViewer, containers)
+            : GetPreviousIndex(scrollViewer, containers);
+    }
+
+    private static int GetNextIndex(
         ScrollViewer scrollViewer,
         IReadOnlyList<ContentPresenter> containers)
     {
-        const double tolerance = 6;
+        const double topTolerance = 12;
 
         for (var i = 0; i < containers.Count; i++)
         {
@@ -95,17 +100,37 @@ public partial class MainWindow : SukiWindow
                 continue;
             }
 
-            var top = point.Value.Y;
-            var bottom = top + containers[i].Bounds.Height;
-
-            // 第一个没有完全滚出顶部的卡片，就是当前锚点
-            if (bottom > tolerance)
+            if (point.Value.Y > topTolerance)
             {
                 return i;
             }
         }
 
         return containers.Count - 1;
+    }
+
+    private static int GetPreviousIndex(
+        ScrollViewer scrollViewer,
+        IReadOnlyList<ContentPresenter> containers)
+    {
+        const double topTolerance = 6;
+
+        for (var i = containers.Count - 1; i >= 0; i--)
+        {
+            var point = containers[i].TranslatePoint(new Point(0, 0), scrollViewer);
+
+            if (point is null)
+            {
+                continue;
+            }
+
+            if (point.Value.Y < -topTolerance)
+            {
+                return i;
+            }
+        }
+
+        return 0;
     }
 
     private static void ScrollContainerToTop(
@@ -121,12 +146,7 @@ public partial class MainWindow : SukiWindow
         }
 
         const double topPadding = 8;
-
-        // 关键修复：
-        // point.Value.Y 是目标卡片相对当前 ScrollViewer 视口的位置，
-        // 所以必须加上当前 Offset，而不是直接把 point.Value.Y 当成 Offset。
         var desiredY = scrollViewer.Offset.Y + point.Value.Y - topPadding;
-
         var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
         var clampedY = Math.Clamp(desiredY, 0, maxY);
 
