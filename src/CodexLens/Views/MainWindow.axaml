@@ -1,0 +1,453 @@
+
+
+<suki:SukiWindow xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+                 xmlns:vm="clr-namespace:CodexLens.ViewModels"
+                 xmlns:models="clr-namespace:CodexLens.Models"
+                 x:Class="CodexLens.Views.MainWindow"
+                 x:DataType="vm:MainWindowViewModel"
+                 mc:Ignorable="d"
+                 Width="1380"
+                 Height="860"
+                 MinWidth="1080"
+                 MinHeight="640"
+                 Title="Codex Lens"
+                 Background="#FBF7EF"
+                 BackgroundStyle="Flat">
+  <suki:SukiWindow.Styles>
+    <Style Selector="Button.roundIconButton">
+      <Setter Property="Width" Value="34" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </suki:SukiWindow.Styles>
+  
+  <Grid RowDefinitions="Auto,*,Auto"
+        ColumnDefinitions="340,*"
+        Margin="14"
+        ColumnSpacing="12"
+        RowSpacing="12"
+        Background="#FBF7EF">
+
+    <Border Grid.Row="0"
+            Grid.ColumnSpan="2"
+            CornerRadius="18"
+            Padding="12"
+            Background="#FFFDF8"
+            BorderBrush="#E7DCCB"
+            BorderThickness="1">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+        <TextBlock Text="Sessions root"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   Foreground="#3E3A36"/>
+
+        <TextBox Grid.Column="1"
+                 Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 Watermark="C:\Users\you\.codex\sessions 或 WSL UNC 路径"
+                 FontFamily="Consolas"/>
+
+        <Button Grid.Column="2" Content="Default" Command="{Binding OpenDefaultRootCommand}"/>
+        <Button Grid.Column="3" Content="Refresh" Command="{Binding RefreshCommand}"/>
+        <CheckBox Grid.Column="4"
+                  Content="Pin selected"
+                  IsChecked="{Binding PinSelectedSession}"
+                  VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="1"
+            Grid.Column="0"
+            CornerRadius="18"
+            Padding="10"
+            Background="#FFFDF8"
+            BorderBrush="#E7DCCB"
+            BorderThickness="1">
+      <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel>
+            <TextBlock Text="Codex sessions"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="#3A3732"/>
+            <TextBlock Text="{Binding SessionCountText}"
+                       Foreground="#746A5F"/>
+          </StackPanel>
+
+          <Border Grid.Column="1"
+                  CornerRadius="10"
+                  Padding="8,3"
+                  Background="#FFFFFF"
+                  BorderBrush="#E7DCCB"
+                  BorderThickness="1">
+            <TextBlock Text="只读"
+                       FontSize="12"
+                       Foreground="#6C7A6F"/>
+          </Border>
+        </Grid>
+
+        <TextBox Grid.Row="1"
+                 Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 Watermark="搜索当前 session：回复 / 命令 / diff / raw"/>
+
+        <ListBox Grid.Row="2"
+                 ItemsSource="{Binding Sessions}"
+                 SelectedItem="{Binding SelectedSession, Mode=TwoWay}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="models:SessionInfo">
+              <Border CornerRadius="10"
+                      Padding="8"
+                      Margin="0,2"
+                      Background="#FFFFFF"
+                      BorderBrush="#E7DCCB"
+                      BorderThickness="1">
+                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4">
+                  <TextBlock Text="{Binding DisplayTitle}"
+                             FontWeight="SemiBold"
+                             TextWrapping="Wrap"
+                             MaxLines="2"
+                             Foreground="#3D3445"/>
+
+                  <Border Grid.Column="1"
+                          CornerRadius="8"
+                          Padding="6,2"
+                          Background="#F8F8F8"
+                          BorderBrush="#E7DCCB"
+                          BorderThickness="1">
+                    <TextBlock Text="{Binding StatusText}"
+                               FontSize="11"
+                               Foreground="#7A6F63"/>
+                  </Border>
+
+                  <TextBlock Grid.Row="1"
+                             Grid.ColumnSpan="2"
+                             Text="{Binding DisplaySubtitle}"
+                             Foreground="#746A5F"
+                             FontSize="12"/>
+
+                  <TextBlock Grid.Row="2"
+                             Grid.ColumnSpan="2"
+                             Text="{Binding FilePath}"
+                             Foreground="#9A9187"
+                             FontSize="11"
+                             TextTrimming="CharacterEllipsis"/>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="10">
+      <Border CornerRadius="18"
+              Padding="10"
+              Background="#FFFDF8"
+              BorderBrush="#E7DCCB"
+              BorderThickness="1">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+          <StackPanel>
+            <TextBlock Text="{Binding SelectedSessionPath}"
+                       FontFamily="Consolas"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="#3A3732"/>
+            <TextBlock Text="{Binding EventCountText}"
+                       Foreground="#746A5F"
+                       FontSize="12"/>
+          </StackPanel>
+
+          <ComboBox Grid.Column="1"
+                    ItemsSource="{Binding FilterOptions}"
+                    SelectedItem="{Binding SelectedFilter}"
+                    MinWidth="150"/>
+
+          <Button Grid.Column="2"
+                  Content="Clear search"
+                  Command="{Binding ClearSearchCommand}"/>
+
+          <ToggleButton Grid.Column="3"
+                        Content="Raw"
+                        IsChecked="{Binding ShowRawEvents}"/>
+        </Grid>
+      </Border>
+
+      <Grid Grid.Row="1"
+            ColumnDefinitions="*,8,*"
+            RowDefinitions="*,Auto"
+            ColumnSpacing="0"
+            RowSpacing="10">
+
+        <Border Grid.Column="0"
+                CornerRadius="18"
+                Padding="10"
+                Background="#FFFDF8"
+                BorderBrush="#E7DCCB"
+                BorderThickness="1">
+          <Grid RowDefinitions="Auto,*" RowSpacing="8">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+              <TextBlock Text="Conversation"
+                         FontSize="18"
+                         FontWeight="Bold"
+                         Foreground="#3A3732"
+                         VerticalAlignment="Center"/>
+
+              <Button Grid.Column="1"
+                      Classes="roundIconButton"
+                      Click="ConversationUp_Click"
+                      ToolTip.Tip="上一条消息">
+                <Border Width="30"
+                        Height="30"
+                        CornerRadius="15"
+                        Background="#FFFFFF"
+                        BorderBrush="#E7DCCB"
+                        BorderThickness="1">
+                  <Path Width="12"
+                        Height="12"
+                        Stretch="Uniform"
+                        Fill="#6F655C"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Data="{StaticResource IconChevronUp}" />
+                </Border>
+              </Button>
+
+              <Button Grid.Column="2"
+                      Classes="roundIconButton"
+                      Click="ConversationDown_Click"
+                      ToolTip.Tip="下一条消息">
+                <Border Width="30"
+                        Height="30"
+                        CornerRadius="15"
+                        Background="#FFFFFF"
+                        BorderBrush="#E7DCCB"
+                        BorderThickness="1">
+                  <Path Width="12"
+                        Height="12"
+                        Stretch="Uniform"
+                        Fill="#6F655C"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Data="{StaticResource IconChevronDown}" />
+                </Border>
+              </Button>
+            </Grid>
+
+            <ScrollViewer x:Name="ConversationScrollViewer" Grid.Row="1">
+              <ItemsControl x:Name="ConversationItemsControl"
+                            ItemsSource="{Binding ConversationEvents}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="models:DisplayEvent">
+                    <Border CornerRadius="16"
+                            Padding="12"
+                            Margin="0,0,0,10"
+                            Background="{Binding CardBackground}"
+                            BorderBrush="{Binding CardBorder}"
+                            BorderThickness="1">
+                      <StackPanel Spacing="7">
+                        <Grid ColumnDefinitions="Auto,*">
+                          <Border CornerRadius="999"
+                                  Padding="8,3"
+                                  Background="{Binding RoleBadgeBackground}">
+                            <TextBlock Text="{Binding RoleLabel}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding RoleBadgeForeground}"/>
+                          </Border>
+
+                          <TextBlock Grid.Column="1"
+                                     Text="{Binding TimeText}"
+                                     HorizontalAlignment="Right"
+                                     FontSize="12"
+                                     Foreground="#8A8178"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding Title}"
+                                   FontWeight="Bold"
+                                   Foreground="#37332F"/>
+
+                        <TextBlock Text="{Binding Text}"
+                                   TextWrapping="Wrap"
+                                   FontSize="14"
+                                   LineHeight="20"
+                                   Foreground="#34302C"/>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+
+        <GridSplitter Grid.Column="1"
+                      Width="8"
+                      Background="#F0E8DC"
+                      HorizontalAlignment="Stretch"/>
+
+        <Border Grid.Column="2"
+                CornerRadius="18"
+                Padding="10"
+                Background="#FFFDF8"
+                BorderBrush="#E7DCCB"
+                BorderThickness="1">
+          <Grid RowDefinitions="Auto,*" RowSpacing="8">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+              <TextBlock Text="Execution"
+                         FontSize="18"
+                         FontWeight="Bold"
+                         Foreground="#3A3732"
+                         VerticalAlignment="Center"/>
+
+              <Button Grid.Column="1"
+                      Width="34"
+                      Height="34"
+                      Padding="0"
+                      Background="Transparent"
+                      BorderThickness="0"
+                      Click="ExecutionUp_Click"
+                      ToolTip.Tip="上一条消息">
+                <Border Width="30"
+                        Height="30"
+                        CornerRadius="15"
+                        Background="#FFFFFF"
+                        BorderBrush="#E7DCCB"
+                        BorderThickness="1">
+                  <Path Width="12"
+                        Height="12"
+                        Stretch="Uniform"
+                        Fill="#6F655C"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Data="M 12 6 L 20 17 L 4 17 Z"/>
+                </Border>
+              </Button>
+
+              <Button Grid.Column="2"
+                      Width="34"
+                      Height="34"
+                      Padding="0"
+                      Background="Transparent"
+                      BorderThickness="0"
+                      Click="ExecutionDown_Click"
+                      ToolTip.Tip="下一条消息">
+                <Border Width="30"
+                        Height="30"
+                        CornerRadius="15"
+                        Background="#FFFFFF"
+                        BorderBrush="#E7DCCB"
+                        BorderThickness="1">
+                  <Path Width="12"
+                        Height="12"
+                        Stretch="Uniform"
+                        Fill="#6F655C"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Data="M 4 7 L 20 7 L 12 18 Z"/>
+                </Border>
+              </Button>
+            </Grid>
+
+            <ScrollViewer x:Name="ExecutionScrollViewer"
+                          Grid.Row="1"
+                          HorizontalScrollBarVisibility="Auto">
+              <ItemsControl x:Name="ExecutionItemsControl"
+                            ItemsSource="{Binding ExecutionEvents}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="models:DisplayEvent">
+                    <Border CornerRadius="16"
+                            Padding="12"
+                            Margin="0,0,0,10"
+                            Background="{Binding CardBackground}"
+                            BorderBrush="{Binding CardBorder}"
+                            BorderThickness="1">
+                      <StackPanel Spacing="7">
+                        <Grid ColumnDefinitions="Auto,*">
+                          <Border CornerRadius="999"
+                                  Padding="8,3"
+                                  Background="{Binding RoleBadgeBackground}">
+                            <TextBlock Text="{Binding RoleLabel}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding RoleBadgeForeground}"/>
+                          </Border>
+
+                          <TextBlock Grid.Column="1"
+                                     Text="{Binding TimeText}"
+                                     HorizontalAlignment="Right"
+                                     FontSize="12"
+                                     Foreground="#8A8178"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding Title}"
+                                   FontWeight="Bold"
+                                   TextWrapping="Wrap"
+                                   Foreground="#37332F"/>
+
+                        <TextBlock Text="{Binding Text}"
+                                   TextWrapping="Wrap"
+                                   FontFamily="Consolas"
+                                   FontSize="13"
+                                   LineHeight="18"
+                                   Foreground="#34302C"/>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+
+        <Expander Grid.Row="1"
+                  Grid.ColumnSpan="3"
+                  Header="Raw events"
+                  IsExpanded="{Binding ShowRawEvents}">
+          <Border CornerRadius="16"
+                  Padding="10"
+                  Background="#FFFDF8"
+                  BorderBrush="#E7DCCB"
+                  BorderThickness="1"
+                  MaxHeight="220">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding RawEvents}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="models:DisplayEvent">
+                    <TextBlock Text="{Binding RawJson}"
+                               FontFamily="Consolas"
+                               FontSize="12"
+                               TextWrapping="NoWrap"
+                               Margin="0,0,0,6"
+                               Foreground="#4A4640"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Border>
+        </Expander>
+      </Grid>
+    </Grid>
+
+    <Border Grid.Row="2"
+            Grid.ColumnSpan="2"
+            CornerRadius="16"
+            Padding="10"
+            Background="#FFFDF8"
+            BorderBrush="#E7DCCB"
+            BorderThickness="1">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding StatusMessage}"
+                   Foreground="#3A3732"/>
+        <ProgressBar Grid.Column="1"
+                     IsIndeterminate="{Binding IsBusy}"
+                     Width="160"
+                     Height="8"
+                     VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+  </Grid>
+</suki:SukiWindow>

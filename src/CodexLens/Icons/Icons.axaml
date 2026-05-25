@@ -1,0 +1,32 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Chevron Up -->
+    <StreamGeometry x:Key="IconChevronUp">
+        M 12 7 L 20 17 L 4 17 Z
+    </StreamGeometry>
+
+    <!-- Chevron Down -->
+    <StreamGeometry x:Key="IconChevronDown">
+        M 4 7 L 20 7 L 12 17 Z
+    </StreamGeometry>
+
+    <!-- 可选：以后还能继续统一放这里 -->
+    <StreamGeometry x:Key="IconSearch">
+        M 10 4
+        A 6 6 0 1 0 10 16
+        A 6 6 0 1 0 10 4
+        M 14.5 14.5
+        L 20 20
+    </StreamGeometry>
+
+    <StreamGeometry x:Key="IconRefresh">
+        M 17 7
+        A 7 7 0 1 0 18 14
+        M 17 7
+        L 17 3
+        M 17 7
+        L 13 7
+    </StreamGeometry>
+
+</ResourceDictionary>
