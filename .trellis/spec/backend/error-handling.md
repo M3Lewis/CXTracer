@@ -47,7 +47,18 @@ This is acceptable because line count is only a summary hint.
 
 - Long reads accept `CancellationToken`.
 - Selection changes cancel the previous load through `_loadCts`.
+- Tail reads wait on their per-file gate with the provided token, so cancellation can stop before filesystem work begins.
+- Debounced watcher updates cancel superseded delay tasks with per-path `CancellationTokenSource` instances.
 - `OperationCanceledException` may be swallowed at the ViewModel boundary because it represents a superseded UI operation.
+
+## Concurrent File Changes
+
+File growth, duplicate watcher events, truncation, and rotation are expected.
+
+- Use the actual bytes read, not later file metadata, when advancing the tail offset.
+- Preserve pending partial lines between append reads.
+- Treat truncation or rotation as a fresh read from offset `0`.
+- Serialize reads per file path instead of relying on watcher event ordering.
 
 ## Avoid
 

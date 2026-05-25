@@ -51,6 +51,37 @@ Current examples:
 
 This state is process-local and should not be serialized.
 
+### Tail Read Contract
+
+`SessionReader.ReadAllAsync(filePath, cancellationToken)` and
+`SessionReader.ReadAppendedAsync(filePath, cancellationToken)` must serialize
+work per file path with a per-path `SemaphoreSlim`. This prevents a full reload
+and an append read from racing against the same `_tailStates[filePath]` entry.
+
+When `ReadAllAsync` finishes, record `stream.Position` as the next tail offset.
+Do not use `new FileInfo(filePath).Length` for this state update: an active
+session file may grow after the stream has reached its current end, and using
+the later file length would skip bytes that were appended but never parsed.
+
+`ReadAppendedAsync` must snapshot `FileInfo.Length` before allocating the read
+buffer, read only up to the bytes actually returned by the stream, then set the
+next offset to `state.Offset + totalRead`.
+
+Validation and error behavior:
+
+- missing file -> return an empty event list
+- file length below stored offset -> treat as truncation/rotation and restart from offset `0`
+- no new bytes -> return an empty event list
+- partial final line -> keep it in `TailState.Pending` until a later newline
+- appended byte count larger than `int.MaxValue` -> restart from offset `0` rather than allocating an oversized buffer
+- cancellation -> throw `OperationCanceledException` to the caller
+
+Good/base/bad cases:
+
+- Good: full read records the actual stream offset, then appended reads continue from that exact byte.
+- Base: repeated watcher notifications for the same unchanged file return no events.
+- Bad: recording `FileInfo.Length` after a full read can skip bytes appended during the read window.
+
 ## Avoid
 
 - Writing markers, locks, indexes, or metadata beside Codex session files.

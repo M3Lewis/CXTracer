@@ -11,6 +11,13 @@ Services may use filesystem APIs, JSON APIs, and plain model types.
 - `SessionWatcher` wraps `FileSystemWatcher` and raises normalized session change events.
 - `CodexEventParser` parses one JSONL line and classifies it into conversation, execution, or raw panes.
 
+`SessionReader` also owns transcript tail coordination:
+
+- `_tailStates` stores offset, pending partial line, and line number per path.
+- `_tailLocks` stores one `SemaphoreSlim` per path so reads for the same file are serialized.
+- `_sync` protects both dictionaries and any direct tail-state mutation.
+- `Forget(filePath)` clears tail state when a caller intentionally wants the next read to start fresh.
+
 Services should not know about:
 
 - Avalonia controls or visual tree objects

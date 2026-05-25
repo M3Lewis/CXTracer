@@ -29,12 +29,14 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 - Raw events remain hidden unless `ShowRawEvents` or the Raw filter is active.
 - Conversation pane contains only user, assistant, and final events.
 - Execution pane contains command, output, diff, tool, and error events.
+- Rapid duplicate watcher events for the same path are debounced before UI collections are updated.
+- Debounced live updates still respect `PinSelectedSession`: they update the selected file, but do not auto-switch when pinning is enabled.
 
 ## Verification
 
 - Run `dotnet build .\CodexLens.sln` after UI changes.
 - For layout changes, run the app and load `samples/sample-rollout.jsonl` or a copied real transcript.
-- For live-update changes, verify a file append updates the selected session without switching when `PinSelectedSession` is true.
+- For live-update changes, verify rapid repeated file appends do not duplicate events, and a file append updates the selected session without switching when `PinSelectedSession` is true.
 
 ## Avoid
 

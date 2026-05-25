@@ -21,15 +21,19 @@ Use this checklist when changing services, parser behavior, or transcript IO.
 - Full transcript loads remain async and cancellable.
 - File watcher callbacks marshal to `Dispatcher.UIThread` before mutating observable collections.
 - Long scans stay off the UI thread with `Task.Run` or a better async design.
+- `SessionReader` serializes `ReadAllAsync` and `ReadAppendedAsync` per file path so `_tailStates` cannot race.
+- Tail offsets advance from `stream.Position` / actual bytes read, not from a later `FileInfo.Length` observation.
 
 ## Resource Management
 
 - Streams and readers are disposed with `using` / `await using`.
 - `SessionWatcher.Stop()` detaches event handlers before disposing.
 - `MainWindowViewModel.Dispose()` cancels load state and disposes the watcher.
+- `MainWindowViewModel.Dispose()` also cancels, disposes, and clears any watcher debounce token sources.
+- If per-path semaphores are added or replaced, document their lifetime; they are currently app-session scoped with the reader.
 
 ## Verification
 
 - Run `dotnet build .\CodexLens.sln` after service or ViewModel changes.
 - For parser changes, exercise `samples/sample-rollout.jsonl` or a real copied transcript.
-- For watcher/tail changes, verify active append behavior with a file that is still writable.
+- For watcher/tail changes, verify duplicate rapid change events, active appends, partial final lines, and truncation/rotation behavior.

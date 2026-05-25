@@ -15,6 +15,7 @@ namespace CodexLens.ViewModels;
 
 public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 {
+    private readonly Dictionary<string, CancellationTokenSource> _changeDebouncers = new(StringComparer.OrdinalIgnoreCase);
     private readonly SessionScanner _scanner;
     private readonly SessionReader _reader;
     private readonly SessionWatcher _watcher;
@@ -188,7 +189,33 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void OnSessionFileChanged(object? sender, SessionFileChangedEventArgs e)
     {
-        _ = Dispatcher.UIThread.InvokeAsync(async () => await HandleSessionFileChangedOnUiThreadAsync(e.Path));
+        CancellationTokenSource cts;
+
+        lock (_changeDebouncers)
+        {
+            if (_changeDebouncers.TryGetValue(e.Path, out var old))
+            {
+                old.Cancel();
+                old.Dispose();
+            }
+
+            cts = new CancellationTokenSource();
+            _changeDebouncers[e.Path] = cts;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(150, cts.Token).ConfigureAwait(false);
+
+                await Dispatcher.UIThread.InvokeAsync(
+                    async () => await HandleSessionFileChangedOnUiThreadAsync(e.Path));
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        });
     }
 
     private async Task HandleSessionFileChangedOnUiThreadAsync(string path)
@@ -334,5 +361,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _loadCts?.Dispose();
         _watcher.SessionFileChanged -= OnSessionFileChanged;
         _watcher.Dispose();
+        
+        lock (_changeDebouncers)
+        {
+            foreach (var cts in _changeDebouncers.Values)
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+
+            _changeDebouncers.Clear();
+        }
     }
 }
