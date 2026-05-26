@@ -71,3 +71,36 @@ Implemented lightweight session discovery, lazy summary enrichment, newest-only 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Transcript pane navigation settings
+
+**Date**: 2026-05-26
+**Task**: Transcript pane navigation settings
+**Branch**: `master`
+
+### Summary
+
+Implemented transcript pane keyboard navigation, synchronized chronological navigation, execution wrapping, persisted navigation preferences, and a dedicated Settings window for sync navigation and shortcut capture.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5e603cc` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

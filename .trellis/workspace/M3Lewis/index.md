@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 2
-- **Last Active**: 2026-05-25
+- **Total Sessions**: 3
+- **Last Active**: 2026-05-26
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~73 | Active |
+| `journal-1.md` | ~106 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 3 | 2026-05-26 | Transcript pane navigation settings | `5e603cc` | `master` |
 | 2 | 2026-05-25 | Make session loading progressive | `f49f5c7` | `master` |
 | 1 | 2026-05-25 | Fix scroll arrow navigation | `bcadd75` | `master` |
 <!-- @@@/auto:session-history -->
