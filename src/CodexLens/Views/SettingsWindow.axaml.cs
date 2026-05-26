@@ -32,6 +32,12 @@ public partial class SettingsWindow : SukiWindow
         }
 
         var letter = KeyToLetter(e.Key);
+        if (IsModifierOnlyKey(e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (letter.Length == 1)
         {
             viewModel.CaptureSyncShortcut(
@@ -59,5 +65,15 @@ public partial class SettingsWindow : SukiWindow
         return text.Length == 1 && char.IsLetter(text[0])
             ? text.ToUpperInvariant()
             : string.Empty;
+    }
+
+    private static bool IsModifierOnlyKey(Key key)
+    {
+        return key is Key.LeftCtrl
+            or Key.RightCtrl
+            or Key.LeftShift
+            or Key.RightShift
+            or Key.LeftAlt
+            or Key.RightAlt;
     }
 }

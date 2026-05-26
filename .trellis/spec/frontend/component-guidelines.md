@@ -47,6 +47,8 @@ Click handlers are acceptable only for behavior that needs rendered controls, su
 
 Settings-window key capture is also view-only: the window receives the next physical key event and forwards normalized modifier/letter data to its ViewModel. The ViewModel owns validation and persistence.
 
+When capturing shortcuts, modifier-only keydown events (`LeftCtrl`, `RightCtrl`, `LeftShift`, `RightShift`, `LeftAlt`, `RightAlt`) must keep capture mode active. A shortcut capture should complete only after receiving a valid final key such as `Ctrl`/`Shift`/`Alt` plus a letter.
+
 Command handlers should remain in the ViewModel for application behavior.
 
 ## Visual Style

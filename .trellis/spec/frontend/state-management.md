@@ -23,6 +23,8 @@ private async Task RefreshAsync()
 }
 ```
 
+For settings-window proxy ViewModels, bind Avalonia nullable control properties with matching nullable CLR properties. Example: `CheckBox.IsChecked` is nullable, so a proxy property should use `bool?` and translate valid `bool` values into the underlying main ViewModel state. This prevents toggle controls from flashing back when compiled bindings push nullable values.
+
 ## State Ownership
 
 `MainWindowViewModel` owns UI state:

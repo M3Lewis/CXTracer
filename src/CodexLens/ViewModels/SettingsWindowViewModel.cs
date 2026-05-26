@@ -9,17 +9,17 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
 {
     private readonly MainWindowViewModel _main;
 
-    public bool IsSynchronizedNavigationEnabled
+    public bool? IsSynchronizedNavigationEnabled
     {
         get => _main.IsSynchronizedNavigationEnabled;
         set
         {
-            if (_main.IsSynchronizedNavigationEnabled == value)
+            if (value is not bool enabled || _main.IsSynchronizedNavigationEnabled == enabled)
             {
                 return;
             }
 
-            _main.IsSynchronizedNavigationEnabled = value;
+            _main.IsSynchronizedNavigationEnabled = enabled;
             OnPropertyChanged();
         }
     }
