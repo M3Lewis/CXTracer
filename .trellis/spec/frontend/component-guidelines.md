@@ -15,6 +15,8 @@ The current UI is a dense desktop inspection tool, not a landing page or wizard.
 - `GridSplitter` between conversation and execution panes
 - `Expander` for raw events
 
+`SettingsWindow.axaml` owns persistent app preferences that would clutter the main transcript toolbar. Main toolbar controls may open settings, but should not inline multi-step preference editors such as shortcut capture.
+
 ## Binding Pattern
 
 Bind controls directly to `MainWindowViewModel` properties and generated commands:
@@ -41,6 +43,9 @@ Click handlers are acceptable only for behavior that needs rendered controls, su
 - `ConversationDown_Click`
 - `ExecutionUp_Click`
 - `ExecutionDown_Click`
+- `Settings_Click` to create/show the settings window owned by the main window
+
+Settings-window key capture is also view-only: the window receives the next physical key event and forwards normalized modifier/letter data to its ViewModel. The ViewModel owns validation and persistence.
 
 Command handlers should remain in the ViewModel for application behavior.
 

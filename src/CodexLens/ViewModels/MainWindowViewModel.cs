@@ -22,9 +22,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly SessionScanner _scanner;
     private readonly SessionReader _reader;
     private readonly SessionWatcher _watcher;
+    private readonly AppSettingsService _settingsService;
     private readonly List<DisplayEvent> _allEvents = [];
     private CancellationTokenSource? _loadCts;
     private bool _selectionChanging;
+    private bool _isLoadingSettings;
+    private ShortcutGesture? _syncNavigationShortcut;
 
     public ObservableCollection<SessionInfo> Sessions { get; } = [];
     public ObservableCollection<DisplayEvent> ConversationEvents { get; } = [];
@@ -57,6 +60,20 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private bool _pinSelectedSession = true;
 
     [ObservableProperty]
+    private EventPane _activeTranscriptPane = EventPane.Conversation;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmSyncShortcutCommand))]
+    private bool _isCapturingSyncShortcut;
+
+    [ObservableProperty]
+    private bool _isSynchronizedNavigationEnabled;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmSyncShortcutCommand))]
+    private string _pendingSyncShortcutText = string.Empty;
+
+    [ObservableProperty]
     private int _totalEventCount;
 
     [ObservableProperty]
@@ -65,13 +82,23 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public string SessionCountText => $"{Sessions.Count} sessions";
     public string EventCountText => $"{VisibleEventCount}/{TotalEventCount} events";
     public string SelectedSessionPath => SelectedSession?.FilePath ?? "No session selected";
+    public bool IsConversationPaneActive => ActiveTranscriptPane == EventPane.Conversation;
+    public bool IsExecutionPaneActive => ActiveTranscriptPane == EventPane.Execution;
+    public string SyncNavigationShortcutText => _syncNavigationShortcut?.DisplayText ?? "Unset";
+    public string SyncShortcutEditorText => IsCapturingSyncShortcut
+        ? "Press shortcut..."
+        : string.IsNullOrWhiteSpace(PendingSyncShortcutText)
+            ? SyncNavigationShortcutText
+            : PendingSyncShortcutText;
 
-    public MainWindowViewModel(SessionScanner scanner, SessionReader reader, SessionWatcher watcher)
+    public MainWindowViewModel(SessionScanner scanner, SessionReader reader, SessionWatcher watcher, AppSettingsService settingsService)
     {
         _scanner = scanner;
         _reader = reader;
         _watcher = watcher;
+        _settingsService = settingsService;
         _watcher.SessionFileChanged += OnSessionFileChanged;
+        LoadSettings();
         _ = RefreshAsync();
     }
 
@@ -97,6 +124,21 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     partial void OnSearchTextChanged(string value) => ApplyFilter();
     partial void OnSelectedFilterChanged(string value) => ApplyFilter();
     partial void OnShowRawEventsChanged(bool value) => ApplyFilter();
+    partial void OnActiveTranscriptPaneChanged(EventPane value)
+    {
+        OnPropertyChanged(nameof(IsConversationPaneActive));
+        OnPropertyChanged(nameof(IsExecutionPaneActive));
+    }
+
+    partial void OnIsCapturingSyncShortcutChanged(bool value) => OnPropertyChanged(nameof(SyncShortcutEditorText));
+    partial void OnPendingSyncShortcutTextChanged(string value) => OnPropertyChanged(nameof(SyncShortcutEditorText));
+    partial void OnIsSynchronizedNavigationEnabledChanged(bool value)
+    {
+        if (!_isLoadingSettings)
+        {
+            SaveSettings();
+        }
+    }
 
     [RelayCommand]
     private async Task RefreshAsync()
@@ -164,6 +206,115 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private void ToggleRaw()
     {
         ShowRawEvents = !ShowRawEvents;
+    }
+
+    [RelayCommand]
+    private void ConfirmSyncShortcut()
+    {
+        ConfirmPendingSyncShortcut();
+    }
+
+    public void ConfirmPendingSyncShortcut()
+    {
+        var gesture = ParseShortcutText(PendingSyncShortcutText);
+        if (gesture is null)
+        {
+            StatusMessage = "Choose a Ctrl/Shift/Alt + letter shortcut first.";
+            return;
+        }
+
+        _syncNavigationShortcut = gesture;
+        PendingSyncShortcutText = string.Empty;
+        IsCapturingSyncShortcut = false;
+        OnPropertyChanged(nameof(SyncNavigationShortcutText));
+        OnPropertyChanged(nameof(SyncShortcutEditorText));
+        SaveSettings();
+        StatusMessage = $"Sync navigation shortcut set to {gesture.DisplayText}.";
+    }
+
+    private bool CanConfirmSyncShortcut()
+    {
+        return CanConfirmPendingSyncShortcut();
+    }
+
+    public bool CanConfirmPendingSyncShortcut()
+    {
+        return ParseShortcutText(PendingSyncShortcutText) is not null;
+    }
+
+    public void StartSyncShortcutCapture()
+    {
+        PendingSyncShortcutText = string.Empty;
+        IsCapturingSyncShortcut = true;
+        StatusMessage = "Press Ctrl/Shift/Alt + a letter for sync navigation.";
+    }
+
+    public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string letter)
+    {
+        var gesture = ShortcutGesture.Create(ctrl, shift, alt, letter);
+        if (!gesture.IsValid)
+        {
+            RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + a letter.");
+            return;
+        }
+
+        PendingSyncShortcutText = gesture.DisplayText;
+        IsCapturingSyncShortcut = false;
+        StatusMessage = $"Captured {gesture.DisplayText}. Click OK to save.";
+    }
+
+    public void RejectSyncShortcutCapture(string message)
+    {
+        IsCapturingSyncShortcut = false;
+        StatusMessage = message;
+    }
+
+    public bool MatchesSyncNavigationShortcut(bool ctrl, bool shift, bool alt, string letter)
+    {
+        return _syncNavigationShortcut?.Matches(ctrl, shift, alt, letter) == true;
+    }
+
+    public void ToggleSynchronizedNavigation()
+    {
+        IsSynchronizedNavigationEnabled = !IsSynchronizedNavigationEnabled;
+        StatusMessage = IsSynchronizedNavigationEnabled
+            ? "Synchronized navigation enabled."
+            : "Synchronized navigation disabled.";
+    }
+
+    public void SetActiveTranscriptPane(EventPane pane)
+    {
+        if (pane is EventPane.Conversation or EventPane.Execution)
+        {
+            ActiveTranscriptPane = pane;
+        }
+    }
+
+    public TranscriptNavigationTarget? GetSynchronizedNavigationTarget(
+        EventPane requestedPane,
+        int direction,
+        DisplayEvent? anchor)
+    {
+        SetActiveTranscriptPane(requestedPane);
+
+        var events = ConversationEvents
+            .Concat(ExecutionEvents)
+            .OrderBy(EventSortTimestamp)
+            .ThenBy(x => x.LineNumber)
+            .ToList();
+
+        if (events.Count == 0)
+        {
+            return null;
+        }
+
+        var anchorIndex = GetAnchorIndex(events, anchor, direction);
+        var targetIndex = Math.Clamp(anchorIndex + Math.Sign(direction), 0, events.Count - 1);
+        var target = events[targetIndex];
+        ActiveTranscriptPane = target.Pane;
+
+        var companion = GetCompanionEvent(target);
+        return new TranscriptNavigationTarget(target, companion);
     }
 
     private async Task LoadSelectedSessionAsync(SessionInfo session)
@@ -449,6 +600,141 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             "Raw" => evt.Pane == EventPane.Raw,
             _ => evt.Pane != EventPane.Raw || ShowRawEvents
         };
+    }
+
+    private void LoadSettings()
+    {
+        try
+        {
+            var settings = _settingsService.Load();
+            _isLoadingSettings = true;
+            IsSynchronizedNavigationEnabled = settings.IsSynchronizedNavigationEnabled;
+            _syncNavigationShortcut = settings.SyncNavigationShortcut?.IsValid == true
+                ? settings.SyncNavigationShortcut
+                : null;
+            _isLoadingSettings = false;
+
+            OnPropertyChanged(nameof(SyncNavigationShortcutText));
+            OnPropertyChanged(nameof(SyncShortcutEditorText));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            _isLoadingSettings = false;
+            StatusMessage = $"Settings load failed: {ex.Message}";
+        }
+    }
+
+    private void SaveSettings()
+    {
+        try
+        {
+            _settingsService.Save(new AppSettings
+            {
+                IsSynchronizedNavigationEnabled = IsSynchronizedNavigationEnabled,
+                SyncNavigationShortcut = _syncNavigationShortcut
+            });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            StatusMessage = $"Settings save failed: {ex.Message}";
+        }
+    }
+
+    private static ShortcutGesture? ParseShortcutText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var parts = value.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        var ctrl = parts.Any(x => string.Equals(x, "Ctrl", StringComparison.OrdinalIgnoreCase));
+        var shift = parts.Any(x => string.Equals(x, "Shift", StringComparison.OrdinalIgnoreCase));
+        var alt = parts.Any(x => string.Equals(x, "Alt", StringComparison.OrdinalIgnoreCase));
+        var letter = parts.LastOrDefault(x => x.Length == 1 && char.IsLetter(x[0])) ?? string.Empty;
+        var gesture = ShortcutGesture.Create(ctrl, shift, alt, letter);
+        return gesture.IsValid ? gesture : null;
+    }
+
+    private static int GetAnchorIndex(IReadOnlyList<DisplayEvent> events, DisplayEvent? anchor, int direction)
+    {
+        if (anchor is not null)
+        {
+            var exactIndex = events
+                .Select((evt, index) => new { evt, index })
+                .FirstOrDefault(x => string.Equals(x.evt.Id, anchor.Id, StringComparison.Ordinal));
+
+            if (exactIndex is not null)
+            {
+                return exactIndex.index;
+            }
+
+            var anchorKey = EventSortTimestamp(anchor);
+            var nearbyIndex = direction > 0
+                ? FindLastIndex(events, x => EventSortTimestamp(x) <= anchorKey)
+                : FindFirstIndex(events, x => EventSortTimestamp(x) >= anchorKey);
+
+            if (nearbyIndex >= 0)
+            {
+                return nearbyIndex;
+            }
+        }
+
+        return direction > 0 ? -1 : events.Count;
+    }
+
+    private DisplayEvent? GetCompanionEvent(DisplayEvent target)
+    {
+        var companionPane = target.Pane == EventPane.Conversation
+            ? EventPane.Execution
+            : EventPane.Conversation;
+
+        var companionEvents = companionPane == EventPane.Conversation
+            ? ConversationEvents
+            : ExecutionEvents;
+
+        var targetKey = EventSortTimestamp(target);
+        return companionEvents
+            .Where(x => EventSortTimestamp(x) <= targetKey)
+            .OrderByDescending(EventSortTimestamp)
+            .ThenByDescending(x => x.LineNumber)
+            .FirstOrDefault();
+    }
+
+    private static DateTimeOffset EventSortTimestamp(DisplayEvent evt)
+    {
+        return evt.Timestamp ?? DateTimeOffset.MinValue.AddTicks(Math.Max(0, evt.LineNumber));
+    }
+
+    private static int FindFirstIndex(IReadOnlyList<DisplayEvent> events, Func<DisplayEvent, bool> predicate)
+    {
+        for (var i = 0; i < events.Count; i++)
+        {
+            if (predicate(events[i]))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static int FindLastIndex(IReadOnlyList<DisplayEvent> events, Func<DisplayEvent, bool> predicate)
+    {
+        for (var i = events.Count - 1; i >= 0; i--)
+        {
+            if (predicate(events[i]))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static string NormalizeRoot(string value)

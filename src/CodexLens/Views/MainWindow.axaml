@@ -16,6 +16,7 @@
                  MinHeight="640"
                  Title="Codex Lens"
                  Background="#FBF7EF"
+                 KeyDown="Window_KeyDown"
                  BackgroundStyle="Flat">
   <suki:SukiWindow.Styles>
     <Style Selector="Button.roundIconButton">
@@ -24,6 +25,10 @@
       <Setter Property="Padding" Value="0" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border.transcriptPane.active">
+      <Setter Property="BorderBrush" Value="#E97924" />
+      <Setter Property="BorderThickness" Value="3" />
     </Style>
   </suki:SukiWindow.Styles>
   
@@ -152,7 +157,7 @@
               Background="#FFFDF8"
               BorderBrush="#E7DCCB"
               BorderThickness="1">
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="10">
           <StackPanel>
             <TextBlock Text="{Binding SelectedSessionPath}"
                        FontFamily="Consolas"
@@ -163,16 +168,20 @@
                        FontSize="12"/>
           </StackPanel>
 
-          <ComboBox Grid.Column="1"
+          <Button Grid.Column="2"
+                  Content="Settings"
+                  Click="Settings_Click"/>
+
+          <ComboBox Grid.Column="3"
                     ItemsSource="{Binding FilterOptions}"
                     SelectedItem="{Binding SelectedFilter}"
                     MinWidth="150"/>
 
-          <Button Grid.Column="2"
+          <Button Grid.Column="4"
                   Content="Clear search"
                   Command="{Binding ClearSearchCommand}"/>
 
-          <ToggleButton Grid.Column="3"
+          <ToggleButton Grid.Column="1"
                         Content="Raw"
                         IsChecked="{Binding ShowRawEvents}"/>
         </Grid>
@@ -185,6 +194,8 @@
             RowSpacing="10">
 
         <Border Grid.Column="0"
+                Classes="transcriptPane"
+                Classes.active="{Binding IsConversationPaneActive}"
                 CornerRadius="18"
                 Padding="10"
                 Background="#FFFDF8"
@@ -292,6 +303,8 @@
                       HorizontalAlignment="Stretch"/>
 
         <Border Grid.Column="2"
+                Classes="transcriptPane"
+                Classes.active="{Binding IsExecutionPaneActive}"
                 CornerRadius="18"
                 Padding="10"
                 Background="#FFFDF8"
@@ -356,7 +369,7 @@
 
             <ScrollViewer x:Name="ExecutionScrollViewer"
                           Grid.Row="1"
-                          HorizontalScrollBarVisibility="Auto">
+                          HorizontalScrollBarVisibility="Disabled">
               <ItemsControl x:Name="ExecutionItemsControl"
                             ItemsSource="{Binding ExecutionEvents}">
                 <ItemsControl.ItemTemplate>

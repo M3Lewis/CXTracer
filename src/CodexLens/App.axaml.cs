@@ -22,9 +22,10 @@ public partial class App : Application
             var scanner = new SessionScanner(parser);
             var reader = new SessionReader(parser);
             var watcher = new SessionWatcher();
+            var settings = new AppSettingsService();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(scanner, reader, watcher)
+                DataContext = new MainWindowViewModel(scanner, reader, watcher, settings)
             };
         }
 

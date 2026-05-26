@@ -10,6 +10,7 @@ Services may use filesystem APIs, JSON APIs, and plain model types.
 - `SessionReader` reads complete files and appended chunks into `DisplayEvent` lists.
 - `SessionWatcher` wraps `FileSystemWatcher` and raises normalized session change events.
 - `CodexEventParser` parses one JSONL line and classifies it into conversation, execution, or raw panes.
+- `AppSettingsService` reads and writes Codex Lens app preferences, not Codex session transcript files.
 
 `SessionReader` also owns transcript tail coordination:
 
@@ -24,6 +25,17 @@ Services should not know about:
 - `MainWindow`
 - SukiUI controls
 - UI selection, filters, or scroll position
+
+`AppSettingsService` contract:
+
+- Location: a Codex Lens-specific directory under `Environment.SpecialFolder.LocalApplicationData`.
+- Format: JSON.
+- Current fields: `IsSynchronizedNavigationEnabled` and `SyncNavigationShortcut`.
+- Missing file: return default settings.
+- Invalid or inaccessible file: let the caller catch and report a user-visible status.
+- Writes: create the settings directory if needed, write a temporary JSON file, then replace the settings file.
+
+This service is allowed to write app preferences. It must never write to the Codex CLI session tree.
 
 ## Models
 
@@ -44,6 +56,9 @@ Models hold display data and simple derived properties.
 - refresh/load/clear/default-root commands
 - filter application and live update coordination
 - marshaling watcher events back to `Dispatcher.UIThread`
+- persisted navigation preference state and the timing of settings saves
+
+`SettingsWindowViewModel` may proxy settings owned by `MainWindowViewModel`, but should not duplicate persistence state. This keeps global keyboard behavior and the settings window reading the same source of truth.
 
 ## View
 
