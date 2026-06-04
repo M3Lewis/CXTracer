@@ -8,7 +8,7 @@
 2. **Specs injected, not remembered** — guidelines are injected via hook/skill, not recalled from memory
 3. **Persist everything** — research, decisions, and lessons all go to files; conversations get compacted, files don't
 4. **Incremental development** — one task at a time
-5. **Capture learnings** — after each task, review and write new knowledge back to spec
+5. **Curate learnings** — after each task, decide what knowledge deserves spec storage before writing it back
 
 ---
 
@@ -36,6 +36,8 @@ python ./.trellis/scripts/get_context.py --mode packages   # list packages / lay
 ```
 
 **When to update spec**: new pattern/convention found · bug-fix prevention to codify · new technical decision.
+
+Use `trellis-update-spec` for normal task-end spec updates. It includes the curator judgment: keep only durable, verifiable, non-code-redundant knowledge before writing. Use `trellis-spec-curator` separately for broad review, pruning, atomization, or stale-spec cleanup across `.trellis/spec/`.
 
 ### Task System
 
@@ -223,8 +225,7 @@ Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `trellis-bef
 Sub-agent dispatch protocol applies to all platforms and all sub-agents, including class-2 Codex/Copilot/Gemini/Qoder and `trellis-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions.
 
 [workflow-state:in_progress]
-Tools: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill; there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
-Flow: `trellis-implement` -> `trellis-check` -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
+Flow: `trellis-implement` -> `trellis-check` -> `trellis-update-spec` with curator gate -> commit (Phase 3.4) -> `/trellis:finish-work`.
 Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `trellis-implement`, do NOT spawn another `trellis-implement` or `trellis-check`; if already running as `trellis-check`, do NOT spawn another `trellis-check` or `trellis-implement`. Dispatch is main session only.
 Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
 [/workflow-state:in_progress]
@@ -235,7 +236,7 @@ Dispatch prompt starts with `Active task: <task path from task.py current>`. Rea
      instead of dispatching sub-agents. -->
 
 [workflow-state:in_progress-inline]
-Flow: `trellis-before-dev` -> edit -> `trellis-check` -> validation -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
+Flow: `trellis-before-dev` -> edit -> `trellis-check` -> validation -> `trellis-update-spec` with curator gate -> commit (Phase 3.4) -> `/trellis:finish-work`.
 Do not dispatch implement/check sub-agents in inline mode.
 Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
 [/workflow-state:in_progress-inline]
@@ -275,7 +276,7 @@ When a user request matches one of these intents inside an active task, route fi
 
 - Planning or unclear requirements -> `trellis-brainstorm`.
 - `in_progress` implementation/check -> dispatch `trellis-implement` / `trellis-check`.
-- Repeated debugging -> `trellis-break-loop`; spec updates -> `trellis-update-spec`.
+- Repeated debugging -> `trellis-break-loop`; normal spec updates -> `trellis-update-spec`; broad spec cleanup -> `trellis-spec-curator`.
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
@@ -283,7 +284,7 @@ When a user request matches one of these intents inside an active task, route fi
 
 - Planning or unclear requirements -> `trellis-brainstorm`.
 - Before editing -> `trellis-before-dev`; after editing -> `trellis-check`.
-- Repeated debugging -> `trellis-break-loop`; spec updates -> `trellis-update-spec`.
+- Repeated debugging -> `trellis-break-loop`; normal spec updates -> `trellis-update-spec`; broad spec cleanup -> `trellis-spec-curator`.
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
@@ -587,7 +588,9 @@ Load the `trellis-update-spec` skill and review whether this task produced new k
 - Pitfalls you hit
 - New technical decisions
 
-Update the docs under `.trellis/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment.
+Use its curator gate to reject code-redundant, stale, duplicate, vague, or unverified material before it enters `.trellis/spec/`.
+
+If the gate accepts active spec changes, update the docs under `.trellis/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment. Use `trellis-spec-curator` separately when the task is specifically to audit, prune, atomize, merge, archive, or clean up existing specs.
 
 #### 3.4 Commit changes `[required · once]`
 
