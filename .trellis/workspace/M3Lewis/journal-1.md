@@ -137,3 +137,39 @@ Fixed settings-window synchronized navigation toggle binding and shortcut captur
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Finish navigation settings interactions
+
+**Date**: 2026-06-04
+**Task**: Finish navigation settings interactions
+**Branch**: `master`
+
+### Summary
+
+Fixed navigation/settings interaction regressions, aligned update-spec with curator gate, atomized frontend specs, and archived the completed Trellis task.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e0a9b57` | (see git log) |
+| `96c34e9` | (see git log) |
+| `a2df1a8` | (see git log) |
+| `f41e33b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
