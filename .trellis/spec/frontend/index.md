@@ -67,6 +67,7 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 
 - [Navigation Shared State](./atoms/navigation-shared-state.md) - shared ViewModel-owned state for mouse and keyboard transcript navigation.
 - [Active Border Style Precedence](./atoms/active-border-style-precedence.md) - class-style active indicators must not be hidden by local border values.
+- [Session List Item Template Styling](./atoms/session-list-item-template-styling.md) - selected session row background/border fixes must target the generated item container and visible card layer without breaking the default selected indicator.
 
 ### Toolbar Controls
 
