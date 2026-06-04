@@ -46,9 +46,9 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 - For layout changes, run the app and load `samples/sample-rollout.jsonl` or a copied real transcript.
 - For startup/load changes, verify the window remains responsive while sessions and selected transcript events are still filling in.
 - For scroll-button changes, verify repeated up/down clicks in both Conversation and Execution panes, including rapid repeated clicks before a render frame.
-- For synchronized-navigation changes, verify mouse buttons and keyboard arrows advance from the same current message and preserve visible pane/message highlighting.
-- For settings-window changes, verify the Settings button opens one reusable window, sync navigation can be toggled there, shortcut capture shows the pending shortcut, OK persists it, and restarting restores it.
-- For shortcut capture changes, verify pressing only `Ctrl`, `Shift`, or `Alt` does not exit capture mode before testing both a full modifier-plus-letter shortcut and a full modifier-plus-punctuation shortcut such as `Ctrl+Shift+'`.
+- For synchronized-navigation changes, run the checks in [Navigation Shared State](./navigation-shared-state.md).
+- For settings-window checkbox changes, run the checks in [Settings Checkbox Three-State](./settings-checkbox-three-state.md) and [Proxy ViewModel Reentrancy](./proxy-viewmodel-reentrancy.md).
+- For shortcut capture changes, run the checks in [Shortcut Capture Contract](./shortcut-capture-contract.md).
 - For live-update changes, verify rapid repeated file appends do not duplicate events, and a file append updates the selected session without switching when `PinSelectedSession` is true.
 
 ## Avoid

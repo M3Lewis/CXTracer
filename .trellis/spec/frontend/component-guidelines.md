@@ -45,22 +45,13 @@ Click handlers are acceptable only for behavior that needs rendered controls, su
 - `ExecutionDown_Click`
 - `Settings_Click` to create/show the settings window owned by the main window
 
-Settings-window key capture is also view-only: the window receives the next physical key event and forwards normalized modifier/key data to its ViewModel. The ViewModel owns validation and persistence.
+Settings-window key capture is view-only: the window receives physical key events and forwards normalized modifier/key data to its ViewModel. See [Shortcut Capture Contract](./shortcut-capture-contract.md).
 
-When binding `CheckBox.IsChecked` (which is `bool?` in Avalonia) to a ViewModel property, always set `IsThreeState="False"` explicitly. SukiUI themes may override the default and turning on three-state causes clicks to cycle through `null`, which the ViewModel setter must handle or the checkbox will appear stuck.
+For settings checkboxes, active navigation state, and active border styling, follow the atom specs:
 
-```xml
-<CheckBox IsThreeState="False"
-          IsChecked="{Binding MyProperty, Mode=TwoWay}" />
-```
-
-When capturing shortcuts, modifier-only keydown events (`LeftCtrl`, `RightCtrl`, `LeftShift`, `RightShift`, `LeftAlt`, `RightAlt`) must keep capture mode active. A shortcut capture should complete only after receiving a valid final key such as a letter, digit, punctuation key, function key, or navigation key with at least one of `Ctrl`, `Shift`, or `Alt`. Do not hard-code shortcut validation to letters only; punctuation such as `Ctrl+Shift+'` is a valid user shortcut.
-
-If multiple windows can capture or match the same shortcut, put physical-key normalization in one shared view-only helper so Settings and MainWindow cannot drift.
-
-Pane-navigation buttons and keyboard navigation must share navigation state. The active transcript pane and current message are ViewModel state; code-behind may compute visual anchors and scroll offsets, but it must write the navigated `DisplayEvent` back to the ViewModel so mouse clicks and arrow keys continue from the same place.
-
-Do not set local `BorderBrush` or `BorderThickness` values on controls whose active state is controlled by class styles. Local values override style setters and make active pane borders appear broken even when `Classes.active` is changing.
+- [Settings Checkbox Three-State](./settings-checkbox-three-state.md)
+- [Navigation Shared State](./navigation-shared-state.md)
+- [Active Border Style Precedence](./active-border-style-precedence.md)
 
 Command handlers should remain in the ViewModel for application behavior.
 

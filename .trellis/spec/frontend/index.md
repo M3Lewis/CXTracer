@@ -40,6 +40,30 @@ Compiled bindings, `x:DataType`, source-generated properties/commands, and nulla
 
 Build and review checklist for UI changes.
 
+## Active Spec Atoms
+
+These files hold durable, scoped, evidence-backed rules that are not just source summaries.
+
+### [Settings Checkbox Three-State](./settings-checkbox-three-state.md)
+
+Two-state checkbox requirements for persistent settings controls.
+
+### [Proxy ViewModel Reentrancy](./proxy-viewmodel-reentrancy.md)
+
+Avoiding synchronous binding-write reentrancy when a Settings ViewModel proxies MainWindow state.
+
+### [Shortcut Capture Contract](./shortcut-capture-contract.md)
+
+Modifier-only keydown, punctuation shortcuts, and shared physical-key normalization.
+
+### [Navigation Shared State](./navigation-shared-state.md)
+
+Shared ViewModel-owned state for mouse and keyboard transcript navigation.
+
+### [Active Border Style Precedence](./active-border-style-precedence.md)
+
+Class-style active indicators must not be hidden by local border values.
+
 ## Tech Stack
 
 - Avalonia 11.3.14
