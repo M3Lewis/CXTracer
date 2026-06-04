@@ -25,9 +25,9 @@ private async Task RefreshAsync()
 
 ### Proxy ViewModel Pattern
 
-Proxy ViewModels that expose another ViewModel's settings must avoid re-entrant binding writes. See [Proxy ViewModel Reentrancy](./proxy-viewmodel-reentrancy.md).
+Proxy ViewModels that expose another ViewModel's settings must avoid re-entrant binding writes. See [Proxy ViewModel Reentrancy](./atoms/proxy-viewmodel-reentrancy.md).
 
-Settings checkboxes must remain explicitly two-state. See [Settings Checkbox Three-State](./settings-checkbox-three-state.md).
+Settings checkboxes must remain explicitly two-state. See [Settings Checkbox Three-State](./atoms/settings-checkbox-three-state.md).
 
 ## State Ownership
 
@@ -47,7 +47,7 @@ Settings checkboxes must remain explicitly two-state. See [Settings Checkbox Thr
 
 Services own IO and parsing. Views own visuals and view-only scroll mechanics.
 
-For the shared navigation-state invariant, see [Navigation Shared State](./navigation-shared-state.md).
+For the shared navigation-state invariant, see [Navigation Shared State](./atoms/navigation-shared-state.md).
 
 ## Collections
 

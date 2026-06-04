@@ -153,12 +153,30 @@ For triggered tasks, include all sections below:
     └── *.md           # Topic-specific guides
 ```
 
-### CRITICAL: Code-Spec vs Guide - Know the Difference
+### CRITICAL: Atom vs Guideline vs Guide - Know the Difference
+
+The directory tree above is only the layer overview. Active spec atoms belong in an `atoms/` directory under the owning layer:
+
+```text
+.trellis/spec/<layer>/atoms/<atom-name>.md
+.trellis/spec/<package>/<layer>/atoms/<atom-name>.md
+```
+
+Normal `<layer>/*.md` files are guideline/overview documents. They should route to atoms and summarize when to read them, not duplicate active atom rules.
 
 | Type | Location | Purpose | Content Style |
 |------|----------|---------|---------------|
-| **Code-Spec** | `<layer>/*.md` | Tell AI "how to implement safely" | Signatures, contracts, matrices, cases, test points |
+| **Guideline** | `<layer>/*.md` | Route and summarize layer conventions | Overview, links, short checklists |
+| **Spec Atom** | `<layer>/atoms/*.md` | Tell AI "how to implement safely" | Frontmatter, Rule, Why, verification |
 | **Guide** | `guides/*.md` | Help AI "what to think about" | Checklists, questions, pointers to specs |
+
+**Current Decision Rule (authoritative)**:
+
+- "This is a durable, evidence-backed **rule**" -> Put in `<layer>/atoms/`
+- "This is **how a layer is organized or what to read**" -> Put in a layer guideline document and link atoms
+- "This is **what to consider** before writing" -> Put in `guides/`
+
+Legacy wording below is superseded when it conflicts with the `atoms/` placement rule.
 
 **Decision Rule**: Ask yourself:
 
@@ -208,15 +226,16 @@ Classify the candidate with the labels above.
 | **Convention** | Agreed-upon standard | Add to relevant section |
 | **Gotcha** | Non-obvious behavior | Add warning callout |
 
-### Step 4: Read the Target Code-Spec
+### Step 4: Read the Target Layer
 
-Before editing, read the current code-spec to:
+Before editing, read the target layer `index.md` and relevant guideline/atom files to:
 - Understand existing structure
 - Avoid duplicating content
-- Find the right section for your update
+- Find the right atom or decide whether a new atom is justified
 
 ```bash
-cat .trellis/spec/<category>/<file>.md
+cat .trellis/spec/<layer>/index.md
+cat .trellis/spec/<layer>/atoms/<file>.md
 ```
 
 ### Step 5: Make the Update
@@ -231,7 +250,7 @@ Follow these principles:
 
 ### Step 6: Update the Index (if needed)
 
-If you added a new section or the code-spec status changed, update the category's `index.md`.
+If you added, moved, merged, archived, or deleted an atom, update the layer's `index.md`. Keep normal guideline files as routing/overview documents and avoid duplicating atom rules there.
 
 ---
 
@@ -239,7 +258,7 @@ If you added a new section or the code-spec status changed, update the category'
 
 ### Preferred Spec Atom Shape
 
-Prefer Markdown files or sections that are atomic and reviewable. When creating a new active spec atom, include:
+Create active atoms as standalone Markdown files under `<layer>/atoms/`. When creating a new active spec atom, include:
 
 - `id`
 - `type`

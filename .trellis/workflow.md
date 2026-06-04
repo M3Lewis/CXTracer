@@ -28,6 +28,8 @@ Creates `.trellis/.developer` (gitignored) + `.trellis/workspace/<your-name>/`.
 
 `.trellis/spec/` holds coding guidelines organized by package and layer.
 
+Active spec atoms live under `.trellis/spec/<package>/<layer>/atoms/*.md` or `.trellis/spec/<layer>/atoms/*.md`. Layer guideline files link to atoms; they should not duplicate atom rules.
+
 - `.trellis/spec/<package>/<layer>/index.md` — entry point with **Pre-Development Checklist** + **Quality Check**. Actual guidelines live in the `.md` files it points to.
 - `.trellis/spec/guides/index.md` — cross-package thinking guides.
 
@@ -37,7 +39,7 @@ python ./.trellis/scripts/get_context.py --mode packages   # list packages / lay
 
 **When to update spec**: new pattern/convention found · bug-fix prevention to codify · new technical decision.
 
-Use `trellis-update-spec` for normal task-end spec updates. It includes the curator judgment: keep only durable, verifiable, non-code-redundant knowledge before writing. Use `trellis-spec-curator` separately for broad review, pruning, atomization, or stale-spec cleanup across `.trellis/spec/`.
+Use `trellis-update-spec` for normal task-end spec updates. It includes the curator judgment: keep only durable, verifiable, non-code-redundant knowledge before writing active atoms under the layer's `atoms/` directory. Use `trellis-spec-curator` separately for broad review, pruning, atomization, or stale-spec cleanup across `.trellis/spec/`.
 
 ### Task System
 
@@ -590,7 +592,7 @@ Load the `trellis-update-spec` skill and review whether this task produced new k
 
 Use its curator gate to reject code-redundant, stale, duplicate, vague, or unverified material before it enters `.trellis/spec/`.
 
-If the gate accepts active spec changes, update the docs under `.trellis/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment. Use `trellis-spec-curator` separately when the task is specifically to audit, prune, atomize, merge, archive, or clean up existing specs.
+If the gate accepts active spec changes, write or update atom files under the owning layer's `atoms/` directory and update the layer `index.md` routing. Keep ordinary guideline files as overview/routing documents and avoid duplicating atom rules. Even if the conclusion is "nothing to update", walk through the judgment. Use `trellis-spec-curator` separately when the task is specifically to audit, prune, atomize, merge, archive, or clean up existing specs.
 
 #### 3.4 Commit changes `[required · once]`
 

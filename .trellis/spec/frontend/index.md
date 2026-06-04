@@ -2,6 +2,19 @@
 
 Frontend here means the Avalonia/SukiUI desktop presentation layer in `src/CodexLens`.
 
+## Pre-Development Checklist
+
+- Read the guideline document that matches the files you will edit.
+- Read every atom under `./atoms/` whose `applies_when` entries match the task.
+- Treat atom files as the source of truth for active rules; guideline files provide routing and background.
+- If a guideline and an atom conflict, follow the atom and update the stale guideline.
+
+## Quality Check
+
+- Re-read the applicable atoms before review.
+- Run the verification items listed in each applicable atom's `verify` field.
+- If a task creates, moves, merges, or deletes an atom, update this index in the same change.
+
 ## Structure
 
 ### [Directory Structure](./directory-structure.md)
@@ -42,27 +55,18 @@ Build and review checklist for UI changes.
 
 ## Active Spec Atoms
 
-These files hold durable, scoped, evidence-backed rules that are not just source summaries.
+Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed rules that are not just source summaries. Read the atoms whose `applies_when` entries match the task; guideline files may link to atoms, but the atom file is the source of truth for the rule.
 
-### [Settings Checkbox Three-State](./settings-checkbox-three-state.md)
+### Settings and Shortcut Input
 
-Two-state checkbox requirements for persistent settings controls.
+- [Settings Checkbox Three-State](./atoms/settings-checkbox-three-state.md) - two-state checkbox requirements for persistent settings controls.
+- [Proxy ViewModel Reentrancy](./atoms/proxy-viewmodel-reentrancy.md) - avoiding synchronous binding-write reentrancy when a Settings ViewModel proxies MainWindow state.
+- [Shortcut Capture Contract](./atoms/shortcut-capture-contract.md) - modifier-only keydown, punctuation shortcuts, and shared physical-key normalization.
 
-### [Proxy ViewModel Reentrancy](./proxy-viewmodel-reentrancy.md)
+### Transcript Navigation
 
-Avoiding synchronous binding-write reentrancy when a Settings ViewModel proxies MainWindow state.
-
-### [Shortcut Capture Contract](./shortcut-capture-contract.md)
-
-Modifier-only keydown, punctuation shortcuts, and shared physical-key normalization.
-
-### [Navigation Shared State](./navigation-shared-state.md)
-
-Shared ViewModel-owned state for mouse and keyboard transcript navigation.
-
-### [Active Border Style Precedence](./active-border-style-precedence.md)
-
-Class-style active indicators must not be hidden by local border values.
+- [Navigation Shared State](./atoms/navigation-shared-state.md) - shared ViewModel-owned state for mouse and keyboard transcript navigation.
+- [Active Border Style Precedence](./atoms/active-border-style-precedence.md) - class-style active indicators must not be hidden by local border values.
 
 ## Tech Stack
 
