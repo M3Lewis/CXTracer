@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CodexLens.Models;
 using CodexLens.ViewModels;
@@ -69,26 +68,26 @@ public partial class MainWindow : SukiWindow
             return;
         }
 
-        var letter = KeyToLetter(e.Key);
+        var keyText = ShortcutKeyInput.ToShortcutKeyText(e.Key);
         var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         var alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
 
         if (viewModel.IsCapturingSyncShortcut)
         {
-            if (IsModifierOnlyKey(e.Key))
+            if (ShortcutKeyInput.IsModifierOnlyKey(e.Key))
             {
                 e.Handled = true;
                 return;
             }
 
-            if (letter.Length == 1)
+            if (keyText.Length > 0)
             {
-                viewModel.CaptureSyncShortcut(ctrl, shift, alt, letter);
+                viewModel.CaptureSyncShortcut(ctrl, shift, alt, keyText);
             }
             else
             {
-                viewModel.RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + a letter.");
+                viewModel.RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + another key.");
             }
 
             e.Handled = true;
@@ -100,7 +99,7 @@ public partial class MainWindow : SukiWindow
             return;
         }
 
-        if (letter.Length == 1 && viewModel.MatchesSyncNavigationShortcut(ctrl, shift, alt, letter))
+        if (keyText.Length > 0 && viewModel.MatchesSyncNavigationShortcut(ctrl, shift, alt, keyText))
         {
             viewModel.ToggleSynchronizedNavigation();
             e.Handled = true;
@@ -144,18 +143,24 @@ public partial class MainWindow : SukiWindow
             return;
         }
 
-        viewModel.SetActiveTranscriptPane(pane);
-        var (itemsControl, scrollViewer) = ControlsForPane(pane);
+        var effectivePane = viewModel.IsSynchronizedNavigationEnabled
+            && viewModel.CurrentTranscriptEvent is not null
+            ? viewModel.ActiveTranscriptPane
+            : pane;
+
+        viewModel.SetActiveTranscriptPane(effectivePane);
+        var (itemsControl, scrollViewer) = ControlsForPane(effectivePane);
 
         if (!viewModel.IsSynchronizedNavigationEnabled)
         {
-            ScrollToAdjacentMessage(itemsControl, scrollViewer, direction);
+            var target = ScrollToAdjacentMessage(itemsControl, scrollViewer, direction);
+            viewModel.SetCurrentTranscriptEvent(target);
             return;
         }
 
         var anchor = GetAnchorEvent(itemsControl, scrollViewer);
-        var target = viewModel.GetSynchronizedNavigationTarget(pane, direction, anchor);
-        ScrollNavigationTarget(target);
+        var navigationTarget = viewModel.GetSynchronizedNavigationTarget(effectivePane, direction, anchor);
+        ScrollNavigationTarget(navigationTarget);
     }
 
     private void ScrollNavigationTarget(TranscriptNavigationTarget? navigationTarget)
@@ -173,23 +178,22 @@ public partial class MainWindow : SukiWindow
         ScrollEventIntoView(navigationTarget.Target);
     }
 
-    private static void ScrollToAdjacentMessage(
+    private static DisplayEvent? ScrollToAdjacentMessage(
         ItemsControl itemsControl,
         ScrollViewer scrollViewer,
         int direction)
     {
-        Dispatcher.UIThread.Post(() =>
+        var containers = GetItemContainers(itemsControl);
+
+        if (containers.Count == 0)
         {
-            var containers = GetItemContainers(itemsControl);
+            return null;
+        }
 
-            if (containers.Count == 0)
-            {
-                return;
-            }
-
-            var targetIndex = GetAdjacentIndex(scrollViewer, containers, direction);
-            ScrollContainerToTop(scrollViewer, containers[targetIndex]);
-        }, DispatcherPriority.Background);
+        var targetIndex = GetAdjacentIndex(itemsControl, scrollViewer, containers, direction);
+        var target = containers[targetIndex];
+        ScrollContainerToTop(itemsControl, scrollViewer, target);
+        return target.DataContext as DisplayEvent;
     }
 
     private DisplayEvent? GetAnchorEvent(ItemsControl itemsControl, ScrollViewer scrollViewer)
@@ -206,14 +210,13 @@ public partial class MainWindow : SukiWindow
 
         foreach (var container in containers)
         {
-            var point = container.TranslatePoint(new Point(0, 0), scrollViewer);
-
-            if (point is null)
+            var top = GetContainerTop(itemsControl, container);
+            if (top is null)
             {
                 continue;
             }
 
-            if (point.Value.Y <= topTolerance)
+            if (top.Value <= scrollViewer.Offset.Y + topTolerance)
             {
                 candidate = container;
                 continue;
@@ -230,16 +233,13 @@ public partial class MainWindow : SukiWindow
     {
         var (itemsControl, scrollViewer) = ControlsForPane(evt.Pane);
 
-        Dispatcher.UIThread.Post(() =>
-        {
-            var target = GetItemContainers(itemsControl)
-                .FirstOrDefault(x => IsEventContainer(x, evt));
+        var target = GetItemContainers(itemsControl)
+            .FirstOrDefault(x => IsEventContainer(x, evt));
 
-            if (target is not null)
-            {
-                ScrollContainerToTop(scrollViewer, target);
-            }
-        }, DispatcherPriority.Background);
+        if (target is not null)
+        {
+            ScrollContainerToTop(itemsControl, scrollViewer, target);
+        }
     }
 
     private (ItemsControl ItemsControl, ScrollViewer ScrollViewer) ControlsForPane(EventPane pane)
@@ -274,31 +274,33 @@ public partial class MainWindow : SukiWindow
     }
 
     private static int GetAdjacentIndex(
+        ItemsControl itemsControl,
         ScrollViewer scrollViewer,
         IReadOnlyList<ContentPresenter> containers,
         int direction)
     {
         return direction > 0
-            ? GetNextIndex(scrollViewer, containers)
-            : GetPreviousIndex(scrollViewer, containers);
+            ? GetNextIndex(itemsControl, scrollViewer, containers)
+            : GetPreviousIndex(itemsControl, scrollViewer, containers);
     }
 
     private static int GetNextIndex(
+        ItemsControl itemsControl,
         ScrollViewer scrollViewer,
         IReadOnlyList<ContentPresenter> containers)
     {
         const double topTolerance = 12;
+        var threshold = scrollViewer.Offset.Y + topTolerance;
 
         for (var i = 0; i < containers.Count; i++)
         {
-            var point = containers[i].TranslatePoint(new Point(0, 0), scrollViewer);
-
-            if (point is null)
+            var top = GetContainerTop(itemsControl, containers[i]);
+            if (top is null)
             {
                 continue;
             }
 
-            if (point.Value.Y > topTolerance)
+            if (top.Value > threshold)
             {
                 return i;
             }
@@ -308,21 +310,22 @@ public partial class MainWindow : SukiWindow
     }
 
     private static int GetPreviousIndex(
+        ItemsControl itemsControl,
         ScrollViewer scrollViewer,
         IReadOnlyList<ContentPresenter> containers)
     {
         const double topTolerance = 6;
+        var threshold = scrollViewer.Offset.Y - topTolerance;
 
         for (var i = containers.Count - 1; i >= 0; i--)
         {
-            var point = containers[i].TranslatePoint(new Point(0, 0), scrollViewer);
-
-            if (point is null)
+            var top = GetContainerTop(itemsControl, containers[i]);
+            if (top is null)
             {
                 continue;
             }
 
-            if (point.Value.Y < -topTolerance)
+            if (top.Value < threshold)
             {
                 return i;
             }
@@ -332,23 +335,29 @@ public partial class MainWindow : SukiWindow
     }
 
     private static void ScrollContainerToTop(
+        ItemsControl itemsControl,
         ScrollViewer scrollViewer,
         ContentPresenter target)
     {
-        var point = target.TranslatePoint(new Point(0, 0), scrollViewer);
+        var top = GetContainerTop(itemsControl, target);
 
-        if (point is null)
+        if (top is null)
         {
             target.BringIntoView();
             return;
         }
 
         const double topPadding = 8;
-        var desiredY = scrollViewer.Offset.Y + point.Value.Y - topPadding;
+        var desiredY = top.Value - topPadding;
         var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
         var clampedY = Math.Clamp(desiredY, 0, maxY);
 
         scrollViewer.Offset = new Vector(0, clampedY);
+    }
+
+    private static double? GetContainerTop(ItemsControl itemsControl, ContentPresenter target)
+    {
+        return target.TranslatePoint(new Point(0, 0), itemsControl)?.Y;
     }
 
     private static bool IsTextInputFocused(object? source)
@@ -358,21 +367,4 @@ public partial class MainWindow : SukiWindow
             && visual.GetVisualAncestors().OfType<TextBox>().Any();
     }
 
-    private static string KeyToLetter(Key key)
-    {
-        var text = key.ToString();
-        return text.Length == 1 && char.IsLetter(text[0])
-            ? text.ToUpperInvariant()
-            : string.Empty;
-    }
-
-    private static bool IsModifierOnlyKey(Key key)
-    {
-        return key is Key.LeftCtrl
-            or Key.RightCtrl
-            or Key.LeftShift
-            or Key.RightShift
-            or Key.LeftAlt
-            or Key.RightAlt;
-    }
 }

@@ -26,6 +26,10 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
+    <Style Selector="Border.transcriptPane">
+      <Setter Property="BorderBrush" Value="#E7DCCB" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
     <Style Selector="Border.transcriptPane.active">
       <Setter Property="BorderBrush" Value="#E97924" />
       <Setter Property="BorderThickness" Value="3" />
@@ -198,9 +202,7 @@
                 Classes.active="{Binding IsConversationPaneActive}"
                 CornerRadius="18"
                 Padding="10"
-                Background="#FFFDF8"
-                BorderBrush="#E7DCCB"
-                BorderThickness="1">
+                Background="#FFFDF8">
           <Grid RowDefinitions="Auto,*" RowSpacing="8">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
               <TextBlock Text="Conversation"
@@ -260,7 +262,7 @@
                             Margin="0,0,0,10"
                             Background="{Binding CardBackground}"
                             BorderBrush="{Binding CardBorder}"
-                            BorderThickness="1">
+                            BorderThickness="{Binding CardBorderThickness}">
                       <StackPanel Spacing="7">
                         <Grid ColumnDefinitions="Auto,*">
                           <Border CornerRadius="999"
@@ -307,9 +309,7 @@
                 Classes.active="{Binding IsExecutionPaneActive}"
                 CornerRadius="18"
                 Padding="10"
-                Background="#FFFDF8"
-                BorderBrush="#E7DCCB"
-                BorderThickness="1">
+                Background="#FFFDF8">
           <Grid RowDefinitions="Auto,*" RowSpacing="8">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
               <TextBlock Text="Execution"
@@ -379,7 +379,7 @@
                             Margin="0,0,0,10"
                             Background="{Binding CardBackground}"
                             BorderBrush="{Binding CardBorder}"
-                            BorderThickness="1">
+                            BorderThickness="{Binding CardBorderThickness}">
                       <StackPanel Spacing="7">
                         <Grid ColumnDefinitions="Auto,*">
                           <Border CornerRadius="999"

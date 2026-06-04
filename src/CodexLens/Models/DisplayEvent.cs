@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
@@ -17,6 +18,9 @@ public sealed partial class DisplayEvent : ObservableObject
 
     [ObservableProperty]
     private bool _isExpanded;
+
+    [ObservableProperty]
+    private bool _isCurrentNavigationTarget;
 
     public string TimeText => Timestamp?.ToLocalTime().ToString("HH:mm:ss") ?? $"#{LineNumber}";
     public bool IsError => Kind == EventKind.Error || Text.Contains("error", StringComparison.OrdinalIgnoreCase) || Text.Contains("exception", StringComparison.OrdinalIgnoreCase);
@@ -42,7 +46,9 @@ public sealed partial class DisplayEvent : ObservableObject
         _ => Brush("#FAFAFA")
     };
 
-    public IBrush CardBorder => Kind switch
+    public IBrush CardBorder => IsCurrentNavigationTarget
+        ? Brush("#E97924")
+        : Kind switch
     {
         EventKind.User => Brush("#A8DEC2"),
         EventKind.Assistant => Brush("#AFCDF5"),
@@ -54,6 +60,10 @@ public sealed partial class DisplayEvent : ObservableObject
         EventKind.Error => Brush("#F0B7B7"),
         _ => Brush("#E0E0E0")
     };
+
+    public Thickness CardBorderThickness => IsCurrentNavigationTarget
+        ? new Thickness(3)
+        : new Thickness(1);
 
     public IBrush RoleBadgeBackground => Kind switch
     {
@@ -93,4 +103,10 @@ public sealed partial class DisplayEvent : ObservableObject
         EventKind.Error => "Error",
         _ => Kind.ToString()
     };
+
+    partial void OnIsCurrentNavigationTargetChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CardBorder));
+        OnPropertyChanged(nameof(CardBorderThickness));
+    }
 }

@@ -31,24 +31,24 @@ public partial class SettingsWindow : SukiWindow
             return;
         }
 
-        var letter = KeyToLetter(e.Key);
-        if (IsModifierOnlyKey(e.Key))
+        var keyText = ShortcutKeyInput.ToShortcutKeyText(e.Key);
+        if (ShortcutKeyInput.IsModifierOnlyKey(e.Key))
         {
             e.Handled = true;
             return;
         }
 
-        if (letter.Length == 1)
+        if (keyText.Length > 0)
         {
             viewModel.CaptureSyncShortcut(
                 e.KeyModifiers.HasFlag(KeyModifiers.Control),
                 e.KeyModifiers.HasFlag(KeyModifiers.Shift),
                 e.KeyModifiers.HasFlag(KeyModifiers.Alt),
-                letter);
+                keyText);
         }
         else
         {
-            viewModel.RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + a letter.");
+            viewModel.RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + another key.");
         }
 
         e.Handled = true;
@@ -59,21 +59,4 @@ public partial class SettingsWindow : SukiWindow
         Close();
     }
 
-    private static string KeyToLetter(Key key)
-    {
-        var text = key.ToString();
-        return text.Length == 1 && char.IsLetter(text[0])
-            ? text.ToUpperInvariant()
-            : string.Empty;
-    }
-
-    private static bool IsModifierOnlyKey(Key key)
-    {
-        return key is Key.LeftCtrl
-            or Key.RightCtrl
-            or Key.LeftShift
-            or Key.RightShift
-            or Key.LeftAlt
-            or Key.RightAlt;
-    }
 }

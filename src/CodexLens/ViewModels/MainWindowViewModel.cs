@@ -63,6 +63,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private EventPane _activeTranscriptPane = EventPane.Conversation;
 
     [ObservableProperty]
+    private DisplayEvent? _currentTranscriptEvent;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConfirmSyncShortcutCommand))]
     private bool _isCapturingSyncShortcut;
 
@@ -128,6 +131,20 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(IsConversationPaneActive));
         OnPropertyChanged(nameof(IsExecutionPaneActive));
+    }
+
+    partial void OnCurrentTranscriptEventChanged(DisplayEvent? oldValue, DisplayEvent? newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.IsCurrentNavigationTarget = false;
+        }
+
+        if (newValue is not null)
+        {
+            newValue.IsCurrentNavigationTarget = true;
+            SetActiveTranscriptPane(newValue.Pane);
+        }
     }
 
     partial void OnIsCapturingSyncShortcutChanged(bool value) => OnPropertyChanged(nameof(SyncShortcutEditorText));
@@ -219,7 +236,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         var gesture = ParseShortcutText(PendingSyncShortcutText);
         if (gesture is null)
         {
-            StatusMessage = "Choose a Ctrl/Shift/Alt + letter shortcut first.";
+            StatusMessage = "Choose a Ctrl/Shift/Alt + key shortcut first.";
             return;
         }
 
@@ -246,15 +263,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         PendingSyncShortcutText = string.Empty;
         IsCapturingSyncShortcut = true;
-        StatusMessage = "Press Ctrl/Shift/Alt + a letter for sync navigation.";
+        StatusMessage = "Press Ctrl/Shift/Alt + a key for sync navigation.";
     }
 
-    public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string letter)
+    public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string keyText)
     {
-        var gesture = ShortcutGesture.Create(ctrl, shift, alt, letter);
+        var gesture = ShortcutGesture.Create(ctrl, shift, alt, keyText);
         if (!gesture.IsValid)
         {
-            RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + a letter.");
+            RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + another key.");
             return;
         }
 
@@ -269,9 +286,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         StatusMessage = message;
     }
 
-    public bool MatchesSyncNavigationShortcut(bool ctrl, bool shift, bool alt, string letter)
+    public bool MatchesSyncNavigationShortcut(bool ctrl, bool shift, bool alt, string keyText)
     {
-        return _syncNavigationShortcut?.Matches(ctrl, shift, alt, letter) == true;
+        return _syncNavigationShortcut?.Matches(ctrl, shift, alt, keyText) == true;
     }
 
     public void ToggleSynchronizedNavigation()
@@ -290,13 +307,19 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
+    public void SetCurrentTranscriptEvent(DisplayEvent? evt)
+    {
+        if (evt is null || evt.Pane is EventPane.Conversation or EventPane.Execution)
+        {
+            CurrentTranscriptEvent = evt;
+        }
+    }
+
     public TranscriptNavigationTarget? GetSynchronizedNavigationTarget(
         EventPane requestedPane,
         int direction,
         DisplayEvent? anchor)
     {
-        SetActiveTranscriptPane(requestedPane);
-
         var events = ConversationEvents
             .Concat(ExecutionEvents)
             .OrderBy(EventSortTimestamp)
@@ -308,10 +331,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             return null;
         }
 
-        var anchorIndex = GetAnchorIndex(events, anchor, direction);
+        var effectiveAnchor = CurrentTranscriptEvent is not null
+            && CurrentTranscriptEvent.Pane == requestedPane
+            && events.Contains(CurrentTranscriptEvent)
+            ? CurrentTranscriptEvent
+            : anchor;
+        var anchorIndex = GetAnchorIndex(events, effectiveAnchor, direction);
         var targetIndex = Math.Clamp(anchorIndex + Math.Sign(direction), 0, events.Count - 1);
         var target = events[targetIndex];
-        ActiveTranscriptPane = target.Pane;
+        SetCurrentTranscriptEvent(target);
 
         var companion = GetCompanionEvent(target);
         return new TranscriptNavigationTarget(target, companion);
@@ -474,6 +502,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void ApplyFilter()
     {
+        SetCurrentTranscriptEvent(null);
         ConversationEvents.Clear();
         ExecutionEvents.Clear();
         RawEvents.Clear();
@@ -541,6 +570,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         ConversationEvents.Clear();
         ExecutionEvents.Clear();
         RawEvents.Clear();
+        SetCurrentTranscriptEvent(null);
         TotalEventCount = 0;
         VisibleEventCount = 0;
         OnPropertyChanged(nameof(EventCountText));
@@ -656,8 +686,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         var ctrl = parts.Any(x => string.Equals(x, "Ctrl", StringComparison.OrdinalIgnoreCase));
         var shift = parts.Any(x => string.Equals(x, "Shift", StringComparison.OrdinalIgnoreCase));
         var alt = parts.Any(x => string.Equals(x, "Alt", StringComparison.OrdinalIgnoreCase));
-        var letter = parts.LastOrDefault(x => x.Length == 1 && char.IsLetter(x[0])) ?? string.Empty;
-        var gesture = ShortcutGesture.Create(ctrl, shift, alt, letter);
+        var keyText = parts.LastOrDefault(x => !ShortcutGesture.IsModifierText(x)) ?? string.Empty;
+        var gesture = ShortcutGesture.Create(ctrl, shift, alt, keyText);
         return gesture.IsValid ? gesture : null;
     }
 

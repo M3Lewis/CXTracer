@@ -29,6 +29,7 @@
 
       <CheckBox Grid.Row="1"
                 Content="Synchronized navigation"
+                IsThreeState="False"
                 IsChecked="{Binding IsSynchronizedNavigationEnabled, Mode=TwoWay}"
                 VerticalAlignment="Center"/>
 

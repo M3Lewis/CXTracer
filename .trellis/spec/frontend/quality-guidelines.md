@@ -33,6 +33,9 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 - Startup lists sessions without blocking on transcript summaries for every historical session.
 - Large selected transcripts populate Conversation/Execution/Raw collections progressively instead of one UI-thread burst.
 - Conversation and Execution arrow buttons continue moving across repeated clicks, not only the first click.
+- With synchronized navigation enabled, pane arrow buttons and keyboard Up/Down continue through the same current-message state.
+- Left/Right visibly changes the active Conversation/Execution pane border.
+- Up/Down navigation visibly highlights the current message card.
 - Rapid duplicate watcher events for the same path are debounced before UI collections are updated.
 - Debounced live updates still respect `PinSelectedSession`: they update the selected file, but do not auto-switch when pinning is enabled.
 - Small status badges such as `只读` and `History` stay close to text height and do not stretch to fill multiline rows.
@@ -42,9 +45,10 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 - Run `dotnet build .\CodexLens.sln` after UI changes.
 - For layout changes, run the app and load `samples/sample-rollout.jsonl` or a copied real transcript.
 - For startup/load changes, verify the window remains responsive while sessions and selected transcript events are still filling in.
-- For scroll-button changes, verify repeated up/down clicks in both Conversation and Execution panes.
+- For scroll-button changes, verify repeated up/down clicks in both Conversation and Execution panes, including rapid repeated clicks before a render frame.
+- For synchronized-navigation changes, verify mouse buttons and keyboard arrows advance from the same current message and preserve visible pane/message highlighting.
 - For settings-window changes, verify the Settings button opens one reusable window, sync navigation can be toggled there, shortcut capture shows the pending shortcut, OK persists it, and restarting restores it.
-- For shortcut capture changes, verify pressing only `Ctrl`, `Shift`, or `Alt` does not exit capture mode before testing a full modifier-plus-letter shortcut.
+- For shortcut capture changes, verify pressing only `Ctrl`, `Shift`, or `Alt` does not exit capture mode before testing both a full modifier-plus-letter shortcut and a full modifier-plus-punctuation shortcut such as `Ctrl+Shift+'`.
 - For live-update changes, verify rapid repeated file appends do not duplicate events, and a file append updates the selected session without switching when `PinSelectedSession` is true.
 
 ## Avoid

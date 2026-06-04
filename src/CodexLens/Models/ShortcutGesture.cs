@@ -13,8 +13,7 @@ public sealed class ShortcutGesture
 
     [JsonIgnore]
     public bool IsValid => (Ctrl || Shift || Alt)
-        && Letter.Length == 1
-        && char.IsLetter(Letter[0]);
+        && IsShortcutKeyText(Letter);
 
     [JsonIgnore]
     public string DisplayText
@@ -42,30 +41,61 @@ public sealed class ShortcutGesture
                 parts.Add("Alt");
             }
 
-            parts.Add(Letter.ToUpperInvariant());
+            parts.Add(FormatKeyText(Letter));
             return string.Join("+", parts);
         }
     }
 
-    public bool Matches(bool ctrl, bool shift, bool alt, string letter)
+    public bool Matches(bool ctrl, bool shift, bool alt, string keyText)
     {
         return IsValid
             && Ctrl == ctrl
             && Shift == shift
             && Alt == alt
-            && string.Equals(Letter, letter, StringComparison.OrdinalIgnoreCase);
+            && string.Equals(Letter, NormalizeKeyText(keyText), StringComparison.OrdinalIgnoreCase);
     }
 
-    public static ShortcutGesture Create(bool ctrl, bool shift, bool alt, string letter)
+    public static ShortcutGesture Create(bool ctrl, bool shift, bool alt, string keyText)
     {
         return new ShortcutGesture
         {
             Ctrl = ctrl,
             Shift = shift,
             Alt = alt,
-            Letter = letter.Length == 0
-                ? string.Empty
-                : letter[..1].ToUpperInvariant()
+            Letter = NormalizeKeyText(keyText)
         };
+    }
+
+    public static bool IsModifierText(string value)
+    {
+        return string.Equals(value, "Ctrl", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "Shift", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "Alt", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsShortcutKeyText(string value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && !IsModifierText(value);
+    }
+
+    private static string NormalizeKeyText(string value)
+    {
+        var trimmed = value.Trim();
+        if (trimmed.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        return trimmed.Length == 1 && char.IsLetter(trimmed[0])
+            ? trimmed.ToUpperInvariant()
+            : trimmed;
+    }
+
+    private static string FormatKeyText(string value)
+    {
+        return value.Length == 1 && char.IsLetter(value[0])
+            ? value.ToUpperInvariant()
+            : value;
     }
 }

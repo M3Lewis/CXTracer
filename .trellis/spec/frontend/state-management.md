@@ -23,7 +23,59 @@ private async Task RefreshAsync()
 }
 ```
 
-For settings-window proxy ViewModels, bind Avalonia nullable control properties with matching nullable CLR properties. Example: `CheckBox.IsChecked` is nullable, so a proxy property should use `bool?` and translate valid `bool` values into the underlying main ViewModel state. This prevents toggle controls from flashing back when compiled bindings push nullable values.
+### Proxy ViewModel Pattern (anti-pattern → corrected)
+
+**Do NOT** use proxy properties that delegate get/set to another ViewModel's property. When a compiled binding writes to a proxy setter, and the setter mutates the underlying ViewModel, the underlying PropertyChanged cascade fires synchronously back into the bound ViewModel **during the binding's write cycle**. Avalonia's binding re-entrancy guard can discard the read-back, causing the control to visually revert.
+
+**Wrong** (causes checkbox toggle failure):
+```csharp
+// Proxy property — re-entrant PropertyChanged during binding write
+public bool? IsSynchronizedNavigationEnabled
+{
+    get => _main.IsSynchronizedNavigationEnabled;
+    set
+    {
+        if (value is not bool enabled || _main.IsSynchronizedNavigationEnabled == enabled)
+            return;
+        _main.IsSynchronizedNavigationEnabled = enabled; // triggers cascade back to self
+        OnPropertyChanged();
+    }
+}
+```
+
+**Correct** — expose a nullable binding property for `CheckBox.IsChecked`, own a local non-null field, and sync both directions explicitly:
+```csharp
+private bool _isSynchronizedNavigationEnabled;
+
+public bool? IsSynchronizedNavigationEnabled
+{
+    get => _isSynchronizedNavigationEnabled;
+    set
+    {
+        if (value is not bool enabled || _isSynchronizedNavigationEnabled == enabled)
+            return;
+        _isSynchronizedNavigationEnabled = enabled;
+        _main.IsSynchronizedNavigationEnabled = enabled;
+        OnPropertyChanged();
+    }
+}
+
+// In constructor:
+_isSynchronizedNavigationEnabled = main.IsSynchronizedNavigationEnabled;
+
+// In PropertyChanged handler — only sync from underlying VM when value actually differs:
+case nameof(MainWindowViewModel.IsSynchronizedNavigationEnabled):
+    if (_isSynchronizedNavigationEnabled != _main.IsSynchronizedNavigationEnabled)
+    {
+        _isSynchronizedNavigationEnabled = _main.IsSynchronizedNavigationEnabled;
+        OnPropertyChanged(nameof(IsSynchronizedNavigationEnabled));
+    }
+    break;
+```
+
+**Why this works**: The local field is updated BEFORE `_main` is touched, so when the `_main` PropertyChanged cascade fires back, the equality check `_isSynchronizedNavigationEnabled != _main.IsSynchronizedNavigationEnabled` is `false` — the handler is a no-op. The only effective `OnPropertyChanged` call is the one from the local setter, after all mutations are complete and outside any re-entrant binding cycle.
+
+**Also**: Always set `IsThreeState="False"` explicitly on Avalonia `CheckBox` controls. SukiUI themes may override the default.
 
 ## State Ownership
 
@@ -39,6 +91,7 @@ For settings-window proxy ViewModels, bind Avalonia nullable control properties 
 - `PinSelectedSession`
 - event counts
 - observable event/session collections
+- active transcript pane and current navigated transcript event
 
 Services own IO and parsing. Views own visuals and view-only scroll mechanics.
 

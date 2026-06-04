@@ -8,17 +8,19 @@ namespace CodexLens.ViewModels;
 public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposable
 {
     private readonly MainWindowViewModel _main;
+    private bool _isSynchronizedNavigationEnabled;
 
     public bool? IsSynchronizedNavigationEnabled
     {
-        get => _main.IsSynchronizedNavigationEnabled;
+        get => _isSynchronizedNavigationEnabled;
         set
         {
-            if (value is not bool enabled || _main.IsSynchronizedNavigationEnabled == enabled)
+            if (value is not bool enabled || _isSynchronizedNavigationEnabled == enabled)
             {
                 return;
             }
 
+            _isSynchronizedNavigationEnabled = enabled;
             _main.IsSynchronizedNavigationEnabled = enabled;
             OnPropertyChanged();
         }
@@ -31,6 +33,7 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
     public SettingsWindowViewModel(MainWindowViewModel main)
     {
         _main = main;
+        _isSynchronizedNavigationEnabled = main.IsSynchronizedNavigationEnabled;
         _main.PropertyChanged += OnMainPropertyChanged;
     }
 
@@ -51,9 +54,9 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
         return _main.CanConfirmPendingSyncShortcut();
     }
 
-    public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string letter)
+    public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string keyText)
     {
-        _main.CaptureSyncShortcut(ctrl, shift, alt, letter);
+        _main.CaptureSyncShortcut(ctrl, shift, alt, keyText);
     }
 
     public void RejectSyncShortcutCapture(string message)
@@ -66,7 +69,11 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
         switch (e.PropertyName)
         {
             case nameof(MainWindowViewModel.IsSynchronizedNavigationEnabled):
-                OnPropertyChanged(nameof(IsSynchronizedNavigationEnabled));
+                if (_isSynchronizedNavigationEnabled != _main.IsSynchronizedNavigationEnabled)
+                {
+                    _isSynchronizedNavigationEnabled = _main.IsSynchronizedNavigationEnabled;
+                    OnPropertyChanged(nameof(IsSynchronizedNavigationEnabled));
+                }
                 break;
             case nameof(MainWindowViewModel.SyncShortcutEditorText):
             case nameof(MainWindowViewModel.SyncNavigationShortcutText):
