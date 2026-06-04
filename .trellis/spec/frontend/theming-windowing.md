@@ -11,6 +11,10 @@ The current visual design is a light, dense desktop tool built on SukiUI.
     <Application.Styles>
         <suki:SukiTheme Locale="zh-CN" ThemeColor="Orange" />
     </Application.Styles>
+    <Application.Resources>
+        <Color x:Key="SystemAccentColor">#E97924</Color>
+        <SolidColorBrush x:Key="SystemAccentColorBrush" Color="#E97924" />
+    </Application.Resources>
 </Application>
 ```
 
@@ -36,6 +40,7 @@ Document this as current reality. Do not pretend the app is fully dynamic-theme 
 
 - Preserve readability for long transcript text.
 - Keep `ThemeColor="Orange"` unless a visual refresh intentionally changes the app accent.
+- Keep Fluent accent resources aligned with the orange app accent. See [Fluent Accent Resource Coverage](./atoms/fluent-accent-resource-coverage.md).
 - Keep `BackgroundStyle="Flat"` unless there is a clear UX reason to change it.
 - If adding dark mode, first replace hardcoded surface and event colors with theme-aware resources.
 - Keep event-kind color mapping centralized on `DisplayEvent` or a deliberate presentation styling layer.

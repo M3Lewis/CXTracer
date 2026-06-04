@@ -72,6 +72,10 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 
 - [Toolbar Button Visual State Metrics](./atoms/toolbar-button-visual-state-metrics.md) - toolbar button hover/pressed/checked fixes must preserve borders, size, and target scope.
 
+### Theme Accent
+
+- [Fluent Accent Resource Coverage](./atoms/fluent-accent-resource-coverage.md) - SukiUI theme color must be verified against Fluent template-owned selection, progress, and scroll indicators.
+
 ## Tech Stack
 
 - Avalonia 11.3.14
@@ -83,7 +87,7 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 ## Core Rules
 
 - Keep `MainWindow` as a `SukiWindow`.
-- Keep `SukiTheme Locale="zh-CN" ThemeColor="Blue"` registered in `App.axaml`.
+- Keep `SukiTheme Locale="zh-CN" ThemeColor="Orange"` registered in `App.axaml`.
 - Use `x:DataType` for bound views and templates.
 - Keep business and IO logic out of AXAML code-behind.
 - Preserve the desktop tool layout: dense, scan-friendly, and immediately usable.

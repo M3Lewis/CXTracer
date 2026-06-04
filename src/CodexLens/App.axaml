@@ -10,6 +10,12 @@
 
     <Application.Resources>
         <ResourceDictionary>
+            <Color x:Key="SystemAccentColor">#E97924</Color>
+            <SolidColorBrush x:Key="SystemAccentColorBrush" Color="#E97924" />
+            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#E97924" />
+            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#F08A3C" />
+            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#F6B27A" />
+            <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#E97924" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://CodexLens/Icons/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>

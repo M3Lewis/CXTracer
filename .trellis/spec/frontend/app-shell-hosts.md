@@ -22,7 +22,7 @@ public static AppBuilder BuildAvaloniaApp()
 
 ```xml
 <Application.Styles>
-    <suki:SukiTheme Locale="zh-CN" ThemeColor="Blue" />
+    <suki:SukiTheme Locale="zh-CN" ThemeColor="Orange" />
 </Application.Styles>
 ```
 

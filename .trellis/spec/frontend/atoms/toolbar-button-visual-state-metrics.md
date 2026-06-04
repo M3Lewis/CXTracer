@@ -13,6 +13,7 @@ verify:
   - hover, pressed, and checked states do not change button size
   - toolbar buttons keep the same visual bounds as the pre-change SukiUI baseline
   - toolbar buttons in rows with taller neighboring content are vertically centered instead of stretching to the row height
+  - Button and ToggleButton toolbar variants both keep their template border visible on hover
   - similar controls outside the target group, such as transcript pane arrow buttons, are not changed
 source:
   kind: human_confirmed
@@ -26,11 +27,11 @@ When fixing toolbar button visual states, preserve the control's baseline metric
 
 # Why
 
-A previous hover-border fix replaced the SukiUI button template for text toolbar buttons. The border no longer disappeared on pointer hover, but the buttons changed size because the replacement style invented its own `Padding`, `MinHeight`, and then `MinWidth`. After those guesses were removed, transcript-toolbar buttons still rendered too tall because they sat in a grid row whose left side had two lines of text and the buttons were stretching to the row height. Another attempted fix also touched nearby circular pane arrow buttons that were not part of the user's target.
+A previous hover-border fix replaced the SukiUI button template for text toolbar buttons. The border no longer disappeared on pointer hover, but the buttons changed size because the replacement style invented its own `Padding`, `MinHeight`, and then `MinWidth`. After those guesses were removed, transcript-toolbar buttons still rendered too tall because they sat in a grid row whose left side had two lines of text and the buttons were stretching to the row height. A later regression showed `ToggleButton` hover remained correct while plain `Button` hover lost the border, so hover fixes must cover both control types and the template chrome that renders the border. Another attempted fix also touched nearby circular pane arrow buttons that were not part of the user's target.
 
 # Do
 
-Scope toolbar text buttons through an explicit class and keep hover/pressed/checked border setters on that class. If replacing the template is unavoidable, inherit the theme's existing metrics by leaving `Padding`, `MinHeight`, and `MinWidth` unset unless a measured baseline proves they must be set. In mixed-height toolbar rows, set the target buttons to `VerticalAlignment="Center"` so their border does not stretch to neighboring multiline content.
+Scope toolbar text buttons through an explicit class and keep hover/pressed/checked border setters on that class. If replacing the template is unavoidable, inherit the theme's existing metrics by leaving `Padding`, `MinHeight`, and `MinWidth` unset unless a measured baseline proves they must be set. In mixed-height toolbar rows, set the target buttons to `VerticalAlignment="Center"` so their border does not stretch to neighboring multiline content. When a template-owned border renders the visible chrome, set hover/pressed/checked values on the named template child as well as on the owning Button or ToggleButton.
 
 # Do Not
 
