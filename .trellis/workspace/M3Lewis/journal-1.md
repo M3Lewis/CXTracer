@@ -241,3 +241,36 @@ Added stack-aware Trellis verification guidance, trellis-explore hidden-rule wor
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: Convert CodexLens to Native AOT
+
+**Date**: 2026-06-05
+**Task**: Convert CodexLens to Native AOT
+**Branch**: `master`
+
+### Summary
+
+Enabled win-x64 Release Native AOT publish, moved app settings and raw JSON serialization to source-generated System.Text.Json metadata, verified build/publish, and smoke-tested the published executable with sample data.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `40e68a8` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
