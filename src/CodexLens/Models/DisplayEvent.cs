@@ -62,7 +62,7 @@ public sealed partial class DisplayEvent : ObservableObject
     };
 
     public Thickness CardBorderThickness => IsCurrentNavigationTarget
-        ? new Thickness(3)
+        ? new Thickness(2)
         : new Thickness(1);
 
     public IBrush RoleBadgeBackground => Kind switch

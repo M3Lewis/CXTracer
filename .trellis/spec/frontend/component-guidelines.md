@@ -47,11 +47,12 @@ Click handlers are acceptable only for behavior that needs rendered controls, su
 
 Settings-window key capture is view-only: the window receives physical key events and forwards normalized modifier/key data to its ViewModel. See [Shortcut Capture Contract](./atoms/shortcut-capture-contract.md).
 
-For settings checkboxes, active navigation state, and active border styling, follow the atom specs:
+For settings checkboxes, active navigation state, active border styling, and toolbar button visual states, follow the atom specs:
 
 - [Settings Checkbox Three-State](./atoms/settings-checkbox-three-state.md)
 - [Navigation Shared State](./atoms/navigation-shared-state.md)
 - [Active Border Style Precedence](./atoms/active-border-style-precedence.md)
+- [Toolbar Button Visual State Metrics](./atoms/toolbar-button-visual-state-metrics.md)
 
 Command handlers should remain in the ViewModel for application behavior.
 

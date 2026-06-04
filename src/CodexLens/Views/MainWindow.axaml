@@ -26,13 +26,71 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
+    <Style Selector="Button.toolbarButton">
+      <Setter Property="Background" Value="#FFFFFF" />
+      <Setter Property="BorderBrush" Value="#D8CAB8" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="8">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                              Margin="{TemplateBinding Padding}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.toolbarButton:pointerover">
+      <Setter Property="Background" Value="#FFF8EE" />
+      <Setter Property="BorderBrush" Value="#D8CAB8" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.toolbarButton:pressed">
+      <Setter Property="Background" Value="#F7EBDD" />
+      <Setter Property="BorderBrush" Value="#CDBCA8" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="ToggleButton.toolbarButton">
+      <Setter Property="Background" Value="#FFFFFF" />
+      <Setter Property="BorderBrush" Value="#D8CAB8" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="8">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                              Margin="{TemplateBinding Padding}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="ToggleButton.toolbarButton:pointerover">
+      <Setter Property="Background" Value="#FFF8EE" />
+      <Setter Property="BorderBrush" Value="#D8CAB8" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="ToggleButton.toolbarButton:checked">
+      <Setter Property="Background" Value="#FFFFFF" />
+      <Setter Property="BorderBrush" Value="#D8CAB8" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
     <Style Selector="Border.transcriptPane">
       <Setter Property="BorderBrush" Value="#E7DCCB" />
       <Setter Property="BorderThickness" Value="1" />
     </Style>
     <Style Selector="Border.transcriptPane.active">
       <Setter Property="BorderBrush" Value="#E97924" />
-      <Setter Property="BorderThickness" Value="3" />
+      <Setter Property="BorderThickness" Value="2" />
     </Style>
   </suki:SukiWindow.Styles>
   
@@ -61,8 +119,8 @@
                  Watermark="C:\Users\you\.codex\sessions 或 WSL UNC 路径"
                  FontFamily="Consolas"/>
 
-        <Button Grid.Column="2" Content="Default" Command="{Binding OpenDefaultRootCommand}"/>
-        <Button Grid.Column="3" Content="Refresh" Command="{Binding RefreshCommand}"/>
+        <Button Grid.Column="2" Classes="toolbarButton" Content="Default" Command="{Binding OpenDefaultRootCommand}"/>
+        <Button Grid.Column="3" Classes="toolbarButton" Content="Refresh" Command="{Binding RefreshCommand}"/>
         <CheckBox Grid.Column="4"
                   Content="Pin selected"
                   IsChecked="{Binding PinSelectedSession}"
@@ -173,7 +231,9 @@
           </StackPanel>
 
           <Button Grid.Column="2"
+                  Classes="toolbarButton"
                   Content="Settings"
+                  VerticalAlignment="Center"
                   Click="Settings_Click"/>
 
           <ComboBox Grid.Column="3"
@@ -182,11 +242,15 @@
                     MinWidth="150"/>
 
           <Button Grid.Column="4"
+                  Classes="toolbarButton"
                   Content="Clear search"
+                  VerticalAlignment="Center"
                   Command="{Binding ClearSearchCommand}"/>
 
           <ToggleButton Grid.Column="1"
+                        Classes="toolbarButton"
                         Content="Raw"
+                        VerticalAlignment="Center"
                         IsChecked="{Binding ShowRawEvents}"/>
         </Grid>
       </Border>

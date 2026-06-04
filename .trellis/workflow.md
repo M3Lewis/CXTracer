@@ -159,6 +159,23 @@ Phase 3: Finish  → verify, update spec, commit, and wrap up
 - Complex task: ask whether you may create a Trellis task and enter planning. If the user says no, do not do broad inline implementation; explain, clarify scope, or suggest a smaller split.
 - User approval to create a task is not approval to start implementation. Planning still happens first.
 
+### Direct Edit Safeguards
+
+When the user explicitly allows a small direct edit without creating a Trellis task, keep the edit path fast but lock the target before changing files.
+
+Before editing:
+
+- Identify the exact affected element, selector, component, file, API, or behavior.
+- If more than one plausible target exists, ask one clarifying question or use provided screenshots/context to map the target precisely.
+- State the negative scope when similar nearby controls or modules exist: what will not be changed.
+- Do not edit adjacent similar controls just because they share a name or visual pattern.
+
+After editing:
+
+- Compare the diff against the user's original words and any screenshot.
+- Verify the changed selector/component is the one described by the user, not merely a related component.
+- If the diff touches an unintended target, revert only that unintended change before reporting completion.
+
 ### Planning Artifacts
 
 - `prd.md` — requirements, constraints, and acceptance criteria. Do not put technical design or execution checklists here.
@@ -181,6 +198,7 @@ Create new children with `task.py create "<title>" --slug <name> --parent <paren
 No active task. First classify the current turn and ask for task-creation consent before creating any Trellis task.
 Simple conversation / small task: ask only whether this turn should create a Trellis task. If the user says no, skip Trellis for this session.
 Complex task: ask the user if you can create a Trellis task and enter the planning phase. If the user says no, explain, clarify scope, or suggest a smaller split.
+Direct small edit without task: lock the exact target first; if similar targets exist, state the negative scope before editing; verify the diff matches the user's words/screenshot.
 [/workflow-state:no_task]
 
 ### Phase 1: Plan
@@ -295,6 +313,7 @@ When a user request matches one of these intents inside an active task, route fi
 - Task creation approval is not implementation approval; implementation waits for `task.py start` after artifact review.
 - PRD-only is valid for lightweight tasks; complex tasks need `design.md` + `implement.md`.
 - Planning must be persisted to task artifacts; checks must run before reporting completion.
+- Direct small edits without a task still require target lock, negative scope, and diff-to-request verification before reporting completion.
 
 ### Loading Step Detail
 
@@ -519,8 +538,9 @@ The platform prelude auto-handles the context load requirement:
 1. Load the `trellis-before-dev` skill to read project guidelines
 2. Read `{TASK_DIR}/prd.md`, then `design.md` if present, then `implement.md` if present
 3. Consult materials under `{TASK_DIR}/research/`
-4. Implement the code per reviewed artifacts
-5. Run project lint and type-check
+4. Lock the exact target before editing; for ambiguous UI/API terms, map user words or screenshots to the selector/component/file and state what similar targets are out of scope
+5. Implement the code per reviewed artifacts
+6. Run project lint and type-check
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
@@ -548,6 +568,7 @@ Load the `trellis-check` skill and verify the code per its guidance:
 - Spec compliance
 - lint / type-check / tests
 - Cross-layer consistency (when changes span layers)
+- Diff-to-request match: confirm changed files/selectors/components map to the user's described target or screenshot, and that similar out-of-scope targets were not changed
 
 If issues are found → fix → re-check, until green.
 

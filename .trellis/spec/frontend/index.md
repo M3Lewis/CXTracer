@@ -68,6 +68,10 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 - [Navigation Shared State](./atoms/navigation-shared-state.md) - shared ViewModel-owned state for mouse and keyboard transcript navigation.
 - [Active Border Style Precedence](./atoms/active-border-style-precedence.md) - class-style active indicators must not be hidden by local border values.
 
+### Toolbar Controls
+
+- [Toolbar Button Visual State Metrics](./atoms/toolbar-button-visual-state-metrics.md) - toolbar button hover/pressed/checked fixes must preserve borders, size, and target scope.
+
 ## Tech Stack
 
 - Avalonia 11.3.14
