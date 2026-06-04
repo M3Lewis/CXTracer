@@ -19,7 +19,9 @@ Created a Trellis bugfix task, fixed repeated Conversation/Execution arrow navig
 
 ### Main Changes
 
-(Add details)
+- Removed the session item template's inner card border in `MainWindow.axaml`.
+- Added a readable neutral `ListBoxItem` border style for the Codex sessions list so selected rows render as a single outer border.
+- Left transcript cards, status badges, toolbar controls, and pane container borders unchanged.
 
 ### Git Commits
 
@@ -29,7 +31,8 @@ Created a Trellis bugfix task, fixed repeated Conversation/Execution arrow navig
 
 ### Testing
 
-- [OK] (Add test results)
+- [OK] `dotnet build .\CodexLens.sln --no-restore -c Release` succeeded with `AVALONIA_TELEMETRY_OPTOUT=1` and workspace-local temp variables.
+- [WARN] Plain `dotnet build .\CodexLens.sln` is still blocked by a NuGet lock outside the repo: `E:\Temp\NuGetScratch\lock\0a914de0b883da82fcc3a6925f71bc8dd78fe16e`.
 
 ### Status
 
@@ -161,6 +164,38 @@ Fixed navigation/settings interaction regressions, aligned update-spec with cura
 | `96c34e9` | (see git log) |
 | `a2df1a8` | (see git log) |
 | `f41e33b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
+
+
+## Session 6: Fix session card double border
+
+**Date**: 2026-06-04
+**Task**: Fix session card double border
+
+### Summary
+
+Removed the nested border from Codex session list items and moved the readable neutral border to the ListBoxItem container; verified Release build succeeds.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `98e7c38` | (see git log) |
 
 ### Testing
 

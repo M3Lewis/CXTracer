@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 5
+- **Total Sessions**: 6
 - **Last Active**: 2026-06-04
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~175 | Active |
+| `journal-1.md` | ~207 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 6 | 2026-06-04 | Fix session card double border | `98e7c38` | `-` |
 | 5 | 2026-06-04 | Finish navigation settings interactions | `e0a9b57`, `96c34e9`, `a2df1a8`, `f41e33b` | `master` |
 | 4 | 2026-05-26 | Fix settings shortcut capture | `8ce9252` | `master` |
 | 3 | 2026-05-26 | Transcript pane navigation settings | `5e603cc` | `master` |
