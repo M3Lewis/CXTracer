@@ -1,0 +1,2 @@
+{"file": "aot_assessment.md", "reason": "Acceptance criteria and risk list should be checked against the original assessment."}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend quality checklist applies to AXAML binding and runtime smoke tests."}

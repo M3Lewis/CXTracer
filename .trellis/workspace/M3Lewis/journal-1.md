@@ -208,3 +208,36 @@ Removed the nested border from Codex session list items and moved the readable n
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: Improve Trellis workflow verification
+
+**Date**: 2026-06-04
+**Task**: Improve Trellis workflow verification
+**Branch**: `master`
+
+### Summary
+
+Added stack-aware Trellis verification guidance, trellis-explore hidden-rule workflow, evidence matrix requirements, and a portable workflow override package.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0e5674a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

@@ -1,0 +1,3 @@
+{"file": "aot_assessment.md", "reason": "User-provided Native AOT feasibility assessment and recommended conversion steps."}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend coding and verification guidance for Avalonia AXAML changes."}
+{"file": ".trellis/spec/frontend/atoms/session-list-item-template-styling.md", "reason": "Recent session-list styling pitfall to preserve if AXAML is touched during AOT verification."}
