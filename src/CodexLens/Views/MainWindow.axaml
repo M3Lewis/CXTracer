@@ -112,6 +112,14 @@
     <Style Selector="ListBox.sessionList ListBoxItem:selected /template/ PathIcon">
       <Setter Property="Foreground" Value="#E97924" />
     </Style>
+    <Style Selector="ListBox.sessionList ListBoxItem">
+      <Setter Property="BorderBrush" Value="#E7DCCB" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="ListBox.sessionList ListBoxItem:selected">
+      <Setter Property="BorderBrush" Value="#E7DCCB" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
     <Style Selector="ScrollViewer.accentScrollArea ScrollBar /template/ Thumb">
       <Setter Property="Background" Value="#E97924" />
     </Style>
@@ -213,9 +221,7 @@
               <Border CornerRadius="10"
                       Padding="8"
                       Margin="0,2"
-                      Background="#FFFFFF"
-                      BorderBrush="#E7DCCB"
-                      BorderThickness="1">
+                      Background="#FFFFFF">
                 <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4">
                   <TextBlock Text="{Binding DisplayTitle}"
                              FontWeight="SemiBold"
