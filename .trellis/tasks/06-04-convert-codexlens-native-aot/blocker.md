@@ -1,8 +1,8 @@
-# Native AOT Publish Blocker
+# Native AOT Publish Status
 
 ## Status
 
-Implementation reached Native AOT publish, but publish is blocked by a missing Windows native toolchain.
+Native AOT publish now completes on this machine.
 
 ## Command
 
@@ -12,19 +12,28 @@ dotnet publish src\CodexLens\CodexLens.csproj -c Release -r win-x64 /p:PublishAo
 
 ## Result
 
-Restore and managed build completed, then Native AOT stopped at the platform linker step:
+The command completes and writes publish output to:
 
 ```text
-Platform linker not found. Ensure you have all the required prerequisites documented at https://aka.ms/nativeaot-prerequisites, in particular the Desktop Development for C++ workload in Visual Studio. For ARM64 development also install C++ ARM64 build tools.
+src\CodexLens\bin\Release\net8.0\win-x64\publish\
 ```
 
-Retested on 2026-06-04 with the same command and the result is unchanged. The current blocker is still the missing Windows platform linker, not C# compile errors or app-code AOT warnings.
+Publish output contains 6 files totaling about 281 MiB. `CodexLens.exe` is about 30 MiB.
 
-## Boundary Decision
+## Remaining Warnings
 
-Installing Visual Studio Build Tools, Desktop Development for C++, or Windows SDK components is out of scope for this task. The user must install the missing Native AOT prerequisites before publish and runtime smoke testing can continue.
+The publish output has zero trim/AOT warnings attributable to `CodexLens` application code.
 
-## Work Completed Before Blocker
+Two third-party warnings remain from `Avalonia.Controls.DataGrid` 11.3.13:
+
+```text
+warning IL2104: Assembly 'Avalonia.Controls.DataGrid' produced trim warnings.
+warning IL3053: Assembly 'Avalonia.Controls.DataGrid' produced AOT analysis warnings.
+```
+
+The current UI does not use a DataGrid control path. Required smoke coverage focused on the SukiUI/Avalonia controls used by the app: main `SukiWindow`, settings `SukiWindow`, toolbar buttons, checkbox, list content, transcript panes, and scrollable content.
+
+## Work Completed
 
 - Added Release-scoped Native AOT publish settings to `src/CodexLens/CodexLens.csproj`.
 - Added source-generated JSON metadata in `src/CodexLens/Services/AppJsonContext.cs`.
@@ -35,7 +44,12 @@ Installing Visual Studio Build Tools, Desktop Development for C++, or Windows SD
 ## Verified
 
 ```powershell
+dotnet restore .\CodexLens.sln
 dotnet build .\CodexLens.sln --no-restore
+dotnet build .\CodexLens.sln --configuration Release --no-restore
+dotnet publish src\CodexLens\CodexLens.csproj -c Release -r win-x64 /p:PublishAot=true
 ```
 
-Passed with 0 warnings and 0 errors after the code changes.
+Debug and Release builds passed with 0 warnings and 0 errors. Publish completed with only the third-party DataGrid warnings listed above.
+
+Smoke testing used repository sample data from `samples\sample-rollout.jsonl` and UI Automation against the published executable. No private transcript content, private paths, screenshots, or logs are committed.

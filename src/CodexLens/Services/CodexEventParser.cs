@@ -378,7 +378,7 @@ public sealed class CodexEventParser
         try
         {
             using var doc = JsonDocument.Parse(raw);
-            return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(doc.RootElement, AppJsonContext.Default.JsonElement);
         }
         catch
         {

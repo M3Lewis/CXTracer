@@ -6,11 +6,6 @@ namespace CodexLens.Services;
 
 public sealed class AppSettingsService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true
-    };
-
     private readonly string _settingsPath;
 
     public AppSettingsService()
@@ -31,7 +26,7 @@ public sealed class AppSettingsService
         }
 
         using var stream = File.OpenRead(_settingsPath);
-        return JsonSerializer.Deserialize<AppSettings>(stream, JsonOptions) ?? new AppSettings();
+        return JsonSerializer.Deserialize(stream, AppJsonContext.Default.AppSettings) ?? new AppSettings();
     }
 
     public void Save(AppSettings settings)
@@ -45,7 +40,7 @@ public sealed class AppSettingsService
         var tempPath = $"{_settingsPath}.tmp";
         using (var stream = File.Create(tempPath))
         {
-            JsonSerializer.Serialize(stream, settings, JsonOptions);
+            JsonSerializer.Serialize(stream, settings, AppJsonContext.Default.AppSettings);
         }
 
         File.Move(tempPath, _settingsPath, overwrite: true);
