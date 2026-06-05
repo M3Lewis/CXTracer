@@ -17,6 +17,7 @@ src/CodexLens/
     SessionInfo.cs
   Services/
     CodexEventParser.cs
+    SessionFileAccess.cs
     SessionReader.cs
     SessionScanner.cs
     SessionWatcher.cs
@@ -38,6 +39,7 @@ src/CodexLens/
 ## Current Examples
 
 - `Services/SessionScanner.cs` enumerates `*.jsonl` files and builds `SessionInfo` summaries.
+- `Services/SessionFileAccess.cs` owns shared-open `FileStream` creation for active transcript files.
 - `Services/SessionReader.cs` reads whole transcript files and appended chunks while preserving tail state.
 - `Services/CodexEventParser.cs` classifies unknown Codex JSONL shapes into display events.
 - `ViewModels/MainWindowViewModel.cs` orchestrates refresh, selection, filters, and live updates.
@@ -47,6 +49,7 @@ src/CodexLens/
 
 - New transcript parsing logic belongs in `CodexEventParser` or a narrowly named service under `Services/`.
 - New file access code belongs in a service, not in a ViewModel or code-behind.
+- New transcript file read paths should reuse `SessionFileAccess.OpenReadShared(...)` instead of duplicating file-open flags.
 - New user-visible state belongs in `MainWindowViewModel` until there are multiple screens that justify splitting ViewModels.
 - New display-only fields belong on model types only when they are reused by bindings.
 

@@ -25,33 +25,16 @@ public partial class SettingsWindow : SukiWindow
 
     private void Window_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (DataContext is not SettingsWindowViewModel viewModel
-            || !viewModel.IsCapturingSyncShortcut)
+        if (DataContext is not SettingsWindowViewModel viewModel)
         {
             return;
         }
 
-        var keyText = ShortcutKeyInput.ToShortcutKeyText(e.Key);
-        if (ShortcutKeyInput.IsModifierOnlyKey(e.Key))
-        {
-            e.Handled = true;
-            return;
-        }
-
-        if (keyText.Length > 0)
-        {
-            viewModel.CaptureSyncShortcut(
-                e.KeyModifiers.HasFlag(KeyModifiers.Control),
-                e.KeyModifiers.HasFlag(KeyModifiers.Shift),
-                e.KeyModifiers.HasFlag(KeyModifiers.Alt),
-                keyText);
-        }
-        else
-        {
-            viewModel.RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + another key.");
-        }
-
-        e.Handled = true;
+        _ = ShortcutCaptureInput.TryHandleCapture(
+            e,
+            viewModel.IsCapturingSyncShortcut,
+            viewModel.CaptureSyncShortcut,
+            viewModel.RejectSyncShortcutCapture);
     }
 
     private void Close_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

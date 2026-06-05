@@ -7,6 +7,7 @@ applies_when:
   - adding or changing shortcut matching in MainWindow or SettingsWindow
   - changing physical Avalonia Key normalization
 code_anchors:
+  - src/CodexLens/Views/ShortcutCaptureInput.cs
   - src/CodexLens/Views/ShortcutKeyInput.cs
   - src/CodexLens/Views/SettingsWindow.axaml.cs
   - src/CodexLens/Views/MainWindow.axaml.cs
@@ -32,8 +33,8 @@ A previous shortcut bug treated modifier keydown as terminal and validated only 
 
 # Do
 
-Normalize physical Avalonia `Key` values through one shared view-only helper before forwarding modifier/key data to the ViewModel.
+Handle the capture branch through the shared view-only helper before forwarding modifier/key data to the ViewModel. Normalize physical Avalonia `Key` values through the shared key-normalization helper.
 
 # Do Not
 
-Do not hard-code shortcut capture or matching to letters only, and do not duplicate physical-key normalization separately in Settings and MainWindow.
+Do not hard-code shortcut capture or matching to letters only, and do not duplicate capture flow or physical-key normalization separately in Settings and MainWindow.

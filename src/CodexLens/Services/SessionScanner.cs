@@ -32,18 +32,6 @@ public sealed class SessionScanner
             .ToList();
     }
 
-    public IReadOnlyList<SessionInfo> Scan(string rootPath, int maxResults = 300)
-    {
-        var sessions = ScanLight(rootPath, maxResults).ToList();
-
-        foreach (var session in sessions)
-        {
-            Enrich(session);
-        }
-
-        return sessions;
-    }
-
     public SessionInfo? TryGetSession(string filePath)
     {
         var file = new FileInfo(filePath);
@@ -93,13 +81,7 @@ public sealed class SessionScanner
 
     private static IEnumerable<string> ReadHeadLines(string filePath, int maxLines)
     {
-        using var stream = new FileStream(
-            filePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.ReadWrite | FileShare.Delete,
-            64 * 1024,
-            FileOptions.SequentialScan);
+        using var stream = SessionFileAccess.OpenReadShared(filePath);
 
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
         var count = 0;
@@ -120,15 +102,9 @@ public sealed class SessionScanner
     {
         try
         {
-            using var stream = new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete,
-                64 * 1024,
-                FileOptions.SequentialScan);
+            using var stream = SessionFileAccess.OpenReadShared(filePath);
 
-            var buffer = new byte[64 * 1024];
+            var buffer = new byte[SessionFileAccess.BufferSize];
             var count = 0;
             int read;
 

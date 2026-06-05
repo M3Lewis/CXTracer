@@ -8,6 +8,7 @@ Services may use filesystem APIs, JSON APIs, and plain model types.
 
 - `SessionScanner` discovers transcript files and creates `SessionInfo` summaries.
 - `SessionReader` reads complete files and appended chunks into `DisplayEvent` lists.
+- `SessionFileAccess` owns the shared `FileStream` open policy for reading active transcript files.
 - `SessionWatcher` wraps `FileSystemWatcher` and raises normalized session change events.
 - `CodexEventParser` parses one JSONL line and classifies it into conversation, execution, or raw panes.
 - `AppSettingsService` reads and writes Codex Lens app preferences, not Codex session transcript files.
@@ -36,6 +37,13 @@ Services should not know about:
 - Writes: create the settings directory if needed, write a temporary JSON file, then replace the settings file.
 
 This service is allowed to write app preferences. It must never write to the Codex CLI session tree.
+
+`SessionFileAccess` contract:
+
+- Open transcript files with `FileAccess.Read`.
+- Share active files with `FileShare.ReadWrite | FileShare.Delete`.
+- Use the shared buffer size and sequential-scan options from `SessionFileAccess`.
+- New transcript readers should call `SessionFileAccess.OpenReadShared(...)` instead of duplicating `new FileStream(...)` arguments.
 
 ## Models
 

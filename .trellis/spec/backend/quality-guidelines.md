@@ -7,6 +7,7 @@ Use this checklist when changing services, parser behavior, or transcript IO.
 - No code writes to, deletes from, or creates files under the selected sessions root.
 - Transcript files are opened with `FileAccess.Read`.
 - Active files are opened with `FileShare.ReadWrite | FileShare.Delete`.
+- Transcript read paths reuse `SessionFileAccess.OpenReadShared(...)` rather than duplicating `FileStream` flags.
 - Generated caches or indexes are not introduced without explicit product scope.
 
 ## Parser Behavior

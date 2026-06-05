@@ -68,29 +68,16 @@ public partial class MainWindow : SukiWindow
             return;
         }
 
-        var keyText = ShortcutKeyInput.ToShortcutKeyText(e.Key);
         var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         var alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
 
-        if (viewModel.IsCapturingSyncShortcut)
+        if (ShortcutCaptureInput.TryHandleCapture(
+            e,
+            viewModel.IsCapturingSyncShortcut,
+            viewModel.CaptureSyncShortcut,
+            viewModel.RejectSyncShortcutCapture))
         {
-            if (ShortcutKeyInput.IsModifierOnlyKey(e.Key))
-            {
-                e.Handled = true;
-                return;
-            }
-
-            if (keyText.Length > 0)
-            {
-                viewModel.CaptureSyncShortcut(ctrl, shift, alt, keyText);
-            }
-            else
-            {
-                viewModel.RejectSyncShortcutCapture("Shortcut must be Ctrl/Shift/Alt + another key.");
-            }
-
-            e.Handled = true;
             return;
         }
 
@@ -99,6 +86,7 @@ public partial class MainWindow : SukiWindow
             return;
         }
 
+        var keyText = ShortcutKeyInput.ToShortcutKeyText(e.Key);
         if (keyText.Length > 0 && viewModel.MatchesSyncNavigationShortcut(ctrl, shift, alt, keyText))
         {
             viewModel.ToggleSynchronizedNavigation();

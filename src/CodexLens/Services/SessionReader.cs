@@ -32,12 +32,12 @@ public sealed class SessionReader
             var events = new List<DisplayEvent>();
             var lineNo = 0;
 
-            await using var stream = OpenReadShared(filePath);
+            await using var stream = SessionFileAccess.OpenReadShared(filePath);
             using var reader = new StreamReader(
                 stream,
                 Encoding.UTF8,
                 detectEncodingFromByteOrderMarks: true,
-                bufferSize: 64 * 1024,
+                bufferSize: SessionFileAccess.BufferSize,
                 leaveOpen: true);
 
             while (!reader.EndOfStream)
@@ -145,7 +145,7 @@ public sealed class SessionReader
         var buffer = new byte[bytesToRead];
         var totalRead = 0;
 
-        await using (var stream = OpenReadShared(filePath))
+        await using (var stream = SessionFileAccess.OpenReadShared(filePath))
         {
             stream.Seek(state.Offset, SeekOrigin.Begin);
 
@@ -219,17 +219,6 @@ public sealed class SessionReader
 
             return gate;
         }
-    }
-
-    private static FileStream OpenReadShared(string filePath)
-    {
-        return new FileStream(
-            filePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.ReadWrite | FileShare.Delete,
-            bufferSize: 64 * 1024,
-            options: FileOptions.SequentialScan);
     }
 
     private static IReadOnlyList<string> SplitCompleteLines(string text, out string pending)
