@@ -108,7 +108,7 @@
 
         <TextBox Grid.Column="1"
                  Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 Watermark="C:\Users\you\.codex\sessions 或 WSL UNC 路径"
+                 PlaceholderText="C:\Users\you\.codex\sessions 或 WSL UNC 路径"
                  FontFamily="Consolas"/>
 
         <Button Grid.Column="2" Classes="toolbarButton" Content="Default" Command="{Binding OpenDefaultRootCommand}"/>
@@ -155,7 +155,7 @@
 
         <TextBox Grid.Row="1"
                  Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 Watermark="搜索当前 session：回复 / 命令 / diff / raw"/>
+                 PlaceholderText="搜索当前 session：回复 / 命令 / diff / raw"/>
 
         <ListBox Grid.Row="2"
                  Classes="sessionList"

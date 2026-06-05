@@ -49,17 +49,17 @@ public sealed partial class DisplayEvent : ObservableObject
     public IBrush CardBorder => IsCurrentNavigationTarget
         ? Brush("#E97924")
         : Kind switch
-    {
-        EventKind.User => Brush("#A8DEC2"),
-        EventKind.Assistant => Brush("#AFCDF5"),
-        EventKind.Final => Brush("#F2C49E"),
-        EventKind.Command => Brush("#CFC6F4"),
-        EventKind.CommandOutput => Brush("#DDD5C8"),
-        EventKind.Diff => Brush("#B6DED0"),
-        EventKind.Tool => Brush("#D7BDE6"),
-        EventKind.Error => Brush("#F0B7B7"),
-        _ => Brush("#E0E0E0")
-    };
+        {
+            EventKind.User => Brush("#A8DEC2"),
+            EventKind.Assistant => Brush("#AFCDF5"),
+            EventKind.Final => Brush("#F2C49E"),
+            EventKind.Command => Brush("#CFC6F4"),
+            EventKind.CommandOutput => Brush("#DDD5C8"),
+            EventKind.Diff => Brush("#B6DED0"),
+            EventKind.Tool => Brush("#D7BDE6"),
+            EventKind.Error => Brush("#F0B7B7"),
+            _ => Brush("#E0E0E0")
+        };
 
     public Thickness CardBorderThickness => IsCurrentNavigationTarget
         ? new Thickness(2)

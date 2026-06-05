@@ -7,8 +7,8 @@ Windows-first Codex CLI session reader.
 ## 技术栈
 
 - .NET 8
-- Avalonia 11.3.6
-- SukiUI 6.1.1
+- Avalonia 12.0.4
+- SukiUI 7.0.1
 - CommunityToolkit.Mvvm 8.4.0
 
 ## 功能
@@ -72,7 +72,7 @@ src\CodexLens\bin\Release\net8.0\win-x64\publish
 
 Codex transcript JSONL 不是公开稳定 API，所以解析器采用宽松启发式：识别常见字段如 `role`、`type`、`content`、`text`、`command`、`stdout`、`stderr`、`diff`、`patch`、`tool_call` 等。遇到识别不了的事件，会放进 Raw events。`reasoning` / `thinking` / `plan` 也默认不进入左栏，只有打开 Raw events 时才会看到。
 
-这个压缩包是在无 .NET SDK 的沙盒里生成的，未在本环境实际编译。你本机装好 .NET 8 SDK 后运行 `dotnet restore` / `dotnet run` 即可验证；如果 SukiUI 6.1.x 和 Avalonia 11.3.x 发生 API 兼容问题，优先保持 Avalonia 与 SukiUI 的版本匹配。
+如果 Avalonia 和 SukiUI 后续升级时发生 API 兼容问题，优先保持 Avalonia 与 SukiUI 的主版本匹配，并先跑 `dotnet restore` / `dotnet build` 验证。
 
 ## 测试样例
 

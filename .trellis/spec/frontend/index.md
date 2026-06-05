@@ -79,8 +79,8 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 
 ## Tech Stack
 
-- Avalonia 11.3.14
-- SukiUI 6.1.1
+- Avalonia 12.0.4
+- SukiUI 7.0.1
 - CommunityToolkit.Mvvm 8.4.0
 - C# latest, nullable enabled
 - AXAML compiled bindings enabled in the project file
