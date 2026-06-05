@@ -8,7 +8,7 @@
                  x:DataType="vm:SettingsWindowViewModel"
                  mc:Ignorable="d"
                  Width="460"
-                 Height="260"
+                 SizeToContent="Height"
                  MinWidth="420"
                  MinHeight="240"
                  Title="Settings"
@@ -21,13 +21,14 @@
           Background="#FFFDF8"
           BorderBrush="#E7DCCB"
           BorderThickness="1">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14">
       <TextBlock Text="Navigation"
                  FontSize="18"
                  FontWeight="Bold"
                  Foreground="#3A3732"/>
 
       <CheckBox Grid.Row="1"
+                Classes="preferenceCheckBox"
                 Content="Synchronized navigation"
                 IsThreeState="False"
                 IsChecked="{Binding IsSynchronizedNavigationEnabled, Mode=TwoWay}"
@@ -42,12 +43,14 @@
                    Foreground="#3A3732"/>
 
         <Button Grid.Column="1"
+                Classes="toolbarButton"
                 Content="{Binding ShortcutEditorText}"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center"
                 Command="{Binding StartSyncShortcutCaptureCommand}"/>
 
         <Button Grid.Column="2"
+                Classes="toolbarButton"
                 Content="OK"
                 MinWidth="64"
                 Command="{Binding ConfirmSyncShortcutCommand}"/>
@@ -59,9 +62,12 @@
         <TextBlock Text="{Binding StatusMessage}"
                    Foreground="#746A5F"
                    TextWrapping="Wrap"
+                   MaxLines="2"
+                   TextTrimming="CharacterEllipsis"
                    VerticalAlignment="Center"/>
 
         <Button Grid.Column="1"
+                Classes="toolbarButton"
                 Content="Close"
                 MinWidth="72"
                 Click="Close_Click"/>

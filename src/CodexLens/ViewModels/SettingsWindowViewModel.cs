@@ -9,6 +9,7 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
 {
     private readonly MainWindowViewModel _main;
     private bool _isSynchronizedNavigationEnabled;
+    private string _statusMessage = "Settings ready.";
 
     public bool? IsSynchronizedNavigationEnabled
     {
@@ -22,12 +23,20 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
 
             _isSynchronizedNavigationEnabled = enabled;
             _main.IsSynchronizedNavigationEnabled = enabled;
+            StatusMessage = enabled
+                ? "Synchronized navigation enabled."
+                : "Synchronized navigation disabled.";
             OnPropertyChanged();
         }
     }
 
     public string ShortcutEditorText => _main.SyncShortcutEditorText;
-    public string StatusMessage => _main.StatusMessage;
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        private set => SetProperty(ref _statusMessage, value);
+    }
+
     public bool IsCapturingSyncShortcut => _main.IsCapturingSyncShortcut;
 
     public SettingsWindowViewModel(MainWindowViewModel main)
@@ -41,12 +50,14 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
     private void StartSyncShortcutCapture()
     {
         _main.StartSyncShortcutCapture();
+        StatusMessage = _main.StatusMessage;
     }
 
     [RelayCommand(CanExecute = nameof(CanConfirmSyncShortcut))]
     private void ConfirmSyncShortcut()
     {
         _main.ConfirmPendingSyncShortcut();
+        StatusMessage = _main.StatusMessage;
     }
 
     private bool CanConfirmSyncShortcut()
@@ -57,11 +68,13 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
     public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string keyText)
     {
         _main.CaptureSyncShortcut(ctrl, shift, alt, keyText);
+        StatusMessage = _main.StatusMessage;
     }
 
     public void RejectSyncShortcutCapture(string message)
     {
         _main.RejectSyncShortcutCapture(message);
+        StatusMessage = message;
     }
 
     private void OnMainPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -82,9 +95,6 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
                 OnPropertyChanged(nameof(ShortcutEditorText));
                 OnPropertyChanged(nameof(IsCapturingSyncShortcut));
                 ConfirmSyncShortcutCommand.NotifyCanExecuteChanged();
-                break;
-            case nameof(MainWindowViewModel.StatusMessage):
-                OnPropertyChanged(nameof(StatusMessage));
                 break;
         }
     }
