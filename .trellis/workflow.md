@@ -157,6 +157,7 @@ Phase 3: Finish  → verify, update spec, commit, and wrap up
 
 - Simple conversation or small task: ask only whether this turn should create a Trellis task. If the user says no, skip Trellis for this session.
 - Complex task: ask whether you may create a Trellis task and enter planning. If the user says no, do not do broad inline implementation; explain, clarify scope, or suggest a smaller split.
+- Explicit read-only audit or review requests may run directly without creating a Trellis task when no files will be changed; report findings only.
 - User approval to create a task is not approval to start implementation. Planning still happens first.
 
 ### Direct Edit Safeguards
@@ -198,6 +199,7 @@ Create new children with `task.py create "<title>" --slug <name> --parent <paren
 No active task. First classify the current turn and ask for task-creation consent before creating any Trellis task.
 Simple conversation / small task: ask only whether this turn should create a Trellis task. If the user says no, skip Trellis for this session.
 Complex task: ask the user if you can create a Trellis task and enter the planning phase. If the user says no, explain, clarify scope, or suggest a smaller split.
+Read-only audit/review request: run it directly without creating a Trellis task when no files will be changed; report findings only.
 Direct small edit without task: lock the exact target first; if similar targets exist, state the negative scope before editing; verify the diff matches the user's words/screenshot.
 [/workflow-state:no_task]
 
