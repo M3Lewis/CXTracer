@@ -1,6 +1,6 @@
 ---
 name: code-health-audit
-description: Periodically audit existing code for maintainability risks: coupling, duplicated responsibilities, unclear module boundaries, wrong abstractions, and poor locality. Use this before the codebase quietly rots.
+description: "Periodically audit existing code for maintainability risks: coupling, duplicated responsibilities, unclear module boundaries, wrong abstractions, and poor locality. Use this before the codebase quietly rots."
 ---
 
 # Code Health Audit
