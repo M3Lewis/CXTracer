@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 9
+- **Total Sessions**: 10
 - **Last Active**: 2026-06-05
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~309 | Active |
+| `journal-1.md` | ~343 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 10 | 2026-06-05 | Upgrade Avalonia and SukiUI | `3f2b056`, `3cce387` | `master` |
 | 9 | 2026-06-05 | Fix settings window control regressions | `8afbcca` | `master` |
 | 8 | 2026-06-05 | Convert CodexLens to Native AOT | `40e68a8` | `master` |
 | 7 | 2026-06-04 | Improve Trellis workflow verification | `0e5674a` | `master` |

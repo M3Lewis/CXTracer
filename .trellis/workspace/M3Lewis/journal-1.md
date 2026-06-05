@@ -307,3 +307,37 @@ Stabilized SettingsWindow first-open status/layout, promoted shared toolbarButto
 ### Next Steps
 
 - None - task complete
+
+
+## Session 10: Upgrade Avalonia and SukiUI
+
+**Date**: 2026-06-05
+**Task**: Upgrade Avalonia and SukiUI
+**Branch**: `master`
+
+### Summary
+
+Pinned Avalonia packages to 12.0.4, upgraded SukiUI to 7.0.1, removed Avalonia.Diagnostics, updated Avalonia 12 PlaceholderText usage, validated restore/build/format/test/startup smoke, and archived the Trellis task.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3f2b056` | (see git log) |
+| `3cce387` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
