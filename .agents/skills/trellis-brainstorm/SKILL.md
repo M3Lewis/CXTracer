@@ -52,7 +52,8 @@ Use a concise title from the user's request. Use a slug without a date prefix. `
 4. Ask the single highest-value remaining question.
 5. Include your recommended answer with the question.
 6. After each user answer, update `prd.md` before continuing.
-7. For complex tasks, create or update `design.md` and `implement.md` before implementation starts.
+7. Before declaring planning ready, run the PRD Convergence Gate below.
+8. For complex tasks, create or update `design.md` and `implement.md` before implementation starts.
 
 Do not invent a project-specific product/spec hierarchy. If the repository already has product, domain, or spec docs, use them. If it does not, proceed with the evidence that exists.
 
@@ -68,6 +69,25 @@ Each question must include:
 - the trade-off if the user chooses differently
 
 Do not ask process questions such as whether to search, inspect files, or continue brainstorming. Do the evidence work directly. Ask the user only when the remaining issue is a product decision, preference, scope boundary, or risk tolerance choice.
+
+## PRD Convergence Gate
+
+Run this gate after the final meaningful user answer and before asking for approval to start implementation, curating JSONL manifests, or running `task.py start`.
+
+The working `prd.md` is allowed to be messy during discovery. The final `prd.md` is not. Before planning is ready:
+
+1. Compare the current `prd.md` against the final PRD contract in Artifact Rules.
+2. Collapse repeated facts, root causes, decisions, and constraints into a single authoritative location.
+3. Fold temporary brainstorm sections into final sections:
+   - `What I already know` -> confirmed facts or background.
+   - `Assumptions` -> confirmed facts, requirements, out of scope, or open questions.
+   - Resolved `Open Questions` -> the section that now owns the answer.
+4. Keep `Open Questions` only for unresolved blockers that prevent planning or implementation.
+5. Merge parallel defect lists and requirement lists when they describe the same work. Preserve each defect's file:line anchors, severity, and evidence inside the owning requirement instead of keeping a second duplicate list.
+6. Preserve every file:line anchor, decision, requirement id, acceptance criterion, and AC-to-requirement mapping. Deduplication must be lossless.
+7. Move design detail out of `prd.md` into `design.md` for complex tasks, unless the detail is a requirement, compatibility constraint, or user-visible acceptance condition.
+
+Do not remove content merely because it looks verbose. Remove or move content only when the same fact is already represented in the final structure or belongs in another planning artifact.
 
 ## Artifact Rules
 
@@ -104,6 +124,7 @@ Lightweight tasks may have only `prd.md`. Complex tasks must have `prd.md`, `des
 Before declaring planning ready:
 
 - `prd.md` contains testable acceptance criteria.
+- `prd.md` has passed the PRD Convergence Gate: no duplicate temporary brainstorm sections remain, and no evidence or mapping was lost.
 - Repository-answerable questions have already been answered through inspection.
 - Remaining open questions are genuinely about user intent or scope.
 - Complex tasks have `design.md` and `implement.md`.

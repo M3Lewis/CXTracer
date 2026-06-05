@@ -119,13 +119,13 @@ python ./.trellis/scripts/get_context.py --mode phase --step <X.Y>  # detailed g
     matching enforcement line in its phase's [workflow-state:*] block. The
     breadcrumb is the only per-turn channel; if a mandatory step isn't
     mentioned there, the AI silently skips it (Phase 1 planning gate
-    skip and Phase 3.4 commit skip both manifested via this gap).
+    skip and Phase 3.5 commit skip both manifested via this gap).
 
   TAG ↔ PHASE scoping:
     [workflow-state:no_task]      → no active task; before Phase 1
     [workflow-state:planning]     → all of Phase 1 (status='planning')
     [workflow-state:planning-inline] → Codex inline variant of Phase 1
-    [workflow-state:in_progress]  → Phase 2 + Phase 3.1-3.4
+    [workflow-state:in_progress]  → Phase 2 + Phase 3.1-3.5
                                     (status stays 'in_progress' from
                                     task.py start until task.py archive)
     [workflow-state:in_progress-inline] → Codex inline variant of Phase 2/3
@@ -237,17 +237,18 @@ Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `trellis-bef
 - 2.3 Rollback `[on demand]`
 
 <!-- Per-turn breadcrumb: shown while status='in_progress'.
-     Scope: all of Phase 2 + Phase 3.1-3.4 (status stays 'in_progress' from
+     Scope: all of Phase 2 + Phase 3.1-3.5 (status stays 'in_progress' from
      task.py start until task.py archive; only archive flips it). The body
      therefore must cover every required step from implementation through
-     commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
+     commit, including Phase 3.4 spec update and Phase 3.5 commit. -->
 
 Sub-agent dispatch protocol applies to all platforms and all sub-agents, including class-2 Codex/Copilot/Gemini/Qoder and `trellis-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions.
 
 [workflow-state:in_progress]
-Flow: `trellis-implement` -> `trellis-check` -> optional `trellis-explore` on failure/ambiguity/repeated debugging -> `trellis-update-spec` with curator gate -> commit (Phase 3.4) -> `/trellis:finish-work`.
+Flow: `trellis-implement` -> `trellis-check` -> optional `trellis-explore` on failure/ambiguity/repeated debugging -> optional `code-health-audit` for maintainability risks -> `trellis-update-spec` with curator gate -> commit (Phase 3.5) -> `/trellis:finish-work`.
 Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `trellis-implement`, do NOT spawn another `trellis-implement` or `trellis-check`; if already running as `trellis-check`, do NOT spawn another `trellis-check` or `trellis-implement`. Dispatch is main session only.
 If check fails, the user corrects the target, or the same issue repeats twice, run `trellis-explore` before another implementation attempt and persist inferred hidden rules to the active task.
+Run `code-health-audit` when the user asks for maintainability/code health review, when a task touches shared boundaries or abstractions, or when repeated small fixes suggest the code is becoming hard to change.
 Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present` -> `.trellis/project-profile.md if present`.
 Build/lint/type-check passing is necessary but never sufficient; `trellis-check` must produce a Verification Matrix mapping acceptance criteria and user-visible behavior changes to evidence.
 [/workflow-state:in_progress]
@@ -258,9 +259,10 @@ Build/lint/type-check passing is necessary but never sufficient; `trellis-check`
      instead of dispatching sub-agents. -->
 
 [workflow-state:in_progress-inline]
-Flow: `trellis-before-dev` -> edit -> `trellis-check` -> optional `trellis-explore` on failure/ambiguity/repeated debugging -> validation -> `trellis-update-spec` with curator gate -> commit (Phase 3.4) -> `/trellis:finish-work`.
+Flow: `trellis-before-dev` -> edit -> `trellis-check` -> optional `trellis-explore` on failure/ambiguity/repeated debugging -> validation -> optional `code-health-audit` for maintainability risks -> `trellis-update-spec` with curator gate -> commit (Phase 3.5) -> `/trellis:finish-work`.
 Do not dispatch implement/check sub-agents in inline mode.
 If check fails, the user corrects the target, or the same issue repeats twice, run `trellis-explore` before another implementation attempt and persist inferred hidden rules to the active task.
+Run `code-health-audit` when the user asks for maintainability/code health review, when a task touches shared boundaries or abstractions, or when repeated small fixes suggest the code is becoming hard to change.
 Read context: `prd.md` -> `design.md if present` -> `implement.md if present` -> `.trellis/project-profile.md if present`, plus relevant spec/research loaded by skills.
 Build/lint/type-check passing is necessary but never sufficient; `trellis-check` must produce a Verification Matrix mapping acceptance criteria and user-visible behavior changes to evidence.
 [/workflow-state:in_progress-inline]
@@ -268,9 +270,10 @@ Build/lint/type-check passing is necessary but never sufficient; `trellis-check`
 ### Phase 3: Finish
 - 3.1 Quality verification `[required · repeatable]`
 - 3.2 Debug retrospective `[on demand]`
-- 3.3 Spec update `[required · once]`
-- 3.4 Commit changes `[required · once]`
-- 3.5 Wrap-up reminder
+- 3.3 Code health audit `[on demand · periodic]`
+- 3.4 Spec update `[required · once]`
+- 3.5 Commit changes `[required · once]`
+- 3.6 Wrap-up reminder
 
 <!-- Per-turn breadcrumb: shown while status='completed'.
      Currently DEAD in normal flow: cmd_archive writes status='completed' in
@@ -281,7 +284,7 @@ Build/lint/type-check passing is necessary but never sufficient; `trellis-check`
      channel as the live blocks. -->
 
 [workflow-state:completed]
-Code committed. Run `/trellis:finish-work`; if dirty, return to Phase 3.4 first.
+Code committed. Run `/trellis:finish-work`; if dirty, return to Phase 3.5 first.
 [/workflow-state:completed]
 
 ### Rules
@@ -301,6 +304,7 @@ When a user request matches one of these intents inside an active task, route fi
 - Planning or unclear requirements -> `trellis-brainstorm`.
 - `in_progress` implementation/check -> dispatch `trellis-implement` / `trellis-check`.
 - Check failure with unclear cause, user target correction, repeated implementation failure, or ambiguous component/behavior mapping -> `trellis-explore` before another implementation attempt.
+- Maintainability/code health audit request -> `code-health-audit`; if tied to an active task, write durable findings into the task `research/` directory before acting on them.
 - Repeated debugging retrospective -> `trellis-break-loop`; normal spec updates -> `trellis-update-spec`; broad spec cleanup -> `trellis-spec-curator`.
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
@@ -310,6 +314,7 @@ When a user request matches one of these intents inside an active task, route fi
 - Planning or unclear requirements -> `trellis-brainstorm`.
 - Before editing -> `trellis-before-dev`; after editing -> `trellis-check`.
 - Check failure with unclear cause, user target correction, repeated implementation failure, or ambiguous component/behavior mapping -> `trellis-explore` before another implementation attempt.
+- Maintainability/code health audit request -> `code-health-audit`; if tied to an active task, write durable findings into the task `research/` directory before acting on them.
 - Repeated debugging retrospective -> `trellis-break-loop`; normal spec updates -> `trellis-update-spec`; broad spec cleanup -> `trellis-spec-curator`.
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
@@ -620,7 +625,19 @@ If this task involved repeated debugging (the same issue was fixed multiple time
 
 The goal is to capture debugging lessons so the same class of issue doesn't recur.
 
-#### 3.3 Spec update `[required · once]`
+#### 3.3 Code health audit `[on demand · periodic]`
+
+Load the `code-health-audit` skill when any of these are true:
+- The user explicitly asks for code health, maintainability, coupling, locality, or abstraction review.
+- The task touched shared boundaries, reusable abstractions, or multiple modules and maintainability risk is not covered by normal `trellis-check`.
+- Repeated small fixes suggest the code is becoming hard to change.
+- A periodic audit is requested before a larger planning or implementation pass.
+
+This is not a style review and not a broad refactor pass. Read the code first and base findings on concrete evidence from files, functions, imports, call sites, or repeated rules. Prefer no more than three findings, and recommend only boring local fixes that can fit in a small PR.
+
+If the audit is tied to an active task and produces durable findings, write them under the task `research/` directory before acting on them. If the finding deserves separate refactor work, create or propose a follow-up task instead of expanding the current task scope.
+
+#### 3.4 Spec update `[required · once]`
 
 Load the `trellis-update-spec` skill and review whether this task produced new knowledge worth recording:
 - Newly discovered patterns or conventions
@@ -632,7 +649,7 @@ If the task has `research/implicit-rules.md`, treat it as candidate input only. 
 
 If the gate accepts active spec changes, write or update atom files under the owning layer's `atoms/` directory and update the layer `index.md` routing. Keep ordinary guideline files as overview/routing documents and avoid duplicating atom rules. Even if the conclusion is "nothing to update", walk through the judgment. Use `trellis-spec-curator` separately when the task is specifically to audit, prune, atomize, merge, archive, or clean up existing specs.
 
-#### 3.4 Commit changes `[required · once]`
+#### 3.5 Commit changes `[required · once]`
 
 The AI drives a batched commit of this task's code changes so `/finish-work` can run cleanly afterwards. Goal: produce work commits FIRST, then bookkeeping (archive + journal) commits land after — never interleaved.
 
@@ -642,7 +659,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
    ```bash
    git status --porcelain
    ```
-   Snapshot every dirty path. If the working tree is clean, skip to 3.5.
+   Snapshot every dirty path. If the working tree is clean, skip to 3.6.
 
 2. **Learn commit style** from recent history (so drafted messages blend in):
    ```bash
@@ -674,7 +691,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
 
 6. **On confirmation**: run `git add <files>` + `git commit -m "<msg>"` for each batch in order. Do not amend. Do not push.
 
-7. **On rejection** (user replies "不行" / "我自己来" / "manual" / any pushback on the plan): stop. Do not attempt a second plan. The user will commit by hand; you skip ahead to 3.5 once they confirm.
+7. **On rejection** (user replies "不行" / "我自己来" / "manual" / any pushback on the plan): stop. Do not attempt a second plan. The user will commit by hand; you skip ahead to 3.6 once they confirm.
 
 **Rules**:
 - No `git commit --amend` anywhere — three-stage three-commit flow (work commits → archive commit → journal commit).
@@ -682,7 +699,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
 - If the user wants different message wording but accepts the file grouping, edit the message and re-confirm once — but if they reject the grouping, exit to manual mode.
 - The batched plan is one prompt; do not prompt per commit.
 
-#### 3.5 Wrap-up reminder
+#### 3.6 Wrap-up reminder
 
 After the above, remind the user they can run `/finish-work` to wrap up (archive the task, record the session).
 
@@ -697,7 +714,7 @@ This section is for developers who want to modify the Trellis workflow itself. A
 Edit the corresponding step's walkthrough body in the Phase 1 / 2 / 3 sections above. Critical invariants:
 - No active task must triage first and ask for task-creation consent before creating a Trellis task.
 - Planning must distinguish lightweight PRD-only tasks from complex tasks that require `prd.md`, `design.md`, and `implement.md` before start.
-- Every required execution path must keep the Phase 3.4 commit reminder reachable before `/trellis:finish-work`.
+- Every required execution path must keep the Phase 3.5 commit reminder reachable before `/trellis:finish-work`.
 
 All tag blocks live in the `## Phase Index` section above, immediately after each phase summary:
 
@@ -706,9 +723,9 @@ All tag blocks live in the `## Phase Index` section above, immediately after eac
 | No active task (before Phase 1) | `[workflow-state:no_task]` (after the Phase Index ASCII art) |
 | All of Phase 1 (task created → ready for implementation) | `[workflow-state:planning]` (after Phase 1 summary) |
 | Codex inline Phase 1 | `[workflow-state:planning-inline]` |
-| Phase 2 + Phase 3.1–3.4 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
-| Codex inline Phase 2 + Phase 3.1–3.4 | `[workflow-state:in_progress-inline]` |
-| After Phase 3.5 (archived) | `[workflow-state:completed]` (after Phase 3 summary; **currently DEAD**) |
+| Phase 2 + Phase 3.1–3.5 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
+| Codex inline Phase 2 + Phase 3.1–3.5 | `[workflow-state:in_progress-inline]` |
+| After Phase 3.6 (archived) | `[workflow-state:completed]` (after Phase 3 summary; **currently DEAD**) |
 
 ### Changing the per-turn prompt text
 
