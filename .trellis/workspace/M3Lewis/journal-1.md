@@ -274,3 +274,36 @@ Enabled win-x64 Release Native AOT publish, moved app settings and raw JSON seri
 ### Next Steps
 
 - None - task complete
+
+
+## Session 9: Fix settings window control regressions
+
+**Date**: 2026-06-05
+**Task**: Fix settings window control regressions
+**Branch**: `master`
+
+### Summary
+
+Stabilized SettingsWindow first-open status/layout, promoted shared toolbarButton hover style to app scope, made preference checkboxes explicitly two-state, documented verification blockers, and archived the Trellis task.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8afbcca` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
