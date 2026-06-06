@@ -68,10 +68,10 @@
             ColumnSpacing="10"
             VerticalAlignment="Center">
         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-          <TextBlock Text="About"
+          <TextBlock Text="Author"
                      FontWeight="SemiBold"
                      Foreground="#3A3732"/>
-          <TextBlock Text="-"
+          <TextBlock Text=":"
                      Foreground="#746A5F"/>
           <TextBlock Text="M3Lewis"
                      Foreground="#746A5F"/>
