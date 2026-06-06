@@ -72,8 +72,10 @@
                      FontWeight="SemiBold"
                      Foreground="#3A3732"/>
           <TextBlock Text=":"
+          FontWeight="SemiBold"
                      Foreground="#746A5F"/>
           <TextBlock Text="M3Lewis"
+                FontWeight="SemiBold"
                      Foreground="#746A5F"/>
         </StackPanel>
 
