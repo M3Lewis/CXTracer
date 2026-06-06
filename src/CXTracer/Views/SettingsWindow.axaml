@@ -1,0 +1,77 @@
+<suki:SukiWindow xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+                 xmlns:vm="clr-namespace:CXTracer.ViewModels"
+                 x:Class="CXTracer.Views.SettingsWindow"
+                 x:DataType="vm:SettingsWindowViewModel"
+                 mc:Ignorable="d"
+                 Width="460"
+                 SizeToContent="Height"
+                 MinWidth="420"
+                 MinHeight="240"
+                 Title="Settings"
+                 Background="#FBF7EF"
+                 KeyDown="Window_KeyDown"
+                 BackgroundStyle="Flat">
+  <Border Margin="14"
+          CornerRadius="18"
+          Padding="16"
+          Background="#FFFDF8"
+          BorderBrush="#E7DCCB"
+          BorderThickness="1">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14">
+      <TextBlock Text="Navigation"
+                 FontSize="18"
+                 FontWeight="Bold"
+                 Foreground="#3A3732"/>
+
+      <CheckBox Grid.Row="1"
+                Classes="preferenceCheckBox"
+                Content="Synchronized navigation"
+                IsThreeState="False"
+                IsChecked="{Binding IsSynchronizedNavigationEnabled, Mode=TwoWay}"
+                VerticalAlignment="Center"/>
+
+      <Grid Grid.Row="2"
+            ColumnDefinitions="Auto,*,Auto"
+            ColumnSpacing="10"
+            VerticalAlignment="Top">
+        <TextBlock Text="Shortcut"
+                   VerticalAlignment="Center"
+                   Foreground="#3A3732"/>
+
+        <Button Grid.Column="1"
+                Classes="toolbarButton"
+                Content="{Binding ShortcutEditorText}"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                Command="{Binding StartSyncShortcutCaptureCommand}"/>
+
+        <Button Grid.Column="2"
+                Classes="toolbarButton"
+                Content="OK"
+                MinWidth="64"
+                Command="{Binding ConfirmSyncShortcutCommand}"/>
+      </Grid>
+
+      <Grid Grid.Row="3"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="12">
+        <TextBlock Text="{Binding StatusMessage}"
+                   Foreground="#746A5F"
+                   TextWrapping="Wrap"
+                   MaxLines="2"
+                   TextTrimming="CharacterEllipsis"
+                   VerticalAlignment="Center"/>
+
+        <Button Grid.Column="1"
+                Classes="toolbarButton"
+                Content="Close"
+                MinWidth="72"
+                Click="Close_Click"/>
+      </Grid>
+    </Grid>
+  </Border>
+</suki:SukiWindow>

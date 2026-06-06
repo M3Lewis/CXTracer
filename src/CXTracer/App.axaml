@@ -1,0 +1,111 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:suki="clr-namespace:SukiUI;assembly=SukiUI"
+             x:Class="CXTracer.App"
+             RequestedThemeVariant="Light">
+
+    <Application.Styles>
+        <suki:SukiTheme Locale="zh-CN" ThemeColor="Orange" />
+        <Style Selector="Button.toolbarButton">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="PART_ToolbarButtonChrome"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.toolbarButton:pointerover">
+            <Setter Property="Background" Value="#FFF8EE" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.toolbarButton:pointerover /template/ Border#PART_ToolbarButtonChrome">
+            <Setter Property="Background" Value="#FFF8EE" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.toolbarButton:pressed">
+            <Setter Property="Background" Value="#F7EBDD" />
+            <Setter Property="BorderBrush" Value="#CDBCA8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.toolbarButton:pressed /template/ Border#PART_ToolbarButtonChrome">
+            <Setter Property="Background" Value="#F7EBDD" />
+            <Setter Property="BorderBrush" Value="#CDBCA8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ToggleButton.toolbarButton">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="PART_ToolbarButtonChrome"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ToggleButton.toolbarButton:pointerover">
+            <Setter Property="Background" Value="#FFF8EE" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ToggleButton.toolbarButton:pointerover /template/ Border#PART_ToolbarButtonChrome">
+            <Setter Property="Background" Value="#FFF8EE" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ToggleButton.toolbarButton:checked">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ToggleButton.toolbarButton:checked /template/ Border#PART_ToolbarButtonChrome">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D8CAB8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="CheckBox.preferenceCheckBox:checked /template/ PathIcon">
+            <Setter Property="Foreground" Value="#E97924" />
+        </Style>
+        <Style Selector="CheckBox.preferenceCheckBox:checked /template/ Path">
+            <Setter Property="Fill" Value="#E97924" />
+        </Style>
+    </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <Color x:Key="SystemAccentColor">#E97924</Color>
+            <SolidColorBrush x:Key="SystemAccentColorBrush" Color="#E97924" />
+            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#E97924" />
+            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#F08A3C" />
+            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#F6B27A" />
+            <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#E97924" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://CXTracer/Icons/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+</Application>

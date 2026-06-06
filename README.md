@@ -1,79 +1,92 @@
 # Codex Lens
 
-Windows-first Codex CLI session reader.
+Windows 优先的 Codex CLI 会话极速只读阅读器。
 
-目标：不接管、不启动、不写入 Codex CLI，只读读取本机 `~/.codex/sessions/**/*.jsonl`，把 Codex 的可读回复和命令执行轨迹分成左右两栏。
+目标：**严格不接管、不启动、不修改** Codex CLI。通过后台扫描和监听本机 `~/.codex/sessions/**/*.jsonl`，将 Codex 会话中的可读回复和执行轨迹以优雅的左右两栏（Conversation & Execution）实时分栏呈现，提供流畅的审查体验。
+
+---
 
 ## 技术栈
 
-- .NET 8
-- Avalonia 12.0.4
-- SukiUI 7.0.1
-- CommunityToolkit.Mvvm 8.4.0
+- **.NET 8** (采用最新 C# 语法与 Native AOT 支持)
+- **Avalonia 12.0.4** (跨平台 UI 框架)
+- **SukiUI 7.0.1** (基于橙色主题 `Orange` 与 `zh-CN` 区域设置的精美扁平化设计)
+- **CommunityToolkit.Mvvm 8.4.0** (基于 C# Source Generator 的高效 MVVM 模型)
 
-## 功能
+---
 
-- 扫描 `%USERPROFILE%\.codex\sessions\**\*.jsonl`
-- UI 手动切换历史 session
-- 选中 session 后实时 tail 新增 JSONL 行
-- 左栏 Conversation：只显示 user / assistant / final answer
-- 右栏 Execution：command / stdout / stderr / exit / diff / tool / error
-- 搜索当前 session
-- 过滤：All / Conversation / Commands / Errors / Diffs / Final / Tools / Raw
-- 多 Codex 并行时默认 Pin selected，不自动抢当前 session
-- 严格不修改 `.codex` 文件，不创建索引库，不上传任何数据
+## 核心特性与实现机制
 
-## 运行
+根据 `src` 代码的架构设计，本项目实现了以下核心功能与技术设计：
+
+### 1. 左右双栏分栏 & 智能事件分类
+Codex 的 JSONL 会话并非公开的稳定 API，因此 `CodexEventParser` 采用**扁平化展平（Flatten）**与**宽口径启发式算法**对 JSON 行进行字段扫描和正则分类。
+* **左栏 (Conversation)**：展示 `User`、`Assistant`、`Final`。仅保留用户提示与 Codex 最终的文本回复。
+* **右栏 (Execution)**：展示 `Command`、`CommandOutput`、`Diff`、`Tool`、`Error`。呈现指令执行、工具调用、文件变更补丁（Diff）以及错误信息。
+* **底层折叠栏 (Raw events)**：推理（`Reasoning`/`Thought`）与更新计划（`Plan`）默认不进入左右栏，仅在底部的 `Raw events` 可折叠区域展示，以保持主界面整洁。
+
+### 2. 双栏同步导航 (Synchronized Navigation)
+* **按时间/行号对齐**：开启同步导航后，当用户在任一栏中上下导航（通过 UI 按钮或 Arrow 键）时，阅读器会基于事件的 `Timestamp` 或 `LineNumber` 自动定位并同步对齐另一栏的对应伴随事件（Companion Event），实现视觉上的阅读同步。
+* **快捷键切换与定制**：支持捕获并绑定自定义快捷键（如 `Ctrl + Shift + S` 等），在 Settings 窗口中直接按下按键即可录制，并一键切换同步状态。
+* **本地配置持久化**：用户配置（如同步导航开关和快捷键绑定）会自动序列化为 `settings.json`，持久化存储在 `%LOCALAPPDATA%\CXTracer\` 下，且完全兼容 **Native AOT** 编译（使用 Source Generator 构建的 `AppJsonContext` 避免反射）。
+
+### 3. 高效实时 Live Tail 追加
+* **文件变更监听**：使用 `FileSystemWatcher` 监测指定目录，一旦有 session 更新，通过 `SessionWatcher` 抛出防抖（Debounced）事件触发 UI 刷新。
+* **流式增量读取**：`SessionReader` 在读取更新时，**不会重新加载整份文件**。它会记录上次读取的字节偏移量（`Offset`），直接 `Seek` 并在底层分配字节缓冲区读取新增的 UTF-8 数据。同时，它支持缓存不完整行的尾部（`Pending`），在下一次追加数据时无缝拼接，极大地降低了 I/O 开销。
+* **会话锁定 (Pin Selected)**：如果存在多个 Codex 实例并行写入，支持在顶部勾选 "Pin selected"，当其他会话文件发生变更时，不会自动抢夺当前阅读器的选中焦点，始终锁定在当前查看的会话。
+
+### 4. 严格的只读与安全边界
+应用仅使用只读性质的系统 API，严格限制自身边界：
+* 仅调用 `Directory.EnumerateFiles` 与 `FileSystemWatcher`。
+* 读文件流时强制使用 `FileShare.ReadWrite | FileShare.Delete` 共享模式，避免影响 Codex 进程的写入与清理。
+* **不修改** `~/.codex` 下的任何文件，**不创建**本地索引数据库，**不进行**任何形式的网络数据上传。
+
+---
+
+## 运行与编译
+
+### 开发运行
 
 ```powershell
-dotnet restore .\CodexLens.sln
-dotnet run --project .\src\CodexLens\CodexLens.csproj
+dotnet restore .\CXTracer.sln
+dotnet run --project .\src\CXTracer\CXTracer.csproj
 ```
 
-## 发布 Windows 单文件
+### 发布 Windows 单文件 (Native AOT)
+
+项目配置了完整的 Native AOT 和 Trim 裁剪支持（配置于 `CXTracer.csproj`）。可通过以下命令发布不依赖 .NET 运行时的极小、启动即时、单 exe 运行文件：
 
 ```powershell
-dotnet publish .\src\CodexLens\CodexLens.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+dotnet publish .\src\CXTracer\CXTracer.csproj -c Release -r win-x64 --self-contained true
 ```
 
-输出目录大致在：
-
+编译输出目录位于：
 ```text
-src\CodexLens\bin\Release\net8.0\win-x64\publish
+src\CXTracer\bin\Release\net8.0\win-x64\publish
 ```
 
-## WSL / Zed 注意
+---
 
-如果你在 Zed 里使用的是 WSL shell，Codex session 可能不在 `C:\Users\你\.codex\sessions`，而是在类似：
+## 搜索与过滤
 
+* **全局文本过滤**：支持在左侧搜索栏实时过滤当前 session，同时匹配 JSON 中的键值对。
+* **分类视图切换**：提供 `All` / `Conversation` / `Commands` / `Errors` / `Diffs` / `Final` / `Tools` / `Raw` 快速过滤。
+* **元数据预览**：Session 列表卡片会动态显示最近更新时间、提取的第一行 Prompt 作为 Title、从 `cwd` 推断的项目名称（Project Hint），并标明 `LIVE`/`Active`/`History` 活动状态。
+
+---
+
+## WSL 与跨环境支持
+
+如果你在 WSL (如 Ubuntu) 环境下运行 Codex，而本阅读器运行在 Windows 下，可将 WSL 的共享网络路径粘贴至顶部的 **Sessions root**。
+
+例如：
 ```text
-\\wsl.localhost\Ubuntu\home\你的Linux用户名\.codex\sessions
+\\wsl.localhost\Ubuntu\home\username\.codex\sessions
 ```
+点击 **Refresh** 后，应用将正常加载并进行文件监听及 Live 增量更新。
 
-把这个 UNC 路径粘贴进顶部 Sessions root，然后点击 Refresh。
+---
 
-## 只读边界
+## 运行示例数据
 
-应用只执行：
-
-- Directory.EnumerateFiles
-- FileSystemWatcher
-- FileStream(FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)
-
-应用不会：
-
-- 启动 Codex CLI
-- 向 Codex CLI stdin 写入内容
-- 修改 `~/.codex` 下的任何文件
-- 创建 transcript 索引
-- 上传数据
-
-## 已知限制
-
-Codex transcript JSONL 不是公开稳定 API，所以解析器采用宽松启发式：识别常见字段如 `role`、`type`、`content`、`text`、`command`、`stdout`、`stderr`、`diff`、`patch`、`tool_call` 等。遇到识别不了的事件，会放进 Raw events。`reasoning` / `thinking` / `plan` 也默认不进入左栏，只有打开 Raw events 时才会看到。
-
-如果 Avalonia 和 SukiUI 后续升级时发生 API 兼容问题，优先保持 Avalonia 与 SukiUI 的主版本匹配，并先跑 `dotnet restore` / `dotnet build` 验证。
-
-## 测试样例
-
-`samples/sample-rollout.jsonl` 可以复制到一个临时 sessions 子目录里做 UI 验证。
+可以使用 `samples/sample-rollout.jsonl` 作为参考测试数据，将其复制到 sessions 目录中来检验解析和 UI 分栏渲染效果。

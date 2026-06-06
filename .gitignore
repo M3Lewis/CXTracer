@@ -17,7 +17,7 @@ Thumbs.db
 .codex/
 artifacts/
 trellis-workflow-portable-files/
-CodexLens - 快捷方式.lnk
 
 # Local verification screenshots can include user paths or transcript content.
 .trellis/tasks/**/research/*.png
+.ace-tool/
