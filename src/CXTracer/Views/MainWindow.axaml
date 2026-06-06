@@ -14,7 +14,7 @@
                  Height="860"
                  MinWidth="1080"
                  MinHeight="640"
-                 Title="Codex Lens"
+                 Title="CXTracer"
                  Background="#FBF7EF"
                  KeyDown="Window_KeyDown"
                  BackgroundStyle="Flat">
