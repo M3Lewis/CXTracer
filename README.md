@@ -1,4 +1,4 @@
-# Codex Lens
+# CXTracer
 
 Windows 优先的 Codex CLI 会话极速只读阅读器。
 

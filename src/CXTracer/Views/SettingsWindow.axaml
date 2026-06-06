@@ -21,7 +21,7 @@
           Background="#FFFDF8"
           BorderBrush="#E7DCCB"
           BorderThickness="1">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
       <TextBlock Text="Navigation"
                  FontSize="18"
                  FontWeight="Bold"
@@ -56,7 +56,44 @@
                 Command="{Binding ConfirmSyncShortcutCommand}"/>
       </Grid>
 
-      <Grid Grid.Row="3"
+      <!-- Divider -->
+      <Border Grid.Row="3"
+              Height="1"
+              Background="#E7DCCB"
+              HorizontalAlignment="Stretch"/>
+
+      <!-- About Section -->
+      <Grid Grid.Row="4"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="10"
+            VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <TextBlock Text="About"
+                     FontWeight="SemiBold"
+                     Foreground="#3A3732"/>
+          <TextBlock Text="-"
+                     Foreground="#746A5F"/>
+          <TextBlock Text="M3Lewis"
+                     Foreground="#746A5F"/>
+        </StackPanel>
+
+        <Button Grid.Column="1"
+                Classes="toolbarButton"
+                Command="{Binding OpenGithubCommand}"
+                ToolTip.Tip="GitHub: M3Lewis"
+                Padding="6"
+                Width="32"
+                Height="32"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center">
+          <PathIcon Data="{StaticResource IconGithub}"
+                    Width="16"
+                    Height="16"
+                    Foreground="#3A3732"/>
+        </Button>
+      </Grid>
+
+      <Grid Grid.Row="5"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="12">
         <TextBlock Text="{Binding StatusMessage}"

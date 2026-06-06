@@ -65,6 +65,31 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
         return _main.CanConfirmPendingSyncShortcut();
     }
 
+    [RelayCommand]
+    private void OpenGithub()
+    {
+        try
+        {
+            var url = "https://github.com/M3Lewis";
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+            {
+                System.Diagnostics.Process.Start("xdg-open", url);
+            }
+            else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
+            {
+                System.Diagnostics.Process.Start("open", url);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Failed to open link: {ex.Message}";
+        }
+    }
+
     public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string keyText)
     {
         _main.CaptureSyncShortcut(ctrl, shift, alt, keyText);
