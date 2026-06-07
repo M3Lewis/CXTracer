@@ -50,6 +50,7 @@ Document this as current reality. Do not pretend the app is fully dynamic-theme 
 - Main shell stays `SukiWindow`.
 - Code-behind constructor should only call `InitializeComponent()`.
 - Title, minimum size, and shell background belong in AXAML.
+- All windows must set `Icon="{StaticResource AppIcon}"` referencing the optimized 48x48 icon resource. See [Default Window Icon](./atoms/default-window-icon.md).
 
 ## Avoid
 

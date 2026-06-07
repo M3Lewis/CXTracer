@@ -81,9 +81,10 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 
 - [Toolbar Button Visual State Metrics](./atoms/toolbar-button-visual-state-metrics.md) - toolbar button hover/pressed/checked fixes must preserve borders, size, and target scope.
 
-### Theme Accent
+### Theme and Icons
 
 - [Fluent Accent Resource Coverage](./atoms/fluent-accent-resource-coverage.md) - SukiUI theme color must be verified against Fluent template-owned selection, progress, and scroll indicators.
+- [Default Window Icon](./atoms/default-window-icon.md) - default icon requirements using AppIcon48.ico for sharp window border and taskbar display.
 
 ## Tech Stack
 
