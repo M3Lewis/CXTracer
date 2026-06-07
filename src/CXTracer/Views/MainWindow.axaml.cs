@@ -185,9 +185,9 @@ public partial class MainWindow : SukiWindow
             return null;
         }
 
-        var targetIndex = GetAdjacentIndex(listBox, scrollViewer, containers, direction);
+        var targetIndex = GetAdjacentIndex(scrollViewer, containers, direction);
         var target = containers[targetIndex];
-        ScrollContainerToTop(listBox, scrollViewer, target);
+        ScrollContainerToTop(scrollViewer, target);
         return target.DataContext as DisplayEvent;
     }
 
@@ -205,7 +205,7 @@ public partial class MainWindow : SukiWindow
 
         foreach (var container in containers)
         {
-            var top = GetContainerTop(listBox, container);
+            var top = GetContainerExtentTop(container);
             if (top is null)
             {
                 continue;
@@ -233,7 +233,7 @@ public partial class MainWindow : SukiWindow
             return;
         }
 
-        // First, use ListBox.ScrollIntoView to ensure the item is realized.
+        // Ensure the virtualized container is realized.
         var itemIndex = listBox.Items.Cast<object>().ToList().FindIndex(x =>
             x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
 
@@ -242,13 +242,13 @@ public partial class MainWindow : SukiWindow
             listBox.ScrollIntoView(itemIndex);
         }
 
-        // Then fine-tune to top-align the container.
+        // Top-align the container.
         var target = GetItemContainers(listBox)
             .FirstOrDefault(x => IsEventContainer(x, evt));
 
         if (target is not null)
         {
-            ScrollContainerToTop(listBox, scrollViewer, target);
+            ScrollContainerToTop(scrollViewer, target);
         }
     }
 
@@ -281,11 +281,7 @@ public partial class MainWindow : SukiWindow
                 x.IsVisible &&
                 x.Bounds.Height > 0 &&
                 x.DataContext is DisplayEvent)
-            .OrderBy(x =>
-            {
-                var point = x.TranslatePoint(new Point(0, 0), listBox);
-                return point?.Y ?? double.MaxValue;
-            })
+            .OrderBy(x => GetContainerExtentTop(x) ?? double.MaxValue)
             .ToList();
     }
 
@@ -297,18 +293,16 @@ public partial class MainWindow : SukiWindow
     }
 
     private static int GetAdjacentIndex(
-        ListBox listBox,
         ScrollViewer scrollViewer,
         IReadOnlyList<ContentPresenter> containers,
         int direction)
     {
         return direction > 0
-            ? GetNextIndex(listBox, scrollViewer, containers)
-            : GetPreviousIndex(listBox, scrollViewer, containers);
+            ? GetNextIndex(scrollViewer, containers)
+            : GetPreviousIndex(scrollViewer, containers);
     }
 
     private static int GetNextIndex(
-        ListBox listBox,
         ScrollViewer scrollViewer,
         IReadOnlyList<ContentPresenter> containers)
     {
@@ -317,7 +311,7 @@ public partial class MainWindow : SukiWindow
 
         for (var i = 0; i < containers.Count; i++)
         {
-            var top = GetContainerTop(listBox, containers[i]);
+            var top = GetContainerExtentTop(containers[i]);
             if (top is null)
             {
                 continue;
@@ -333,7 +327,6 @@ public partial class MainWindow : SukiWindow
     }
 
     private static int GetPreviousIndex(
-        ListBox listBox,
         ScrollViewer scrollViewer,
         IReadOnlyList<ContentPresenter> containers)
     {
@@ -342,7 +335,7 @@ public partial class MainWindow : SukiWindow
 
         for (var i = containers.Count - 1; i >= 0; i--)
         {
-            var top = GetContainerTop(listBox, containers[i]);
+            var top = GetContainerExtentTop(containers[i]);
             if (top is null)
             {
                 continue;
@@ -358,11 +351,10 @@ public partial class MainWindow : SukiWindow
     }
 
     private static void ScrollContainerToTop(
-        ListBox listBox,
         ScrollViewer scrollViewer,
         ContentPresenter target)
     {
-        var top = GetContainerTop(listBox, target);
+        var top = GetContainerExtentTop(target);
 
         if (top is null)
         {
@@ -378,9 +370,20 @@ public partial class MainWindow : SukiWindow
         scrollViewer.Offset = new Vector(0, clampedY);
     }
 
-    private static double? GetContainerTop(ListBox listBox, ContentPresenter target)
+    /// <summary>
+    /// Returns the container's extent-relative Y position by walking up
+    /// to the parent ListBoxItem and reading its Bounds.Y. The ListBoxItem
+    /// is a direct child of VirtualizingStackPanel, so Bounds.Y is the
+    /// extent position — no scroll transform involved, no timing issues
+    /// with stale layout after ScrollIntoView.
+    /// </summary>
+    private static double? GetContainerExtentTop(ContentPresenter target)
     {
-        return target.TranslatePoint(new Point(0, 0), listBox)?.Y;
+        // Walk up to the ListBoxItem that owns this ContentPresenter.
+        var item = target.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault();
+        if (item is null) return null;
+        // ListBoxItem.Bounds.Y is its arrange offset inside VirtualizingStackPanel.
+        return item.Bounds.Y;
     }
 
     private static bool IsTextInputFocused(object? source)
