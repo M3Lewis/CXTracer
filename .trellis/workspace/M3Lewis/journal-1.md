@@ -465,3 +465,34 @@ Set Focusable=False on the session list and items so that selecting a session wi
 ### Next Steps
 
 - None - task complete
+
+
+## Session 15: Session path tooltip and copy support
+
+**Date**: 2026-06-07
+**Task**: Session path tooltip and copy support
+**Branch**: `master`
+
+### Summary
+
+Added ToolTip.Tip and PointerPressed events on the active session path label to display the full path on hover and copy it on right-click, generalized copy-to-clipboard toast messages.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
