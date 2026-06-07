@@ -22,3 +22,4 @@ trellis-workflow-portable-files/
 .trellis/tasks/**/research/*.png
 .ace-tool/
 slides/
+*.zip
