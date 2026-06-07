@@ -105,3 +105,8 @@ src\CXTracer\bin\Release\net8.0\win-x64\publish
 ## 运行示例数据
 
 可以使用 `samples/sample-rollout.jsonl` 作为参考测试数据，将其复制到 sessions 目录中来检验解析和 UI 分栏渲染效果。
+
+## 特别鸣谢
+
+[mindfold-ai/Trellis](https://github.com/mindfold-ai/Trellis)
+[LINUX DO](https://linux.do/)
