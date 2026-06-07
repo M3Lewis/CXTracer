@@ -37,8 +37,8 @@ When adding transient notifications (Toasts) or Clipboard copy operations, adher
      }
      ```
 
-3. **User Action Acknowledgment**:
-   - Standard actions like right-clicking cards to copy text must trigger a SukiUI toast feedback message (e.g. "Text copied to clipboard") so the action is visible.
+3. **User Action Acknowledgment & Contextual Messages**:
+   - Actions that copy content (like right-clicking cards or session paths) must trigger a SukiUI toast feedback message that explicitly describes the copied entity (e.g. "Event text copied to clipboard." or "Session path copied to clipboard.") to ensure clear, contextual user feedback.
 
 4. **Overlay Event Interception**:
    - When custom overlay dialogs/popups are active, intercept navigation/escape keys at the Window level (`KeyDown`) to prevent focus drift in background lists.
