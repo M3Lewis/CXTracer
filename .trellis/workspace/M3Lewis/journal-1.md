@@ -372,3 +372,34 @@ Fixed an issue where execution pane did not scroll properly during synchronized 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 12: Message detail popup and clipboard copy
+
+**Date**: 2026-06-07
+**Task**: Message detail popup and clipboard copy
+**Branch**: `master`
+
+### Summary
+
+Implemented single-click event details overlay with collapsible Raw JSON view. Added right-click shortcut to copy message text to clipboard, complete with SukiUI toast notifications.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
