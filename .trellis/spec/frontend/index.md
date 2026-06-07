@@ -63,10 +63,12 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 - [Proxy ViewModel Reentrancy](./atoms/proxy-viewmodel-reentrancy.md) - avoiding synchronous binding-write reentrancy when a Settings ViewModel proxies MainWindow state.
 - [Shortcut Capture Contract](./atoms/shortcut-capture-contract.md) - modifier-only keydown, punctuation shortcuts, and shared physical-key normalization.
 - [Toast Notification Host](./atoms/toast-notification-host.md) - SukiUI Toast Host registration, clipboard async access, and key-guard overlay interception.
+- [ViewModel Lifecycle Cleanup](./atoms/viewmodel-lifecycle-cleanup.md) - transient ViewModels memory leak prevention by disposing of them upon window/control close.
 
 ### Session List and Loading
 
 - [Background Session Enrichment](./atoms/background-session-enrichment.md) - non-blocking parallel loading flow, cancellation, and thread-safe property updates for session lists.
+- [Observable Collection Mutation](./atoms/observable-collection-mutation.md) - avoiding ListBox container reconstruction by using in-place item movements instead of Clear/Add.
 
 ### Transcript Navigation
 
