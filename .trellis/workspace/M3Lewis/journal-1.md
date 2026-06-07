@@ -596,3 +596,36 @@ Configured MainWindow and SettingsWindow to directly reference AppIcon48.ico as 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 18: Implement i18n support
+
+**Date**: 2026-06-07
+**Task**: Implement i18n support
+**Branch**: `master`
+
+### Summary
+
+Added full internationalization support to CXTracer with runtime-switchable English/Chinese language, persistent settings, and OS locale auto-detection on first launch.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `<您的提交哈希>` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
