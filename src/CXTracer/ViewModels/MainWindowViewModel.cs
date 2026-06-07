@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -53,6 +54,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private bool _selectionChanging;
     private bool _isLoadingSettings;
     private ShortcutGesture? _syncNavigationShortcut;
+    private IResourceDictionary? _enUsDictionary;
+    private IResourceDictionary? _zhCnDictionary;
 
     public ObservableCollection<SessionInfo> Sessions { get; } = [];
     public ObservableCollection<DisplayEvent> ConversationEvents { get; } = [];
@@ -912,19 +915,38 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         var merged = app.Resources.MergedDictionaries;
 
-        // Remove existing localization dictionary
-        var existing = merged
-            .OfType<ResourceInclude>()
-            .FirstOrDefault(r => r.Source?.OriginalString.Contains("/Localization/") == true);
-        if (existing is not null)
+        // Cache the pre-instantiated resource dictionaries from App.axaml on first run
+        if (_enUsDictionary is null || _zhCnDictionary is null)
         {
-            merged.Remove(existing);
+            foreach (var provider in merged)
+            {
+                if (provider is IResourceDictionary dict)
+                {
+                    if (dict.TryGetResource("LocalizationLanguage", null, out var langVal) && langVal is string langStr)
+                    {
+                        if (langStr == "en")
+                        {
+                            _enUsDictionary = dict;
+                        }
+                        else if (langStr == "zh")
+                        {
+                            _zhCnDictionary = dict;
+                        }
+                    }
+                }
+            }
         }
 
-        // Load new localization dictionary
-        var file = lang == "zh" ? "zh-CN" : "en-US";
-        var uri = new Uri($"avares://CXTracer/Localization/{file}.axaml");
-        merged.Add(new ResourceInclude(uri) { Source = uri });
+        // Remove both from MergedDictionaries to ensure a clean state
+        if (_enUsDictionary is not null) merged.Remove(_enUsDictionary);
+        if (_zhCnDictionary is not null) merged.Remove(_zhCnDictionary);
+
+        // Add the correct target dictionary
+        var target = lang == "zh" ? _zhCnDictionary : _enUsDictionary;
+        if (target is not null)
+        {
+            merged.Add(target);
+        }
 
         // Refresh filter option display names
         foreach (var opt in FilterOptions)
