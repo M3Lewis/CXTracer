@@ -629,3 +629,36 @@ Added full internationalization support to CXTracer with runtime-switchable Engl
 ### Next Steps
 
 - None - task complete
+
+
+## Session 19: Fix Native AOT i18n dynamic swapping
+
+**Date**: 2026-06-07
+**Task**: Fix Native AOT i18n dynamic swapping
+**Branch**: `master`
+
+### Summary
+
+Resolved Native AOT startup crash by statically merging dictionaries, and resolved dynamic language toggle failure using metadata key identification.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9c5be8c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

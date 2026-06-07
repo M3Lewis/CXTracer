@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 18
+- **Total Sessions**: 19
 - **Last Active**: 2026-06-07
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~631 | Active |
+| `journal-1.md` | ~664 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 19 | 2026-06-07 | Fix Native AOT i18n dynamic swapping | `9c5be8c` | `master` |
 | 18 | 2026-06-07 | Implement i18n support | <您的提交哈希> | `master` |
 | 17 | 2026-06-07 | Fix Startup Empty View & Setup Window Icon Specs | `e999fc1`, `3d895b0`, `3d5dfe8` | `master` |
 | 16 | 2026-06-07 | Search Redesign and UX Separation | `b68c472` | `master` |
