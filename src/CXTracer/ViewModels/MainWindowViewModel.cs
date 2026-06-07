@@ -28,6 +28,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly AppSettingsService _settingsService;
     private readonly List<DisplayEvent> _allEvents = [];
     private CancellationTokenSource? _loadCts;
+    private CancellationTokenSource? _enrichCts;
     private bool _selectionChanging;
     private bool _isLoadingSettings;
     private ShortcutGesture? _syncNavigationShortcut;
@@ -192,6 +193,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
             var sessions = await Task.Run(() => _scanner.ScanLight(normalized)).ConfigureAwait(true);
             await AddSessionsAsync(sessions).ConfigureAwait(true);
+
+            _enrichCts?.Cancel();
+            _enrichCts = new CancellationTokenSource();
+            _ = StartBackgroundEnrichmentAsync(_enrichCts.Token);
 
             _watcher.Start(normalized);
             StatusMessage = sessions.Count == 0
@@ -376,6 +381,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             if (summary is not null)
             {
                 session.CopySummaryFrom(summary);
+                // CopySummaryFrom sets IsEnriched = true, so background loop will skip this session
             }
 
             var events = await _reader.ReadAllAsync(session.FilePath, ct).ConfigureAwait(true);
@@ -494,6 +500,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         if (existing is null)
         {
             Sessions.Insert(0, info);
+            _ = EnrichSingleSessionAsync(info);
         }
         else
         {
@@ -798,10 +805,58 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             StringComparison.OrdinalIgnoreCase);
     }
 
+    private async Task StartBackgroundEnrichmentAsync(CancellationToken ct)
+    {
+        var snapshot = Sessions.Where(s => !s.IsEnriched).ToList();
+        if (snapshot.Count == 0)
+        {
+            return;
+        }
+
+        var options = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 4,
+            CancellationToken = ct
+        };
+
+        try
+        {
+            await Parallel.ForEachAsync(snapshot, options, async (session, token) =>
+            {
+                var summary = await Task.Run(() => _scanner.TryGetSessionSummary(session.FilePath), token);
+                if (summary is not null)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() => session.CopySummaryFrom(summary));
+                }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task EnrichSingleSessionAsync(SessionInfo session)
+    {
+        try
+        {
+            var summary = await Task.Run(() => _scanner.TryGetSessionSummary(session.FilePath));
+            if (summary is not null)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => session.CopySummaryFrom(summary));
+            }
+        }
+        catch (Exception)
+        {
+            // Ignore enrichment failures for individual sessions
+        }
+    }
+
     public void Dispose()
     {
         _loadCts?.Cancel();
         _loadCts?.Dispose();
+        _enrichCts?.Cancel();
+        _enrichCts?.Dispose();
         _watcher.SessionFileChanged -= OnSessionFileChanged;
         _watcher.Dispose();
 

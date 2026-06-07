@@ -24,6 +24,8 @@ public sealed partial class SessionInfo : ObservableObject
     [ObservableProperty]
     private int _eventCount;
 
+    public bool IsEnriched { get; set; }
+
     public string DisplayTitle
     {
         get
@@ -76,6 +78,7 @@ public sealed partial class SessionInfo : ObservableObject
         FirstPrompt = source.FirstPrompt;
         ProjectHint = source.ProjectHint;
         EventCount = source.EventCount;
+        IsEnriched = true;
     }
 
     public static SessionInfo FromFile(FileInfo file)
