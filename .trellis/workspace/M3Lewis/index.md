@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 15
+- **Total Sessions**: 16
 - **Last Active**: 2026-06-07
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~498 | Active |
+| `journal-1.md` | ~563 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 16 | 2026-06-07 | Search Redesign and UX Separation | `b68c472` | `master` |
 | 15 | 2026-06-07 | Session path tooltip and copy support | - | `master` |
 | 14 | 2026-06-07 | Session list keyboard focus separation | - | `master` |
 | 13 | 2026-06-07 | Session list background details visible | - | `master` |

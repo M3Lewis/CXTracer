@@ -528,3 +528,36 @@ Conducted a code health audit, identified a settings VM memory leak and session 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 16: Search Redesign and UX Separation
+
+**Date**: 2026-06-07
+**Task**: Search Redesign and UX Separation
+**Branch**: `master`
+
+### Summary
+
+Separated session listing search from event transcript content search, moving the event search to the main toolbar and letting the sidebar search box focus purely on session matching.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b68c472` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
