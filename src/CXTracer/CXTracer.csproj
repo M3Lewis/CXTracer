@@ -17,6 +17,7 @@
     <SelfContained>true</SelfContained>
     <PublishAot>true</PublishAot>
     <TrimMode>full</TrimMode>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,6 +34,9 @@
 
   <Target Name="DeletePdbAfterPublish" AfterTargets="Publish">
     <Message Importance="high" Text="正在自动清理 publish 目录下的 PDB 调试文件..." />
-    <Exec Command="del /q &quot;$(PublishDir)\*.pdb&quot;" ContinueOnError="true" />
+    <ItemGroup>
+      <PdbFiles Include="$(PublishDir)**\*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(PdbFiles)" />
   </Target>
 </Project>

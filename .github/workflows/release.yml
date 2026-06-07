@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   build:
     name: Build AOT for ${{ matrix.rid }}
@@ -52,18 +55,21 @@ jobs:
         shell: pwsh
         run: |
           cd src/CXTracer/bin/Release/net8.0/win-x64/publish
+          Remove-Item -Path *.pdb -Force -ErrorAction SilentlyContinue
           Compress-Archive -Path * -DestinationPath ../../../../../../../${{ matrix.archive_name }}
 
       - name: Archive Release Binaries (macOS)
         if: startsWith(matrix.os, 'macos')
         run: |
           cd src/CXTracer/bin/Release/net8.0/${{ matrix.rid }}/publish
+          rm -f *.pdb
           zip -r ../../../../../../../${{ matrix.archive_name }} ./*
 
       - name: Archive Release Binaries (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           cd src/CXTracer/bin/Release/net8.0/linux-x64/publish
+          rm -f *.pdb
           tar -czf ../../../../../../../${{ matrix.archive_name }} ./*
 
       - name: Upload to GitHub Release
