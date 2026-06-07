@@ -27,11 +27,14 @@ If dialogs are added, declare `SukiDialogHost` under `SukiWindow.Hosts` and expo
 
 ## When to Add Toasts
 
-Use toasts for transient background events that should not replace the footer status, for example:
+Use toasts for transient background events or copy-to-clipboard actions that should not replace the footer status, for example:
 
 - background session root became unavailable
 - export completed
 - live session switched because pinning is off
+- clipboard copy confirmation
+
+If toasts are used, configure `<suki:SukiToastHost>` in window hosts and bind it to a ViewModel manager. See [Toast Notification Host](./atoms/toast-notification-host.md) for full contracts.
 
 ## Avoid
 

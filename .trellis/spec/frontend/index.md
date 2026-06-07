@@ -57,11 +57,16 @@ Build and review checklist for UI changes.
 
 Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed rules that are not just source summaries. Read the atoms whose `applies_when` entries match the task; guideline files may link to atoms, but the atom file is the source of truth for the rule.
 
-### Settings and Shortcut Input
+### Settings, Shortcut, and Clipboard
 
 - [Settings Checkbox Three-State](./atoms/settings-checkbox-three-state.md) - two-state checkbox requirements for persistent settings controls.
 - [Proxy ViewModel Reentrancy](./atoms/proxy-viewmodel-reentrancy.md) - avoiding synchronous binding-write reentrancy when a Settings ViewModel proxies MainWindow state.
 - [Shortcut Capture Contract](./atoms/shortcut-capture-contract.md) - modifier-only keydown, punctuation shortcuts, and shared physical-key normalization.
+- [Toast Notification Host](./atoms/toast-notification-host.md) - SukiUI Toast Host registration, clipboard async access, and key-guard overlay interception.
+
+### Session List and Loading
+
+- [Background Session Enrichment](./atoms/background-session-enrichment.md) - non-blocking parallel loading flow, cancellation, and thread-safe property updates for session lists.
 
 ### Transcript Navigation
 

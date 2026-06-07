@@ -67,7 +67,7 @@ Keep the full event backing list private as `_allEvents`, then project visible c
 - Use cancellation when replacing a selected-session load.
 - Use `Dispatcher.UIThread` before mutating observable collections from watcher events.
 - Add large `ObservableCollection` updates in batches and yield to `DispatcherPriority.Background` between batches.
-- Startup may auto-load the newest session, but older sessions should remain metadata-only until explicit selection.
+- Startup may auto-load the newest session. All other sessions load basic metadata synchronously on scan, followed by parallel background enrichment to resolve titles and project hints without blocking the UI thread. See [Background Session Enrichment](./atoms/background-session-enrichment.md).
 - Do not use `async void` except framework event handlers.
 
 ## Watcher Event Debounce
