@@ -86,6 +86,10 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 - [Fluent Accent Resource Coverage](./atoms/fluent-accent-resource-coverage.md) - SukiUI theme color must be verified against Fluent template-owned selection, progress, and scroll indicators.
 - [Default Window Icon](./atoms/default-window-icon.md) - default icon requirements using AppIcon48.ico for sharp window border and taskbar display.
 
+### Localization
+
+- [Dynamic Localization](./atoms/dynamic-localization.md) - static UI dynamic resources, ViewModel runtime translation lookup, Key/DisplayName decoupling for selectors, and merged dictionary cleanup.
+
 ## Tech Stack
 
 - Avalonia 12.0.4
