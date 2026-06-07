@@ -434,3 +434,34 @@ Implemented non-blocking background parallel enrichment (concurrency = 4) to res
 ### Next Steps
 
 - None - task complete
+
+
+## Session 14: Session list keyboard focus separation
+
+**Date**: 2026-06-07
+**Task**: Session list keyboard focus separation
+**Branch**: `master`
+
+### Summary
+
+Set Focusable=False on the session list and items so that selecting a session with the mouse does not steal keyboard focus, ensuring Up/Down keys control the active transcript pane.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
