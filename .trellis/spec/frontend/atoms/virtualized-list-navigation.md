@@ -16,7 +16,7 @@ verify:
   - brush properties do not allocate new SolidColorBrush instances on access
 source:
   kind: bug_history
-  ref: 2026-06-07-pane-switch-lag-fix
+  ref: 2026-06-07-exec-sync-scroll
 last_checked: 2026-06-07
 ---
 
@@ -26,19 +26,21 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
 
 1. **Suppressed Selection Chrome**: Since transcript lists are read-only views, strip all default selection styling from the generated `ListBoxItem` template using transparent hosts.
 2. **Keyboard Focus Separation**: Set `Focusable="False"` on list hosts to prevent them from capturing arrow keys or tab loops. Keep key listeners at the parent Window/Host level.
-3. **Double-Pass Scroll Realization**: When scrolling to or aligning an off-screen item, do not assume its container is materialized. First call `ListBox.ScrollIntoView(index)` to force container creation, then query `ContainerFromIndex()` or visual descendants to compute precise alignment offsets.
-4. **Brush and Resource Caching**: Do not initialize color or thickness resources inline inside high-frequency property bindings (e.g. `IBrush CardBackground => new SolidColorBrush(...)`). Declare them as `static readonly` fields.
+3. **Double-Pass Scroll Realization**: When scrolling to or aligning an off-screen item, do not assume its container is materialized. First call `ListBox.ScrollIntoView(index)` to force container creation.
+4. **Stable Extent-Space Alignment**: When calculating precise top-alignment or navigation offsets, do not use `TranslatePoint` relative to the list or viewport. Viewport coordinate translations are sensitive to scroll transformations and layout passes, leading to race conditions during rapid/synchronized scrolling. Instead, locate the parent `ListBoxItem` of the realized item container and use its `Bounds.Y` coordinate (which represents the item's static extent-space layout offset inside the virtualizing panel).
+5. **Brush and Resource Caching**: Do not initialize color or thickness resources inline inside high-frequency property bindings (e.g. `IBrush CardBackground => new SolidColorBrush(...)`). Declare them as `static readonly` fields.
 
 # Why
 
 - A flat `ItemsControl` inside a `ScrollViewer` materializes all items simultaneously. For a 300+ item session, this floods the visual tree with thousands of elements, causing pane switching, tab switching, and rendering pipelines to freeze.
-- Virtualizing controls only materialize elements visible within the viewport. Thus, visual descendants lookups for off-screen items return null. Performing coordinate-based math (`TranslatePoint`) directly on off-screen indices without first scrolling to realize them causes synchronization errors or navigation failures.
-- Creating new brushes on every binding layout pass causes garbage collection pressure and layout thread overhead.
+- Virtualizing controls only materialize elements visible within the viewport. Visual descendant lookups for off-screen items return null.
+- Calling `TranslatePoint` on a visual element relative to a parent that contains/is a `ScrollViewer` returns viewport-relative coordinates. Comparing viewport-relative offsets with `scrollViewer.Offset.Y` (which is in extent-relative coordinates) introduces a coordinate-space mismatch. Furthermore, after `ScrollIntoView()` is called, the scroll position changes asynchronously; reading viewport coordinates before the next layout pass completes yields stale positions.
+- In contrast, a virtualizing panel positions `ListBoxItem`s using arrange-pass coordinates. `ListBoxItem.Bounds.Y` is the static, absolute Y offset in the panel's scroll extent. This value is invariant to the current scroll offset and does not suffer from layout/render pass synchronization issues.
 
 # Do
 
 - Use `ListBox` with `Classes="transcriptList"` and `SelectionMode="Toggle"` (or no-selection) for transcript panes.
-- To scroll to an event `evt`:
+- To scroll to an event `evt` and align it cleanly at the top:
   ```csharp
   var itemIndex = listBox.Items.Cast<object>().ToList().FindIndex(x =>
       x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
@@ -46,11 +48,24 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
   {
       listBox.ScrollIntoView(itemIndex);
   }
-  // Now it is safe to locate the container and top-align
+
+  // Locating the target realized container
   var target = GetItemContainers(listBox).FirstOrDefault(x => IsEventContainer(x, evt));
   if (target is not null)
   {
-      ScrollContainerToTop(listBox, scrollViewer, target);
+      ScrollContainerToTop(scrollViewer, target);
+  }
+  ```
+- Calculate the extent-space position using the parent `ListBoxItem`'s layout bounds:
+  ```csharp
+  private static double? GetContainerExtentTop(ContentPresenter target)
+  {
+      // Walk up to the ListBoxItem that template-hosts this ContentPresenter
+      var item = target.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault();
+      if (item is null) return null;
+      
+      // ListBoxItem.Bounds.Y is its static offset in the scroll extent
+      return item.Bounds.Y;
   }
   ```
 - Declare standard brushes statically:
@@ -61,5 +76,6 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
 # Do Not
 
 - Do not use `ScrollViewer` wrapping `ItemsControl` for scroll lists that can contain more than 50 items.
+- Do not use `TranslatePoint` to calculate target scroll offsets when coordinating navigation, as it produces viewport-relative offsets and causes mismatch errors when comparing to `Offset.Y`.
 - Do not call `GetVisualDescendants()` on list controls to find or count all items in a sequence (this destroys virtualization benefits and misses off-screen items).
 - Do not let the `ListBox` receive keyboard focus directly if key inputs are captured at the window level.
