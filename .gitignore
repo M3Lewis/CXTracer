@@ -21,3 +21,4 @@ trellis-workflow-portable-files/
 # Local verification screenshots can include user paths or transcript content.
 .trellis/tasks/**/research/*.png
 .ace-tool/
+slides/

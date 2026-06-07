@@ -1,5 +1,6 @@
 # CXTracer
 
+<img src="./Icons/AppIcon.png" width="500" alt="App Icon" />
 Windows 优先的 Codex CLI 会话极速只读阅读器。
 
 目标：**严格不接管、不启动、不修改** Codex CLI。通过后台扫描和监听本机 `~/.codex/sessions/**/*.jsonl`，将 Codex 会话中的可读回复和执行轨迹以优雅的左右两栏（Conversation & Execution）实时分栏呈现，提供流畅的审查体验。
