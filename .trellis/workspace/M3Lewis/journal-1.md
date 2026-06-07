@@ -341,3 +341,34 @@ Pinned Avalonia packages to 12.0.4, upgraded SukiUI to 7.0.1, removed Avalonia.D
 ### Next Steps
 
 - None - task complete
+
+
+## Session 11: Fix sync nav scroll mismatch
+
+**Date**: 2026-06-07
+**Task**: Fix sync nav scroll mismatch
+**Branch**: `master`
+
+### Summary
+
+Fixed an issue where execution pane did not scroll properly during synchronized navigation. Replaced TranslatePoint viewport coordinate calculations with ListBoxItem.Bounds.Y to get reliable extent-relative positions.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
