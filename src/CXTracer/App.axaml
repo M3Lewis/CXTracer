@@ -92,6 +92,17 @@
         <Style Selector="CheckBox.preferenceCheckBox:checked /template/ Path">
             <Setter Property="Fill" Value="#E97924" />
         </Style>
+        <Style Selector="TextBox">
+            <Setter Property="SelectionBrush" Value="#F6B27A" />
+            <Setter Property="SelectionForegroundBrush" Value="#3D3445" />
+        </Style>
+        <Style Selector="TextBox:pointerover">
+            <Setter Property="BorderBrush" Value="#F08A3C" />
+        </Style>
+        <Style Selector="TextBox:focus">
+            <Setter Property="BorderBrush" Value="#E97924" />
+            <Setter Property="BorderThickness" Value="1.1" />
+        </Style>
     </Application.Styles>
 
     <Application.Resources>
