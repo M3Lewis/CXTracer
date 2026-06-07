@@ -36,6 +36,7 @@
       <Setter Property="Foreground" Value="#E97924" />
     </Style>
     <Style Selector="ListBox.sessionList ListBoxItem">
+      <Setter Property="Focusable" Value="False" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="0" />
       <Setter Property="Template">
@@ -195,6 +196,7 @@
 
         <ListBox Grid.Row="2"
                  Classes="sessionList"
+                 Focusable="False"
                  ItemsSource="{Binding Sessions}"
                  SelectedItem="{Binding SelectedSession, Mode=TwoWay}">
           <ListBox.ItemTemplate>
