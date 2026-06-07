@@ -403,3 +403,34 @@ Implemented single-click event details overlay with collapsible Raw JSON view. A
 ### Next Steps
 
 - None - task complete
+
+
+## Session 13: Session list background details visible
+
+**Date**: 2026-06-07
+**Task**: Session list background details visible
+**Branch**: `master`
+
+### Summary
+
+Implemented non-blocking background parallel enrichment (concurrency = 4) to resolve titles and project hints for all sessions without UI thread lag.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

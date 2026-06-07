@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 12
+- **Total Sessions**: 13
 - **Last Active**: 2026-06-07
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~405 | Active |
+| `journal-1.md` | ~436 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 13 | 2026-06-07 | Session list background details visible | - | `master` |
 | 12 | 2026-06-07 | Message detail popup and clipboard copy | - | `master` |
 | 11 | 2026-06-07 | Fix sync nav scroll mismatch | - | `master` |
 | 10 | 2026-06-05 | Upgrade Avalonia and SukiUI | `3f2b056`, `3cce387` | `master` |
