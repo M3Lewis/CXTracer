@@ -19,6 +19,10 @@
   <img src="https://img.shields.io/badge/MVVM-CommunityToolkit-217345?style=flat-square" alt="MVVM">
 </p>
 
+<p align="center">
+  <a href="README.md">简体中文</a> | <a href="README.en.md">English</a>
+</p>
+
 ---
 
 Windows 优先的 Codex CLI 会话极速只读阅读器。
