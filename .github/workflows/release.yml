@@ -1,0 +1,71 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build AOT for ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            archive_name: CXTracer-win-x64.zip
+          - os: macos-latest
+            rid: osx-arm64
+            archive_name: CXTracer-osx-arm64.zip
+          - os: macos-13
+            rid: osx-x64
+            archive_name: CXTracer-osx-x64.zip
+          - os: ubuntu-latest
+            rid: linux-x64
+            archive_name: CXTracer-linux-x64.tar.gz
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang zlib1g-dev libkrb5-dev
+
+      - name: Build and Publish (Native AOT)
+        run: |
+          dotnet publish src/CXTracer/CXTracer.csproj -c Release -r ${{ matrix.rid }} --self-contained -p:PublishAot=true
+
+      - name: Archive Release Binaries (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          cd src/CXTracer/bin/Release/net8.0/win-x64/publish
+          Compress-Archive -Path * -DestinationPath ../../../../../../../${{ matrix.archive_name }}
+
+      - name: Archive Release Binaries (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          cd src/CXTracer/bin/Release/net8.0/${{ matrix.rid }}/publish
+          zip -r ../../../../../../../${{ matrix.archive_name }} ./*
+
+      - name: Archive Release Binaries (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd src/CXTracer/bin/Release/net8.0/linux-x64/publish
+          tar -czf ../../../../../../../${{ matrix.archive_name }} ./*
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.archive_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
