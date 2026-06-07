@@ -25,7 +25,7 @@
 
 ---
 
-Windows 优先的 Codex CLI 会话极速只读阅读器。
+多平台 Codex CLI 会话阅读器。
 
 通过后台扫描和监听本机 `~/.codex/sessions/**/*.jsonl`，将 Codex 会话中的可读回复和执行轨迹以优雅的左右两栏（Conversation & Execution）实时分栏呈现，提供流畅的审查体验。
 
