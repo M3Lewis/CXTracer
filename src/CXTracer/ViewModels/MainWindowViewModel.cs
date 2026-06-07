@@ -1,9 +1,12 @@
+using Avalonia;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,6 +16,22 @@ using CXTracer.Models;
 using CXTracer.Services;
 
 namespace CXTracer.ViewModels;
+
+public sealed partial class FilterOptionItem : ObservableObject
+{
+    public string Key { get; }
+
+    [ObservableProperty]
+    private string _displayName;
+
+    public FilterOptionItem(string key, string displayName)
+    {
+        Key = key;
+        _displayName = displayName;
+    }
+
+    public override string ToString() => DisplayName;
+}
 
 public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 {
@@ -39,7 +58,21 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public ObservableCollection<DisplayEvent> ConversationEvents { get; } = [];
     public ObservableCollection<DisplayEvent> ExecutionEvents { get; } = [];
     public ObservableCollection<DisplayEvent> RawEvents { get; } = [];
-    public ObservableCollection<string> FilterOptions { get; } = new(new[] { "All", "Conversation", "Commands", "Errors", "Diffs", "Final", "Tools", "Raw" });
+    private static readonly string[] FilterKeys = ["All", "Conversation", "Commands", "Errors", "Diffs", "Final", "Tools", "Raw"];
+    public ObservableCollection<FilterOptionItem> FilterOptions { get; } = new(
+        FilterKeys.Select(k => new FilterOptionItem(k, k)).ToArray());
+
+    private static readonly Dictionary<string, string> FilterKeyToResourceKey = new()
+    {
+        ["All"] = "FilterAll",
+        ["Conversation"] = "FilterConversation",
+        ["Commands"] = "FilterCommands",
+        ["Errors"] = "FilterErrors",
+        ["Diffs"] = "FilterDiffs",
+        ["Final"] = "FilterFinal",
+        ["Tools"] = "FilterTools",
+        ["Raw"] = "FilterRaw"
+    };
 
     [ObservableProperty]
     private string _rootPath = SessionScanner.DefaultRootPath();
@@ -51,13 +84,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private string _eventSearchText = string.Empty;
 
     [ObservableProperty]
-    private string _selectedFilter = "All";
+    private FilterOptionItem? _selectedFilter;
+
+    [ObservableProperty]
+    private string _currentLanguage = "en";
 
     [ObservableProperty]
     private SessionInfo? _selectedSession;
 
     [ObservableProperty]
-    private string _statusMessage = "Ready";
+    private string _statusMessage = string.Empty;
 
     [ObservableProperty]
     private bool _isBusy;
@@ -96,14 +132,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public bool IsDetailPopupOpen => DetailPopupEvent is not null;
 
-    public string SessionCountText => $"{Sessions.Count} sessions";
-    public string EventCountText => $"{VisibleEventCount}/{TotalEventCount} events";
-    public string SelectedSessionPath => SelectedSession?.FilePath ?? "No session selected";
+    public string SessionCountText => LF("SessionCountFormat", "{0} sessions", Sessions.Count);
+    public string EventCountText => LF("EventCountFormat", "{0}/{1} events", VisibleEventCount, TotalEventCount);
+    public string SelectedSessionPath => SelectedSession?.FilePath ?? L("NoSessionSelected", "No session selected");
     public bool IsConversationPaneActive => ActiveTranscriptPane == EventPane.Conversation;
     public bool IsExecutionPaneActive => ActiveTranscriptPane == EventPane.Execution;
-    public string SyncNavigationShortcutText => _syncNavigationShortcut?.DisplayText ?? "Unset";
+    public string SyncNavigationShortcutText => _syncNavigationShortcut?.DisplayText ?? L("SyncNavUnset", "Unset");
     public string SyncShortcutEditorText => IsCapturingSyncShortcut
-        ? "Press shortcut..."
+        ? L("SyncNavPressShortcut", "Press shortcut...")
         : string.IsNullOrWhiteSpace(PendingSyncShortcutText)
             ? SyncNavigationShortcutText
             : PendingSyncShortcutText;
@@ -115,15 +151,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _watcher = watcher;
         _settingsService = settingsService;
         _watcher.SessionFileChanged += OnSessionFileChanged;
+        _selectedFilter = FilterOptions[0];
         LoadSettings();
+        ApplyLanguage(_currentLanguage);
+        _statusMessage = L("StatusReady", "Ready");
         _ = RefreshAsync();
     }
 
     partial void OnRootPathChanged(string value)
     {
         StatusMessage = Directory.Exists(value)
-            ? "Directory exists. Click Refresh to scan."
-            : "Directory does not exist. Check the Codex sessions path.";
+            ? L("StatusDirExists", "Directory exists. Click Refresh to scan.")
+            : LF("StatusDirNotFound", "Directory not found: {0}", value);
     }
 
     partial void OnSelectedSessionChanged(SessionInfo? value)
@@ -147,8 +186,17 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     partial void OnEventSearchTextChanged(string value) => ApplyFilter();
-    partial void OnSelectedFilterChanged(string value) => ApplyFilter();
+    partial void OnSelectedFilterChanged(FilterOptionItem? value) => ApplyFilter();
     partial void OnShowRawEventsChanged(bool value) => ApplyFilter();
+
+    partial void OnCurrentLanguageChanged(string value)
+    {
+        ApplyLanguage(value);
+        if (!_isLoadingSettings)
+        {
+            SaveSettings();
+        }
+    }
     partial void OnActiveTranscriptPaneChanged(EventPane value)
     {
         OnPropertyChanged(nameof(IsConversationPaneActive));
@@ -189,7 +237,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         try
         {
             IsBusy = true;
-            StatusMessage = "Scanning sessions...";
+            StatusMessage = L("StatusScanning", "Scanning sessions...");
             ResetEvents();
             Sessions.Clear();
             _allSessions.Clear();
@@ -215,13 +263,13 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
             _watcher.Start(normalized);
             StatusMessage = sessions.Count == 0
-                ? "No .jsonl sessions found."
-                : $"Loaded {sessions.Count} session entries.";
+                ? L("StatusNoSessions", "No .jsonl sessions found.")
+                : LF("StatusLoadedSessions", "Loaded {0} session entries.", sessions.Count);
 
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Scan failed: {ex.Message}";
+            StatusMessage = LF("StatusScanFailed", "Scan failed: {0}", ex.Message);
         }
         finally
         {
@@ -259,7 +307,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         var gesture = ParseShortcutText(PendingSyncShortcutText);
         if (gesture is null)
         {
-            StatusMessage = "Choose a Ctrl/Shift/Alt + key shortcut first.";
+            StatusMessage = L("SyncNavChooseFirst", "Choose a Ctrl/Shift/Alt + key shortcut first.");
             return;
         }
 
@@ -269,7 +317,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SyncNavigationShortcutText));
         OnPropertyChanged(nameof(SyncShortcutEditorText));
         SaveSettings();
-        StatusMessage = $"Sync navigation shortcut set to {gesture.DisplayText}.";
+        StatusMessage = LF("SyncNavSet", "Sync navigation shortcut set to {0}.", gesture.DisplayText);
     }
 
     private bool CanConfirmSyncShortcut()
@@ -286,7 +334,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         PendingSyncShortcutText = string.Empty;
         IsCapturingSyncShortcut = true;
-        StatusMessage = "Press Ctrl/Shift/Alt + a key for sync navigation.";
+        StatusMessage = L("SyncNavPressKey", "Press Ctrl/Shift/Alt + a key for sync navigation.");
     }
 
     public void CaptureSyncShortcut(bool ctrl, bool shift, bool alt, string keyText)
@@ -300,7 +348,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         PendingSyncShortcutText = gesture.DisplayText;
         IsCapturingSyncShortcut = false;
-        StatusMessage = $"Captured {gesture.DisplayText}. Click OK to save.";
+        StatusMessage = LF("SyncNavCaptured", "Captured {0}. Click OK to save.", gesture.DisplayText);
     }
 
     public void RejectSyncShortcutCapture(string message)
@@ -318,8 +366,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         IsSynchronizedNavigationEnabled = !IsSynchronizedNavigationEnabled;
         StatusMessage = IsSynchronizedNavigationEnabled
-            ? "Synchronized navigation enabled."
-            : "Synchronized navigation disabled.";
+            ? L("SyncNavEnabled", "Synchronized navigation enabled.")
+            : L("SyncNavDisabled", "Synchronized navigation disabled.");
     }
 
     public void SetActiveTranscriptPane(EventPane pane)
@@ -379,7 +427,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         try
         {
             IsBusy = true;
-            StatusMessage = $"Reading {session.FileName}...";
+            StatusMessage = LF("StatusReading", "Reading {0}...", session.FileName);
             ResetEvents();
 
             var summary = await Task.Run(() => _scanner.TryGetSessionSummary(session.FilePath), ct).ConfigureAwait(true);
@@ -397,14 +445,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             _allEvents.AddRange(events);
             TotalEventCount = _allEvents.Count;
             await PopulateVisibleEventsAsync(_allEvents, ct).ConfigureAwait(true);
-            StatusMessage = $"Viewing {session.FileName}";
+            StatusMessage = LF("StatusViewing", "Viewing {0}", session.FileName);
         }
         catch (OperationCanceledException)
         {
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Read failed: {ex.Message}";
+            StatusMessage = LF("StatusReadFailed", "Read failed: {0}", ex.Message);
         }
         finally
         {
@@ -476,7 +524,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 }
                 else
                 {
-                    StatusMessage = $"Another session changed: {Path.GetFileName(path)}";
+                    StatusMessage = LF("StatusOtherSessionChanged", "Another session changed: {0}", Path.GetFileName(path));
                 }
                 return;
             }
@@ -495,11 +543,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
             TotalEventCount = _allEvents.Count;
             UpdateVisibleEventCount();
-            StatusMessage = $"Live update: {events.Count} events";
+            StatusMessage = LF("StatusLiveUpdate", "Live update: {0} events", events.Count);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Live read failed: {ex.Message}";
+            StatusMessage = LF("StatusLiveReadFailed", "Live read failed: {0}", ex.Message);
         }
     }
 
@@ -771,7 +819,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 ExecutionEvents.Add(evt);
                 break;
             case EventPane.Raw:
-                if (ShowRawEvents || SelectedFilter == "Raw")
+                if (ShowRawEvents || SelectedFilter?.Key == "Raw")
                 {
                     RawEvents.Add(evt);
                 }
@@ -792,7 +840,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
 
-        return SelectedFilter switch
+        var key = SelectedFilter?.Key;
+        return key switch
         {
             "Conversation" => evt.Pane == EventPane.Conversation,
             "Commands" => evt.IsCommand,
@@ -815,15 +864,25 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             _syncNavigationShortcut = settings.SyncNavigationShortcut?.IsValid == true
                 ? settings.SyncNavigationShortcut
                 : null;
+
+            var lang = settings.Language;
+            if (string.IsNullOrWhiteSpace(lang))
+            {
+                lang = CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
+                    ? "zh"
+                    : "en";
+            }
+            _currentLanguage = lang;
             _isLoadingSettings = false;
 
             OnPropertyChanged(nameof(SyncNavigationShortcutText));
             OnPropertyChanged(nameof(SyncShortcutEditorText));
+            OnPropertyChanged(nameof(CurrentLanguage));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
             _isLoadingSettings = false;
-            StatusMessage = $"Settings load failed: {ex.Message}";
+            StatusMessage = LF("StatusSettingsLoadFailed", "Settings load failed: {0}", ex.Message);
         }
     }
 
@@ -834,13 +893,71 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             _settingsService.Save(new AppSettings
             {
                 IsSynchronizedNavigationEnabled = IsSynchronizedNavigationEnabled,
-                SyncNavigationShortcut = _syncNavigationShortcut
+                SyncNavigationShortcut = _syncNavigationShortcut,
+                Language = CurrentLanguage
             });
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
-            StatusMessage = $"Settings save failed: {ex.Message}";
+            StatusMessage = LF("StatusSettingsSaveFailed", "Settings save failed: {0}", ex.Message);
         }
+    }
+
+    // ── Localization helpers ──
+
+    public void ApplyLanguage(string lang)
+    {
+        var app = Application.Current;
+        if (app is null) return;
+
+        var merged = app.Resources.MergedDictionaries;
+
+        // Remove existing localization dictionary
+        var existing = merged
+            .OfType<ResourceInclude>()
+            .FirstOrDefault(r => r.Source?.OriginalString.Contains("/Localization/") == true);
+        if (existing is not null)
+        {
+            merged.Remove(existing);
+        }
+
+        // Load new localization dictionary
+        var file = lang == "zh" ? "zh-CN" : "en-US";
+        var uri = new Uri($"avares://CXTracer/Localization/{file}.axaml");
+        merged.Add(new ResourceInclude(uri) { Source = uri });
+
+        // Refresh filter option display names
+        foreach (var opt in FilterOptions)
+        {
+            if (FilterKeyToResourceKey.TryGetValue(opt.Key, out var resKey))
+            {
+                opt.DisplayName = L(resKey, opt.Key);
+            }
+        }
+
+        // Refresh computed text properties
+        OnPropertyChanged(nameof(SessionCountText));
+        OnPropertyChanged(nameof(EventCountText));
+        OnPropertyChanged(nameof(SelectedSessionPath));
+        OnPropertyChanged(nameof(SyncNavigationShortcutText));
+        OnPropertyChanged(nameof(SyncShortcutEditorText));
+    }
+
+    /// <summary>Look up a localized string resource by key, with a fallback default.</summary>
+    internal string L(string key, string fallback)
+    {
+        if (Application.Current?.Resources.TryGetResource(key, null, out var val) == true && val is string s)
+        {
+            return s;
+        }
+        return fallback;
+    }
+
+    /// <summary>Look up a localized format-string resource by key, then apply string.Format.</summary>
+    internal string LF(string key, string fallbackFormat, params object[] args)
+    {
+        var fmt = L(key, fallbackFormat);
+        return string.Format(fmt, args);
     }
 
     private static ShortcutGesture? ParseShortcutText(string value)

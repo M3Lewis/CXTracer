@@ -11,7 +11,7 @@
                  SizeToContent="Height"
                  MinWidth="420"
                  MinHeight="240"
-                 Title="Settings"
+                 Title="{DynamicResource Settings}"
                  Icon="{StaticResource AppIcon}"
                  Background="#FBF7EF"
                  KeyDown="Window_KeyDown"
@@ -22,15 +22,15 @@
           Background="#FFFDF8"
           BorderBrush="#E7DCCB"
           BorderThickness="1">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
-      <TextBlock Text="Navigation"
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
+      <TextBlock Text="{DynamicResource Navigation}"
                  FontSize="18"
                  FontWeight="Bold"
                  Foreground="#3A3732"/>
 
       <CheckBox Grid.Row="1"
                 Classes="preferenceCheckBox"
-                Content="Synchronized navigation"
+                Content="{DynamicResource SynchronizedNavigation}"
                 IsThreeState="False"
                 IsChecked="{Binding IsSynchronizedNavigationEnabled, Mode=TwoWay}"
                 VerticalAlignment="Center"/>
@@ -39,7 +39,7 @@
             ColumnDefinitions="Auto,*,Auto"
             ColumnSpacing="10"
             VerticalAlignment="Top">
-        <TextBlock Text="Shortcut"
+        <TextBlock Text="{DynamicResource Shortcut}"
                    VerticalAlignment="Center"
                    Foreground="#3A3732"/>
 
@@ -52,7 +52,7 @@
 
         <Button Grid.Column="2"
                 Classes="toolbarButton"
-                Content="OK"
+                Content="{DynamicResource OK}"
                 MinWidth="64"
                 Command="{Binding ConfirmSyncShortcutCommand}"/>
       </Grid>
@@ -63,13 +63,36 @@
               Background="#E7DCCB"
               HorizontalAlignment="Stretch"/>
 
-      <!-- About Section -->
+      <!-- Language Section -->
       <Grid Grid.Row="4"
+            ColumnDefinitions="Auto,*"
+            ColumnSpacing="10"
+            VerticalAlignment="Center">
+        <TextBlock Text="{DynamicResource Language}"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   Foreground="#3A3732"/>
+
+        <ComboBox Grid.Column="1"
+                  ItemsSource="{x:Static vm:SettingsWindowViewModel.LanguageDisplayNames}"
+                  SelectedIndex="{Binding SelectedLanguageIndex, Mode=TwoWay}"
+                  MinWidth="140"
+                  HorizontalAlignment="Right"/>
+      </Grid>
+
+      <!-- Divider -->
+      <Border Grid.Row="5"
+              Height="1"
+              Background="#E7DCCB"
+              HorizontalAlignment="Stretch"/>
+
+      <!-- About Section -->
+      <Grid Grid.Row="6"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="10"
             VerticalAlignment="Center">
         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-          <TextBlock Text="Author"
+          <TextBlock Text="{DynamicResource Author}"
                      FontWeight="SemiBold"
                      Foreground="#3A3732"/>
           <TextBlock Text=":"
@@ -96,7 +119,7 @@
         </Button>
       </Grid>
 
-      <Grid Grid.Row="5"
+      <Grid Grid.Row="7"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="12">
         <TextBlock Text="{Binding StatusMessage}"
@@ -108,7 +131,7 @@
 
         <Button Grid.Column="1"
                 Classes="toolbarButton"
-                Content="Close"
+                Content="{DynamicResource Close}"
                 MinWidth="72"
                 Click="Close_Click"/>
       </Grid>

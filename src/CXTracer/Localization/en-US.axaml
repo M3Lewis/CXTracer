@@ -1,0 +1,88 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+  <!-- MainWindow toolbar -->
+  <sys:String x:Key="SessionsRoot">Sessions root</sys:String>
+  <sys:String x:Key="Default">Default</sys:String>
+  <sys:String x:Key="Refresh">Refresh</sys:String>
+  <sys:String x:Key="PinSelected">Pin selected</sys:String>
+
+  <!-- Session list panel -->
+  <sys:String x:Key="CodexSessions">Codex sessions</sys:String>
+  <sys:String x:Key="ReadOnly">Read-Only</sys:String>
+  <sys:String x:Key="SearchSessionsPlaceholder">Search session name or path...</sys:String>
+
+  <!-- Event panel toolbar -->
+  <sys:String x:Key="Raw">Raw</sys:String>
+  <sys:String x:Key="Settings">Settings</sys:String>
+  <sys:String x:Key="FilterPlaceholder">Filter content...</sys:String>
+  <sys:String x:Key="ClearSearch">Clear search</sys:String>
+
+  <!-- Transcript panes -->
+  <sys:String x:Key="Conversation">Conversation</sys:String>
+  <sys:String x:Key="Execution">Execution</sys:String>
+  <sys:String x:Key="RawEvents">Raw events</sys:String>
+  <sys:String x:Key="RawJson">Raw JSON</sys:String>
+  <sys:String x:Key="Close">Close</sys:String>
+  <sys:String x:Key="PrevMessage">Previous message</sys:String>
+  <sys:String x:Key="NextMessage">Next message</sys:String>
+
+  <!-- Settings window -->
+  <sys:String x:Key="Navigation">Navigation</sys:String>
+  <sys:String x:Key="SynchronizedNavigation">Synchronized navigation</sys:String>
+  <sys:String x:Key="Shortcut">Shortcut</sys:String>
+  <sys:String x:Key="OK">OK</sys:String>
+  <sys:String x:Key="Author">Author</sys:String>
+  <sys:String x:Key="Language">Language</sys:String>
+  <sys:String x:Key="NoSessionSelected">No session selected</sys:String>
+
+  <!-- Filter options -->
+  <sys:String x:Key="FilterAll">All</sys:String>
+  <sys:String x:Key="FilterConversation">Conversation</sys:String>
+  <sys:String x:Key="FilterCommands">Commands</sys:String>
+  <sys:String x:Key="FilterErrors">Errors</sys:String>
+  <sys:String x:Key="FilterDiffs">Diffs</sys:String>
+  <sys:String x:Key="FilterFinal">Final</sys:String>
+  <sys:String x:Key="FilterTools">Tools</sys:String>
+  <sys:String x:Key="FilterRaw">Raw</sys:String>
+
+  <!-- Status messages -->
+  <sys:String x:Key="StatusReady">Ready</sys:String>
+  <sys:String x:Key="StatusScanning">Scanning sessions...</sys:String>
+  <sys:String x:Key="StatusNoSessions">No .jsonl sessions found.</sys:String>
+  <sys:String x:Key="StatusLoadedSessions">Loaded {0} session entries.</sys:String>
+  <sys:String x:Key="StatusDirNotFound">Directory not found: {0}</sys:String>
+  <sys:String x:Key="StatusDirExists">Directory exists. Click Refresh to scan.</sys:String>
+  <sys:String x:Key="StatusScanFailed">Scan failed: {0}</sys:String>
+  <sys:String x:Key="StatusReading">Reading {0}...</sys:String>
+  <sys:String x:Key="StatusViewing">Viewing {0}</sys:String>
+  <sys:String x:Key="StatusLiveUpdate">Live update: {0} events</sys:String>
+  <sys:String x:Key="StatusReadFailed">Read failed: {0}</sys:String>
+  <sys:String x:Key="StatusOtherSessionChanged">Another session changed: {0}</sys:String>
+  <sys:String x:Key="StatusLiveReadFailed">Live read failed: {0}</sys:String>
+  <sys:String x:Key="StatusSettingsLoadFailed">Settings load failed: {0}</sys:String>
+  <sys:String x:Key="StatusSettingsSaveFailed">Settings save failed: {0}</sys:String>
+  <sys:String x:Key="StatusSettingsReady">Settings ready.</sys:String>
+  <sys:String x:Key="StatusOpenLinkFailed">Failed to open link: {0}</sys:String>
+
+  <!-- Sync navigation -->
+  <sys:String x:Key="SyncNavEnabled">Synchronized navigation enabled.</sys:String>
+  <sys:String x:Key="SyncNavDisabled">Synchronized navigation disabled.</sys:String>
+  <sys:String x:Key="SyncNavPressKey">Press Ctrl/Shift/Alt + a key for sync navigation.</sys:String>
+  <sys:String x:Key="SyncNavCaptured">Captured {0}. Click OK to save.</sys:String>
+  <sys:String x:Key="SyncNavSet">Sync navigation shortcut set to {0}.</sys:String>
+  <sys:String x:Key="SyncNavChooseFirst">Choose a Ctrl/Shift/Alt + key shortcut first.</sys:String>
+  <sys:String x:Key="SyncNavPressShortcut">Press shortcut...</sys:String>
+  <sys:String x:Key="SyncNavUnset">Unset</sys:String>
+  <sys:String x:Key="ShortcutMustHaveModifier">Shortcut must be Ctrl/Shift/Alt + another key.</sys:String>
+
+  <!-- Count formats -->
+  <sys:String x:Key="SessionCountFormat">{0} sessions</sys:String>
+  <sys:String x:Key="EventCountFormat">{0}/{1} events</sys:String>
+
+  <!-- Toast -->
+  <sys:String x:Key="ToastCopied">Copied</sys:String>
+  <sys:String x:Key="ToastCopiedContent">Copied to clipboard.</sys:String>
+
+</ResourceDictionary>

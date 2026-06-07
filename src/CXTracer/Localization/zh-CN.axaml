@@ -1,0 +1,88 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+  <!-- MainWindow toolbar -->
+  <sys:String x:Key="SessionsRoot">会话根路径</sys:String>
+  <sys:String x:Key="Default">默认</sys:String>
+  <sys:String x:Key="Refresh">刷新</sys:String>
+  <sys:String x:Key="PinSelected">锁定选中</sys:String>
+
+  <!-- Session list panel -->
+  <sys:String x:Key="CodexSessions">Codex 会话</sys:String>
+  <sys:String x:Key="ReadOnly">只读</sys:String>
+  <sys:String x:Key="SearchSessionsPlaceholder">搜索会话名称或路径...</sys:String>
+
+  <!-- Event panel toolbar -->
+  <sys:String x:Key="Raw">原始</sys:String>
+  <sys:String x:Key="Settings">设置</sys:String>
+  <sys:String x:Key="FilterPlaceholder">过滤日志内容...</sys:String>
+  <sys:String x:Key="ClearSearch">清除搜索</sys:String>
+
+  <!-- Transcript panes -->
+  <sys:String x:Key="Conversation">对话</sys:String>
+  <sys:String x:Key="Execution">执行</sys:String>
+  <sys:String x:Key="RawEvents">原始事件</sys:String>
+  <sys:String x:Key="RawJson">原始 JSON</sys:String>
+  <sys:String x:Key="Close">关闭</sys:String>
+  <sys:String x:Key="PrevMessage">上一条消息</sys:String>
+  <sys:String x:Key="NextMessage">下一条消息</sys:String>
+
+  <!-- Settings window -->
+  <sys:String x:Key="Navigation">导航</sys:String>
+  <sys:String x:Key="SynchronizedNavigation">双栏同步导航</sys:String>
+  <sys:String x:Key="Shortcut">快捷键</sys:String>
+  <sys:String x:Key="OK">确定</sys:String>
+  <sys:String x:Key="Author">作者</sys:String>
+  <sys:String x:Key="Language">语言</sys:String>
+  <sys:String x:Key="NoSessionSelected">未选择会话</sys:String>
+
+  <!-- Filter options -->
+  <sys:String x:Key="FilterAll">全部</sys:String>
+  <sys:String x:Key="FilterConversation">对话</sys:String>
+  <sys:String x:Key="FilterCommands">命令执行</sys:String>
+  <sys:String x:Key="FilterErrors">错误日志</sys:String>
+  <sys:String x:Key="FilterDiffs">代码差异</sys:String>
+  <sys:String x:Key="FilterFinal">最终提交</sys:String>
+  <sys:String x:Key="FilterTools">工具调用</sys:String>
+  <sys:String x:Key="FilterRaw">原始事件</sys:String>
+
+  <!-- Status messages -->
+  <sys:String x:Key="StatusReady">就绪</sys:String>
+  <sys:String x:Key="StatusScanning">正在扫描会话...</sys:String>
+  <sys:String x:Key="StatusNoSessions">未找到 .jsonl 会话文件。</sys:String>
+  <sys:String x:Key="StatusLoadedSessions">已加载 {0} 个会话。</sys:String>
+  <sys:String x:Key="StatusDirNotFound">目录不存在：{0}</sys:String>
+  <sys:String x:Key="StatusDirExists">目录存在，点击"刷新"开始扫描。</sys:String>
+  <sys:String x:Key="StatusScanFailed">扫描失败：{0}</sys:String>
+  <sys:String x:Key="StatusReading">正在读取 {0}...</sys:String>
+  <sys:String x:Key="StatusViewing">正在查看 {0}</sys:String>
+  <sys:String x:Key="StatusLiveUpdate">实时更新：{0} 条事件</sys:String>
+  <sys:String x:Key="StatusReadFailed">读取失败：{0}</sys:String>
+  <sys:String x:Key="StatusOtherSessionChanged">其他会话已变更：{0}</sys:String>
+  <sys:String x:Key="StatusLiveReadFailed">实时读取失败：{0}</sys:String>
+  <sys:String x:Key="StatusSettingsLoadFailed">设置加载失败：{0}</sys:String>
+  <sys:String x:Key="StatusSettingsSaveFailed">设置保存失败：{0}</sys:String>
+  <sys:String x:Key="StatusSettingsReady">设置就绪。</sys:String>
+  <sys:String x:Key="StatusOpenLinkFailed">链接打开失败：{0}</sys:String>
+
+  <!-- Sync navigation -->
+  <sys:String x:Key="SyncNavEnabled">双栏同步导航已启用。</sys:String>
+  <sys:String x:Key="SyncNavDisabled">双栏同步导航已禁用。</sys:String>
+  <sys:String x:Key="SyncNavPressKey">按下 Ctrl/Shift/Alt + 按键 设置同步导航快捷键。</sys:String>
+  <sys:String x:Key="SyncNavCaptured">已捕获 {0}，点击"确定"保存。</sys:String>
+  <sys:String x:Key="SyncNavSet">同步导航快捷键已设置为 {0}。</sys:String>
+  <sys:String x:Key="SyncNavChooseFirst">请先选择 Ctrl/Shift/Alt + 按键 的快捷键组合。</sys:String>
+  <sys:String x:Key="SyncNavPressShortcut">请按快捷键...</sys:String>
+  <sys:String x:Key="SyncNavUnset">未设置</sys:String>
+  <sys:String x:Key="ShortcutMustHaveModifier">快捷键必须包含 Ctrl/Shift/Alt + 其他按键。</sys:String>
+
+  <!-- Count formats -->
+  <sys:String x:Key="SessionCountFormat">{0} 个会话</sys:String>
+  <sys:String x:Key="EventCountFormat">{0}/{1} 条事件</sys:String>
+
+  <!-- Toast -->
+  <sys:String x:Key="ToastCopied">已复制</sys:String>
+  <sys:String x:Key="ToastCopiedContent">内容已复制到剪贴板。</sys:String>
+
+</ResourceDictionary>

@@ -115,6 +115,7 @@
             <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#E97924" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://CXTracer/Icons/Icons.axaml" />
+                <ResourceInclude Source="avares://CXTracer/Localization/en-US.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

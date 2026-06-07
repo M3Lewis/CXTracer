@@ -139,7 +139,7 @@
             BorderBrush="#E7DCCB"
             BorderThickness="1">
       <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="10" VerticalAlignment="Center">
-        <TextBlock Text="Sessions root"
+        <TextBlock Text="{DynamicResource SessionsRoot}"
                    FontWeight="SemiBold"
                    VerticalAlignment="Center"
                    Foreground="#3E3A36"/>
@@ -149,11 +149,11 @@
                  PlaceholderText="C:\Users\you\.codex\sessions 或 WSL UNC 路径"
                  FontFamily="Consolas"/>
 
-        <Button Grid.Column="2" Classes="toolbarButton" Content="Default" Command="{Binding OpenDefaultRootCommand}"/>
-        <Button Grid.Column="3" Classes="toolbarButton" Content="Refresh" Command="{Binding RefreshCommand}"/>
+        <Button Grid.Column="2" Classes="toolbarButton" Content="{DynamicResource Default}" Command="{Binding OpenDefaultRootCommand}"/>
+        <Button Grid.Column="3" Classes="toolbarButton" Content="{DynamicResource Refresh}" Command="{Binding RefreshCommand}"/>
         <CheckBox Grid.Column="4"
                   Classes="preferenceCheckBox"
-                  Content="Pin selected"
+                  Content="{DynamicResource PinSelected}"
                   IsThreeState="False"
                   IsChecked="{Binding PinSelectedSession, Mode=TwoWay}"
                   VerticalAlignment="Center"/>
@@ -170,7 +170,7 @@
       <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel>
-            <TextBlock Text="Codex sessions"
+            <TextBlock Text="{DynamicResource CodexSessions}"
                        FontSize="18"
                        FontWeight="Bold"
                        Foreground="#3A3732"/>
@@ -185,7 +185,7 @@
                   Background="#FFFFFF"
                   BorderBrush="#E7DCCB"
                   BorderThickness="1">
-            <TextBlock Text="只读"
+            <TextBlock Text="{DynamicResource ReadOnly}"
                        FontSize="12"
                        Foreground="#6C7A6F"/>
           </Border>
@@ -193,7 +193,7 @@
 
         <TextBox Grid.Row="1"
                  Text="{Binding SessionSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 PlaceholderText="搜索会话名称或路径..."/>
+                 PlaceholderText="{DynamicResource SearchSessionsPlaceholder}"/>
 
         <ListBox Grid.Row="2"
                  Classes="sessionList"
@@ -266,30 +266,36 @@
 
           <ToggleButton Grid.Column="1"
                         Classes="toolbarButton"
-                        Content="Raw"
+                        Content="{DynamicResource Raw}"
                         VerticalAlignment="Center"
                         IsChecked="{Binding ShowRawEvents}"/>
 
           <Button Grid.Column="2"
                   Classes="toolbarButton"
-                  Content="Settings"
+                  Content="{DynamicResource Settings}"
                   VerticalAlignment="Center"
                   Click="Settings_Click"/>
 
           <TextBox Grid.Column="3"
                    Text="{Binding EventSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                   PlaceholderText="过滤日志内容..."
+                   PlaceholderText="{DynamicResource FilterPlaceholder}"
                    VerticalAlignment="Center"/>
 
           <ComboBox Grid.Column="4"
                     ItemsSource="{Binding FilterOptions}"
                     SelectedItem="{Binding SelectedFilter}"
                     MinWidth="150"
-                    VerticalAlignment="Center"/>
+                    VerticalAlignment="Center">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:FilterOptionItem">
+                <TextBlock Text="{Binding DisplayName}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
 
           <Button Grid.Column="5"
                   Classes="toolbarButton"
-                  Content="Clear search"
+                  Content="{DynamicResource ClearSearch}"
                   VerticalAlignment="Center"
                   Command="{Binding ClearSearchCommand}"/>
         </Grid>
@@ -309,7 +315,7 @@
                 Background="#FFFDF8">
           <Grid RowDefinitions="Auto,*" RowSpacing="8">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-              <TextBlock Text="Conversation"
+              <TextBlock Text="{DynamicResource Conversation}"
                          FontSize="18"
                          FontWeight="Bold"
                          Foreground="#3A3732"
@@ -318,7 +324,7 @@
               <Button Grid.Column="1"
                       Classes="roundIconButton"
                       Click="ConversationUp_Click"
-                      ToolTip.Tip="上一条消息">
+                      ToolTip.Tip="{DynamicResource PrevMessage}">
                 <Border Width="30"
                         Height="30"
                         CornerRadius="15"
@@ -338,7 +344,7 @@
               <Button Grid.Column="2"
                       Classes="roundIconButton"
                       Click="ConversationDown_Click"
-                      ToolTip.Tip="下一条消息">
+                      ToolTip.Tip="{DynamicResource NextMessage}">
                 <Border Width="30"
                         Height="30"
                         CornerRadius="15"
@@ -418,7 +424,7 @@
                 Background="#FFFDF8">
           <Grid RowDefinitions="Auto,*" RowSpacing="8">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-              <TextBlock Text="Execution"
+              <TextBlock Text="{DynamicResource Execution}"
                          FontSize="18"
                          FontWeight="Bold"
                          Foreground="#3A3732"
@@ -431,7 +437,7 @@
                       Background="Transparent"
                       BorderThickness="0"
                       Click="ExecutionUp_Click"
-                      ToolTip.Tip="上一条消息">
+                      ToolTip.Tip="{DynamicResource PrevMessage}">
                 <Border Width="30"
                         Height="30"
                         CornerRadius="15"
@@ -455,7 +461,7 @@
                       Background="Transparent"
                       BorderThickness="0"
                       Click="ExecutionDown_Click"
-                      ToolTip.Tip="下一条消息">
+                      ToolTip.Tip="{DynamicResource NextMessage}">
                 <Border Width="30"
                         Height="30"
                         CornerRadius="15"
@@ -526,7 +532,7 @@
 
         <Expander Grid.Row="1"
                   Grid.ColumnSpan="3"
-                  Header="Raw events"
+                  Header="{DynamicResource RawEvents}"
                   IsExpanded="{Binding ShowRawEvents}">
           <Border CornerRadius="16"
                   Padding="10"
@@ -642,7 +648,7 @@
           <Button Grid.Column="2"
                   Classes="roundIconButton"
                   Click="DetailClose_Click"
-                  ToolTip.Tip="Close">
+                  ToolTip.Tip="{DynamicResource Close}">
             <Border Width="28" Height="28" CornerRadius="14" Background="#1A000000">
               <TextBlock Text="✕"
                          FontSize="14"
@@ -671,7 +677,7 @@
                        LineHeight="22"
                        Foreground="#34302C"/>
 
-            <Expander Header="Raw JSON"
+            <Expander Header="{DynamicResource RawJson}"
                       Padding="0"
                       Margin="0,4,0,0">
               <Border CornerRadius="10"

@@ -9,7 +9,10 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
 {
     private readonly MainWindowViewModel _main;
     private bool _isSynchronizedNavigationEnabled;
-    private string _statusMessage = "Settings ready.";
+    private string _statusMessage;
+
+    public static string[] LanguageOptions { get; } = ["en", "zh"];
+    public static string[] LanguageDisplayNames { get; } = ["English", "简体中文"];
 
     public bool? IsSynchronizedNavigationEnabled
     {
@@ -24,8 +27,32 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
             _isSynchronizedNavigationEnabled = enabled;
             _main.IsSynchronizedNavigationEnabled = enabled;
             StatusMessage = enabled
-                ? "Synchronized navigation enabled."
-                : "Synchronized navigation disabled.";
+                ? _main.L("SyncNavEnabled", "Synchronized navigation enabled.")
+                : _main.L("SyncNavDisabled", "Synchronized navigation disabled.");
+            OnPropertyChanged();
+        }
+    }
+
+    public string CurrentLanguage
+    {
+        get => _main.CurrentLanguage;
+        set
+        {
+            if (_main.CurrentLanguage == value) return;
+            _main.CurrentLanguage = value;
+            OnPropertyChanged();
+            // Refresh display labels after language swap
+            OnPropertyChanged(nameof(ShortcutEditorText));
+            StatusMessage = _main.L("StatusReady", "Ready");
+        }
+    }
+
+    public int SelectedLanguageIndex
+    {
+        get => CurrentLanguage == "zh" ? 1 : 0;
+        set
+        {
+            CurrentLanguage = value == 1 ? "zh" : "en";
             OnPropertyChanged();
         }
     }
@@ -43,6 +70,7 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
     {
         _main = main;
         _isSynchronizedNavigationEnabled = main.IsSynchronizedNavigationEnabled;
+        _statusMessage = main.L("StatusSettingsReady", "Settings ready.");
         _main.PropertyChanged += OnMainPropertyChanged;
     }
 
@@ -86,7 +114,7 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Failed to open link: {ex.Message}";
+            StatusMessage = _main.LF("StatusOpenLinkFailed", "Failed to open link: {0}", ex.Message);
         }
     }
 
@@ -120,6 +148,10 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
                 OnPropertyChanged(nameof(ShortcutEditorText));
                 OnPropertyChanged(nameof(IsCapturingSyncShortcut));
                 ConfirmSyncShortcutCommand.NotifyCanExecuteChanged();
+                break;
+            case nameof(MainWindowViewModel.CurrentLanguage):
+                OnPropertyChanged(nameof(CurrentLanguage));
+                OnPropertyChanged(nameof(SelectedLanguageIndex));
                 break;
         }
     }

@@ -88,17 +88,18 @@ public partial class MainWindow : SukiWindow
         {
             string copyText = evt.IsRaw ? evt.RawJson : evt.Text;
             string description = evt.IsRaw ? "Raw JSON" : "Event text";
-            _ = CopyToClipboardAsync(copyText, description);
+            _ = CopyToClipboardAsync(copyText, viewModel);
             e.Handled = true;
         }
     }
 
     private void DetailPanel_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel { DetailPopupEvent: { } evt }
+        if (DataContext is MainWindowViewModel viewModel
+            && viewModel.DetailPopupEvent is { } evt
             && e.GetCurrentPoint(null).Properties.IsRightButtonPressed)
         {
-            _ = CopyToClipboardAsync(evt.Text, "Event text");
+            _ = CopyToClipboardAsync(evt.Text, viewModel);
             e.Handled = true;
         }
     }
@@ -109,25 +110,22 @@ public partial class MainWindow : SukiWindow
             && !string.IsNullOrEmpty(viewModel.SelectedSessionPath)
             && e.GetCurrentPoint(null).Properties.IsRightButtonPressed)
         {
-            _ = CopyToClipboardAsync(viewModel.SelectedSessionPath, "Session path");
+            _ = CopyToClipboardAsync(viewModel.SelectedSessionPath, viewModel);
             e.Handled = true;
         }
     }
 
-    private async Task CopyToClipboardAsync(string text, string entityName)
+    private async Task CopyToClipboardAsync(string text, MainWindowViewModel viewModel)
     {
         if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
         {
             await clipboard.SetTextAsync(text);
 
-            if (DataContext is MainWindowViewModel viewModel)
-            {
-                viewModel.ToastManager.CreateToast()
-                    .WithTitle("Copied")
-                    .WithContent($"{entityName} copied to clipboard.")
-                    .Dismiss().After(TimeSpan.FromSeconds(2))
-                    .Queue();
-            }
+            viewModel.ToastManager.CreateToast()
+                .WithTitle(viewModel.L("ToastCopied", "Copied"))
+                .WithContent(viewModel.L("ToastCopiedContent", "Copied to clipboard."))
+                .Dismiss().After(TimeSpan.FromSeconds(2))
+                .Queue();
         }
     }
 
