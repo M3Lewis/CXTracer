@@ -81,7 +81,7 @@ public partial class MainWindow : SukiWindow
         }
         else if (props.IsRightButtonPressed)
         {
-            _ = CopyEventTextAsync(evt.Text);
+            _ = CopyToClipboardAsync(evt.Text, "Event text");
             e.Handled = true;
         }
     }
@@ -91,12 +91,23 @@ public partial class MainWindow : SukiWindow
         if (DataContext is MainWindowViewModel { DetailPopupEvent: { } evt }
             && e.GetCurrentPoint(null).Properties.IsRightButtonPressed)
         {
-            _ = CopyEventTextAsync(evt.Text);
+            _ = CopyToClipboardAsync(evt.Text, "Event text");
             e.Handled = true;
         }
     }
 
-    private async Task CopyEventTextAsync(string text)
+    private void SessionPath_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel
+            && !string.IsNullOrEmpty(viewModel.SelectedSessionPath)
+            && e.GetCurrentPoint(null).Properties.IsRightButtonPressed)
+        {
+            _ = CopyToClipboardAsync(viewModel.SelectedSessionPath, "Session path");
+            e.Handled = true;
+        }
+    }
+
+    private async Task CopyToClipboardAsync(string text, string entityName)
     {
         if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
         {
@@ -106,7 +117,7 @@ public partial class MainWindow : SukiWindow
             {
                 viewModel.ToastManager.CreateToast()
                     .WithTitle("Copied")
-                    .WithContent("Text copied to clipboard.")
+                    .WithContent($"{entityName} copied to clipboard.")
                     .Dismiss().After(TimeSpan.FromSeconds(2))
                     .Queue();
             }

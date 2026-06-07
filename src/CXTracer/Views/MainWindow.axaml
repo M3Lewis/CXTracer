@@ -255,7 +255,9 @@
             <TextBlock Text="{Binding SelectedSessionPath}"
                        FontFamily="Consolas"
                        TextTrimming="CharacterEllipsis"
-                       Foreground="#3A3732"/>
+                       Foreground="#3A3732"
+                       ToolTip.Tip="{Binding SelectedSessionPath}"
+                       PointerPressed="SessionPath_PointerPressed"/>
             <TextBlock Text="{Binding EventCountText}"
                        Foreground="#746A5F"
                        FontSize="12"/>
