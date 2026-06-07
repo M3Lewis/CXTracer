@@ -561,3 +561,38 @@ Separated session listing search from event transcript content search, moving th
 ### Next Steps
 
 - None - task complete
+
+
+## Session 17: Fix Startup Empty View & Setup Window Icon Specs
+
+**Date**: 2026-06-07
+**Task**: Fix Startup Empty View & Setup Window Icon Specs
+**Branch**: `master`
+
+### Summary
+
+Configured MainWindow and SettingsWindow to directly reference AppIcon48.ico as window icon and configured application executable icon; added default-window-icon spec atom; fixed startup blank conversation bug by automatically loading selected session if selection changes at the end of PopulateSessionsFilteredAsync.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e999fc1` | (see git log) |
+| `3d895b0` | (see git log) |
+| `3d5dfe8` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
