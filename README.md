@@ -1,6 +1,26 @@
-# CXTracer
 
-<img src="./src/CXTracer/Icons/AppIcon.png" width="500" alt="App Icon" />
+
+<p align="center">
+  <img src="./src/CXTracer/Icons/AppIcon.png" width="128" alt="CXTracer Logo" />
+</p>
+
+<h1 align="center">CXTracer</h1>
+
+<p align="center">
+  <strong>高性能Codex会话追踪与分析工具</strong><br>
+  <sub>基于 .NET 8 与 Avalonia 的精美扁平化桌面端应用</sub>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/%E5%8D%8F%E8%AE%AE-AGPL--3.0-3b82f6?style=flat-square" alt="AGPL-3.0"></a>
+  <img src="https://img.shields.io/badge/.NET-8.0%20%7C%20Native%20AOT-512bd4?style=flat-square" alt=".NET 8">
+  <img src="https://img.shields.io/badge/UI-Avalonia%2012.0.4-007ACC?style=flat-square" alt="Avalonia">
+  <img src="https://img.shields.io/badge/Theme-SukiUI%20Orange-FF6B00?style=flat-square" alt="SukiUI">
+  <img src="https://img.shields.io/badge/MVVM-CommunityToolkit-217345?style=flat-square" alt="MVVM">
+</p>
+
+---
+
 Windows 优先的 Codex CLI 会话极速只读阅读器。
 
 目标：**严格不接管、不启动、不修改** Codex CLI。通过后台扫描和监听本机 `~/.codex/sessions/**/*.jsonl`，将 Codex 会话中的可读回复和执行轨迹以优雅的左右两栏（Conversation & Execution）实时分栏呈现，提供流畅的审查体验。
@@ -110,3 +130,4 @@ src\CXTracer\bin\Release\net8.0\win-x64\publish
 
 [mindfold-ai/Trellis](https://github.com/mindfold-ai/Trellis)
 [LINUX DO](https://linux.do/)
+
