@@ -25,7 +25,7 @@ last_checked: 2026-06-07
 When implementing keyboard navigation, focus switching, or scroll alignment on large event streams, use virtualizing list controls (`ListBox` with default recycling panels) rather than flat `ItemsControl` hosts. Follow these constraints:
 
 1. **Suppressed Selection Chrome**: Since transcript lists are read-only views, strip all default selection styling from the generated `ListBoxItem` template using transparent hosts.
-2. **Keyboard Focus Separation**: Set `Focusable="False"` on list hosts to prevent them from capturing arrow keys or tab loops. Keep key listeners at the parent Window/Host level.
+2. **Keyboard Focus Separation**: Set `Focusable="False"` on list hosts (like ListBox) AND their corresponding item containers (like ListBoxItem style setters) to prevent them from capturing keyboard focus or tab loops. This ensures pointer clicks select items normally but keyboard focus remains at the parent Window/Host level for global navigation.
 3. **Double-Pass Scroll Realization**: When scrolling to or aligning an off-screen item, do not assume its container is materialized. First call `ListBox.ScrollIntoView(index)` to force container creation.
 4. **Stable Extent-Space Alignment**: When calculating precise top-alignment or navigation offsets, do not use `TranslatePoint` relative to the list or viewport. Viewport coordinate translations are sensitive to scroll transformations and layout passes, leading to race conditions during rapid/synchronized scrolling. Instead, locate the parent `ListBoxItem` of the realized item container and use its `Bounds.Y` coordinate (which represents the item's static extent-space layout offset inside the virtualizing panel).
 5. **Brush and Resource Caching**: Do not initialize color or thickness resources inline inside high-frequency property bindings (e.g. `IBrush CardBackground => new SolidColorBrush(...)`). Declare them as `static readonly` fields.
@@ -78,4 +78,4 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
 - Do not use `ScrollViewer` wrapping `ItemsControl` for scroll lists that can contain more than 50 items.
 - Do not use `TranslatePoint` to calculate target scroll offsets when coordinating navigation, as it produces viewport-relative offsets and causes mismatch errors when comparing to `Offset.Y`.
 - Do not call `GetVisualDescendants()` on list controls to find or count all items in a sequence (this destroys virtualization benefits and misses off-screen items).
-- Do not let the `ListBox` receive keyboard focus directly if key inputs are captured at the window level.
+- Do not let the `ListBox` or `ListBoxItem` receive keyboard focus directly if key inputs are captured at the window level.
