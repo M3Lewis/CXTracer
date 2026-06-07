@@ -86,7 +86,9 @@ public partial class MainWindow : SukiWindow
         }
         else if (props.IsRightButtonPressed)
         {
-            _ = CopyToClipboardAsync(evt.Text, "Event text");
+            string copyText = evt.IsRaw ? evt.RawJson : evt.Text;
+            string description = evt.IsRaw ? "Raw JSON" : "Event text";
+            _ = CopyToClipboardAsync(copyText, description);
             e.Handled = true;
         }
     }

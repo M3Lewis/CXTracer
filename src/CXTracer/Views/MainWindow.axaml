@@ -538,12 +538,38 @@
               <ItemsControl ItemsSource="{Binding RawEvents}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="models:DisplayEvent">
-                    <TextBlock Text="{Binding RawJson}"
-                               FontFamily="Consolas"
-                               FontSize="12"
-                               TextWrapping="NoWrap"
-                               Margin="0,0,0,6"
-                               Foreground="#4A4640"/>
+                    <Border CornerRadius="8"
+                            Padding="10"
+                            Margin="0,0,0,8"
+                            Background="{Binding CardBackground}"
+                            BorderBrush="{Binding CardBorder}"
+                            BorderThickness="{Binding CardBorderThickness}"
+                            PointerPressed="CardBorder_PointerPressed">
+                      <StackPanel Spacing="5">
+                        <Grid ColumnDefinitions="Auto,*">
+                          <Border CornerRadius="999"
+                                  Padding="6,2"
+                                  Background="{Binding RoleBadgeBackground}">
+                            <TextBlock Text="{Binding RoleLabel}"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding RoleBadgeForeground}"/>
+                          </Border>
+
+                          <TextBlock Grid.Column="1"
+                                     Text="{Binding TimeText}"
+                                     HorizontalAlignment="Right"
+                                     FontSize="11"
+                                     Foreground="#8A8178"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding FormattedRawJson}"
+                                   FontFamily="Consolas"
+                                   FontSize="12"
+                                   TextWrapping="NoWrap"
+                                   Foreground="#4A4640"/>
+                      </StackPanel>
+                    </Border>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
@@ -654,7 +680,7 @@
                       BorderThickness="1"
                       MaxHeight="260">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto">
-                  <TextBlock Text="{Binding DetailPopupEvent.RawJson}"
+                  <TextBlock Text="{Binding DetailPopupEvent.FormattedRawJson}"
                              FontFamily="Consolas"
                              FontSize="12"
                              TextWrapping="NoWrap"
