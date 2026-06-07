@@ -7,8 +7,8 @@ applies_when:
   - styling Fluent controls under SukiUI
   - fixing black selection, progress, or scrollbar indicators
 code_anchors:
-  - src/CodexLens/App.axaml
-  - src/CodexLens/Views/MainWindow.axaml
+  - src/CXTracer/App.axaml
+  - src/CXTracer/Views/MainWindow.axaml
 verify:
   - selected session check icon uses the orange accent
   - footer progress indicator uses the orange accent

@@ -7,7 +7,7 @@ applies_when:
   - styling current message indicators
   - changing class-based active UI states in AXAML
 code_anchors:
-  - src/CodexLens/Views/MainWindow.axaml
+  - src/CXTracer/Views/MainWindow.axaml
 verify:
   - Left/Right visibly moves the active pane border
   - Up/Down visibly moves the current message indicator

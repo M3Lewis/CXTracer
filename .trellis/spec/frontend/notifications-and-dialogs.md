@@ -1,6 +1,6 @@
 # Notifications and Dialogs
 
-Codex Lens currently uses inline status instead of modal dialogs or toast notifications.
+CXTracer currently uses inline status instead of modal dialogs or toast notifications.
 
 ## Current Feedback Pattern
 

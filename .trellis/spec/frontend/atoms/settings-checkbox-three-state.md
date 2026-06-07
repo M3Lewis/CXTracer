@@ -6,8 +6,8 @@ applies_when:
   - adding or changing an Avalonia CheckBox bound to a bool or bool? ViewModel property
   - adding or changing SettingsWindow persistent preference controls
 code_anchors:
-  - src/CodexLens/Views/SettingsWindow.axaml
-  - src/CodexLens/ViewModels/SettingsWindowViewModel.cs
+  - src/CXTracer/Views/SettingsWindow.axaml
+  - src/CXTracer/ViewModels/SettingsWindowViewModel.cs
 verify:
   - clicking the checkbox visibly toggles between checked and unchecked
   - closing and reopening Settings preserves the current value

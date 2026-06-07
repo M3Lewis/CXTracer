@@ -1,6 +1,6 @@
 # MVVM and State Management
 
-Codex Lens uses CommunityToolkit.Mvvm and a single shell ViewModel.
+CXTracer uses CommunityToolkit.Mvvm and a single shell ViewModel.
 
 ## ViewModel Pattern
 

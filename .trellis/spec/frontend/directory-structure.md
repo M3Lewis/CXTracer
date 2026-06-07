@@ -3,7 +3,7 @@
 The current UI is intentionally small: one Suki window, one ViewModel, and supporting models/services.
 
 ```text
-src/CodexLens/
+src/CXTracer/
   App.axaml
   App.axaml.cs
   Program.cs

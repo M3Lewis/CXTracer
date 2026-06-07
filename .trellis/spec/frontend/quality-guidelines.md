@@ -42,7 +42,7 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 
 ## Verification
 
-- Run `dotnet build .\CodexLens.sln` after UI changes.
+- Run `dotnet build .\CXTracer.sln` after UI changes.
 - For layout changes, run the app and load `samples/sample-rollout.jsonl` or a copied real transcript.
 - For startup/load changes, verify the window remains responsive while sessions and selected transcript events are still filling in.
 - For scroll-button changes, verify repeated up/down clicks in both Conversation and Execution panes, including rapid repeated clicks before a render frame.

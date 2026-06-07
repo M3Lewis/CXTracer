@@ -7,8 +7,8 @@ applies_when:
   - binding Avalonia controls to proxy properties that write through to another ViewModel
   - syncing SettingsWindowViewModel state with MainWindowViewModel state
 code_anchors:
-  - src/CodexLens/ViewModels/SettingsWindowViewModel.cs
-  - src/CodexLens/ViewModels/MainWindowViewModel.cs
+  - src/CXTracer/ViewModels/SettingsWindowViewModel.cs
+  - src/CXTracer/ViewModels/MainWindowViewModel.cs
 verify:
   - changing the SettingsWindow control updates the underlying MainWindowViewModel setting
   - the bound control does not visually revert during the same click or key interaction

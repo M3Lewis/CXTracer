@@ -1,4 +1,4 @@
-# Codex Lens Service Guidelines
+# CXTracer Service Guidelines
 
 Backend here means the local service/model code that reads Codex transcript files. This project is a single .NET 8 Avalonia desktop app, not a web backend and not an EF Core application.
 

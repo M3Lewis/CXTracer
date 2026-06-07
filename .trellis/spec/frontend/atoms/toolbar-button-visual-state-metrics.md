@@ -7,9 +7,9 @@ applies_when:
   - overriding SukiUI button templates
   - fixing hover, pressed, checked, or border visual states
 code_anchors:
-  - src/CodexLens/App.axaml
-  - src/CodexLens/Views/MainWindow.axaml
-  - src/CodexLens/Views/SettingsWindow.axaml
+  - src/CXTracer/App.axaml
+  - src/CXTracer/Views/MainWindow.axaml
+  - src/CXTracer/Views/SettingsWindow.axaml
 verify:
   - pointer hover keeps the button border visible
   - hover, pressed, and checked states do not change button size

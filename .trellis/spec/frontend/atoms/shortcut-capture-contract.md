@@ -7,11 +7,11 @@ applies_when:
   - adding or changing shortcut matching in MainWindow or SettingsWindow
   - changing physical Avalonia Key normalization
 code_anchors:
-  - src/CodexLens/Views/ShortcutCaptureInput.cs
-  - src/CodexLens/Views/ShortcutKeyInput.cs
-  - src/CodexLens/Views/SettingsWindow.axaml.cs
-  - src/CodexLens/Views/MainWindow.axaml.cs
-  - src/CodexLens/Models/ShortcutGesture.cs
+  - src/CXTracer/Views/ShortcutCaptureInput.cs
+  - src/CXTracer/Views/ShortcutKeyInput.cs
+  - src/CXTracer/Views/SettingsWindow.axaml.cs
+  - src/CXTracer/Views/MainWindow.axaml.cs
+  - src/CXTracer/Models/ShortcutGesture.cs
 verify:
   - pressing only Ctrl, Shift, or Alt keeps capture mode active
   - Ctrl+S, Shift+S, and Alt+S capture successfully

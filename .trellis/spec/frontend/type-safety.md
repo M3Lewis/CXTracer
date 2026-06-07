@@ -4,7 +4,7 @@ The project enables nullable reference types and Avalonia compiled bindings by d
 
 ## Project Settings
 
-`CodexLens.csproj` includes:
+`CXTracer.csproj` includes:
 
 ```xml
 <Nullable>enable</Nullable>

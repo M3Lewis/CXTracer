@@ -1,6 +1,6 @@
 # Service Boundaries
 
-Codex Lens has local services rather than backend layers. The important boundary is between filesystem/parsing work and presentation state.
+CXTracer has local services rather than backend layers. The important boundary is between filesystem/parsing work and presentation state.
 
 ## Services
 
@@ -11,7 +11,7 @@ Services may use filesystem APIs, JSON APIs, and plain model types.
 - `SessionFileAccess` owns the shared `FileStream` open policy for reading active transcript files.
 - `SessionWatcher` wraps `FileSystemWatcher` and raises normalized session change events.
 - `CodexEventParser` parses one JSONL line and classifies it into conversation, execution, or raw panes.
-- `AppSettingsService` reads and writes Codex Lens app preferences, not Codex session transcript files.
+- `AppSettingsService` reads and writes CXTracer app preferences, not Codex session transcript files.
 
 `SessionReader` also owns transcript tail coordination:
 
@@ -29,7 +29,7 @@ Services should not know about:
 
 `AppSettingsService` contract:
 
-- Location: a Codex Lens-specific directory under `Environment.SpecialFolder.LocalApplicationData`.
+- Location: a CXTracer-specific directory under `Environment.SpecialFolder.LocalApplicationData`.
 - Format: JSON.
 - Current fields: `IsSynchronizedNavigationEnabled` and `SyncNavigationShortcut`.
 - Missing file: return default settings.

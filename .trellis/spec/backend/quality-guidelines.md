@@ -37,7 +37,7 @@ Use this checklist when changing services, parser behavior, or transcript IO.
 
 ## Verification
 
-- Run `dotnet build .\CodexLens.sln` after service or ViewModel changes.
+- Run `dotnet build .\CXTracer.sln` after service or ViewModel changes.
 - For parser changes, exercise `samples/sample-rollout.jsonl` or a real copied transcript and check that user/assistant messages do not appear twice.
 - For scanner changes, verify non-selected sessions are listed without reading transcript head lines or line counts.
 - For watcher/tail changes, verify duplicate rapid change events, active appends, partial final lines, and truncation/rotation behavior.

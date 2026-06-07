@@ -1,6 +1,6 @@
 # Logging Guidelines
 
-Codex Lens currently has no application logging pipeline. `Program.BuildAvaloniaApp()` uses Avalonia's `LogToTrace()` for framework diagnostics.
+CXTracer currently has no application logging pipeline. `Program.BuildAvaloniaApp()` uses Avalonia's `LogToTrace()` for framework diagnostics.
 
 ## Current Policy
 

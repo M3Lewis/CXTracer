@@ -1,9 +1,9 @@
 # Service Directory Structure
 
-Codex Lens is currently a single-project desktop app:
+CXTracer is currently a single-project desktop app:
 
 ```text
-src/CodexLens/
+src/CXTracer/
   App.axaml
   App.axaml.cs
   Program.cs

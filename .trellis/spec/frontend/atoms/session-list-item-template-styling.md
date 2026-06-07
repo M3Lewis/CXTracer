@@ -3,11 +3,11 @@ id: frontend.session-list.item-template-styling
 type: pitfall
 priority: should
 applies_when:
-  - styling Codex sessions list items
+  - styling CXTracer sessions list items
   - changing selected session row background or border
   - modifying ListBoxItem styles in MainWindow.axaml
 code_anchors:
-  - src/CodexLens/Views/MainWindow.axaml
+  - src/CXTracer/Views/MainWindow.axaml
 verify:
   - selected session row background covers the full visible card area
   - selected session row border thickness and color visibly change when edited
@@ -21,7 +21,7 @@ last_checked: 2026-06-04
 
 # Rule
 
-When styling the Codex sessions list row chrome, keep the generated `ListBoxItem` template chrome and the visible session card boundary deliberately separated.
+When styling the CXTracer sessions list row chrome, keep the generated `ListBoxItem` template chrome and the visible session card boundary deliberately separated.
 
 # Why
 

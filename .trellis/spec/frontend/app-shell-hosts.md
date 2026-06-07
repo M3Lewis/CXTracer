@@ -1,6 +1,6 @@
 # App Shell
 
-Codex Lens uses the standard Avalonia desktop lifetime with a SukiUI main window.
+CXTracer uses the standard Avalonia desktop lifetime with a SukiUI main window.
 
 ## Startup
 
@@ -34,13 +34,13 @@ Keep `ThemeColor` explicit. The app currently requests the light theme variant.
 
 ```xml
 <suki:SukiWindow
-    x:Class="CodexLens.Views.MainWindow"
+    x:Class="CXTracer.Views.MainWindow"
     x:DataType="vm:MainWindowViewModel"
     Width="1380"
     Height="860"
     MinWidth="1080"
     MinHeight="640"
-    Title="Codex Lens"
+    Title="CXTracer"
     BackgroundStyle="Flat">
 ```
 

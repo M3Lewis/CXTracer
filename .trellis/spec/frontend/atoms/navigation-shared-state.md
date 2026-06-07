@@ -8,9 +8,9 @@ applies_when:
   - changing synchronized navigation behavior
   - changing current message highlighting
 code_anchors:
-  - src/CodexLens/ViewModels/MainWindowViewModel.cs
-  - src/CodexLens/Views/MainWindow.axaml.cs
-  - src/CodexLens/Models/DisplayEvent.cs
+  - src/CXTracer/ViewModels/MainWindowViewModel.cs
+  - src/CXTracer/Views/MainWindow.axaml.cs
+  - src/CXTracer/Models/DisplayEvent.cs
 verify:
   - mouse up/down buttons and keyboard Up/Down advance from the same current message when synchronized navigation is enabled
   - Left/Right changes the active Conversation or Execution pane state

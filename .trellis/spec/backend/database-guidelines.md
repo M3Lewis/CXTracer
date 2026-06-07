@@ -1,6 +1,6 @@
 # Data and Persistence Guidelines
 
-Codex Lens does not use a database. The app is a read-only viewer over Codex CLI transcript JSONL files.
+CXTracer does not use a database. The app is a read-only viewer over Codex CLI transcript JSONL files.
 
 ## Source of Truth
 
