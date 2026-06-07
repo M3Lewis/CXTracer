@@ -57,11 +57,16 @@ public partial class MainWindow : SukiWindow
                 return;
             }
 
+            var settingsVm = new SettingsWindowViewModel(viewModel);
             _settingsWindow = new SettingsWindow
             {
-                DataContext = new SettingsWindowViewModel(viewModel)
+                DataContext = settingsVm
             };
-            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+            _settingsWindow.Closed += (_, _) =>
+            {
+                _settingsWindow = null;
+                settingsVm.Dispose();
+            };
             _settingsWindow.Show(this);
         }
     }

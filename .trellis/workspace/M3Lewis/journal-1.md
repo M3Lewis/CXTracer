@@ -496,3 +496,35 @@ Added ToolTip.Tip and PointerPressed events on the active session path label to 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 16: Code health audit and cleanup
+
+**Date**: 2026-06-07
+**Task**: Code health audit and cleanup
+**Branch**: `master`
+
+### Summary
+
+Conducted a code health audit, identified a settings VM memory leak and session list update thrashing. Fixed the leak by calling Dispose() on the view model upon window close, and resolved the thrashing by rewriting the collection upsert to use targeted in-place RemoveAt/Insert operations instead of full Clear/Add rebuilds.
+
+### Main Changes
+
+- Fixed `MainWindow.Settings_Click` to capture and dispose the transient settings view model.
+- Refactored `MainWindowViewModel.UpsertSession` to perform incremental index swaps when a session's modification timestamp changes.
+
+### Git Commits
+
+(No commits - tool execution blocked)
+
+### Testing
+
+- [OK] `dotnet build src/CXTracer/CXTracer.csproj --nologo -v q` succeeded with 0 warnings and 0 errors.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

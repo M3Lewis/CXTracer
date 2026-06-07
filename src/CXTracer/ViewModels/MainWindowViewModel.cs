@@ -506,16 +506,27 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             existing.LastWriteTime = info.LastWriteTime;
             existing.Length = info.Length;
+
+            int oldIndex = Sessions.IndexOf(existing);
+            int targetIndex = 0;
+            while (targetIndex < Sessions.Count && Sessions[targetIndex].LastWriteTime > existing.LastWriteTime)
+            {
+                targetIndex++;
+            }
+
+            if (targetIndex > oldIndex) targetIndex--;
+
+            if (oldIndex != targetIndex)
+            {
+                _selectionChanging = true;
+                var currentSelection = SelectedSession;
+                Sessions.RemoveAt(oldIndex);
+                Sessions.Insert(targetIndex, existing);
+                SelectedSession = currentSelection;
+                _selectionChanging = false;
+            }
         }
 
-        var sorted = Sessions.OrderByDescending(s => s.LastWriteTime).ToList();
-        _selectionChanging = true;
-        Sessions.Clear();
-        foreach (var session in sorted)
-        {
-            Sessions.Add(session);
-        }
-        _selectionChanging = false;
         OnPropertyChanged(nameof(SessionCountText));
     }
 
