@@ -2,12 +2,15 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using SukiUI.Controls;
+using SukiUI.Toasts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CXTracer.Models;
 using CXTracer.ViewModels;
 
@@ -63,6 +66,69 @@ public partial class MainWindow : SukiWindow
         }
     }
 
+    private void CardBorder_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel
+            || sender is not Border { DataContext: DisplayEvent evt })
+        {
+            return;
+        }
+
+        var props = e.GetCurrentPoint(null).Properties;
+        if (props.IsLeftButtonPressed)
+        {
+            viewModel.ShowDetailPopup(evt);
+        }
+        else if (props.IsRightButtonPressed)
+        {
+            _ = CopyEventTextAsync(evt.Text);
+            e.Handled = true;
+        }
+    }
+
+    private void DetailPanel_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel { DetailPopupEvent: { } evt }
+            && e.GetCurrentPoint(null).Properties.IsRightButtonPressed)
+        {
+            _ = CopyEventTextAsync(evt.Text);
+            e.Handled = true;
+        }
+    }
+
+    private async Task CopyEventTextAsync(string text)
+    {
+        if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(text);
+
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                viewModel.ToastManager.CreateToast()
+                    .WithTitle("Copied")
+                    .WithContent("Text copied to clipboard.")
+                    .Dismiss().After(TimeSpan.FromSeconds(2))
+                    .Queue();
+            }
+        }
+    }
+
+    private void DetailBackdrop_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.CloseDetailPopup();
+        }
+    }
+
+    private void DetailClose_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.CloseDetailPopup();
+        }
+    }
+
     private void Window_KeyDown(object? sender, KeyEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel)
@@ -98,6 +164,16 @@ public partial class MainWindow : SukiWindow
 
         switch (e.Key)
         {
+            case Key.Escape when viewModel.IsDetailPopupOpen:
+                viewModel.CloseDetailPopup();
+                e.Handled = true;
+                return;
+            case Key.Left when viewModel.IsDetailPopupOpen:
+            case Key.Right when viewModel.IsDetailPopupOpen:
+            case Key.Up when viewModel.IsDetailPopupOpen:
+            case Key.Down when viewModel.IsDetailPopupOpen:
+                e.Handled = true;
+                return;
             case Key.Left:
                 viewModel.SetActiveTranscriptPane(EventPane.Conversation);
                 e.Handled = true;

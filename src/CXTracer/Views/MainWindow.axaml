@@ -18,6 +18,9 @@
                  Background="#FBF7EF"
                  KeyDown="Window_KeyDown"
                  BackgroundStyle="Flat">
+  <suki:SukiWindow.Hosts>
+    <suki:SukiToastHost Manager="{Binding ToastManager}" />
+  </suki:SukiWindow.Hosts>
   <suki:SukiWindow.Styles>
     <Style Selector="Button.roundIconButton">
       <Setter Property="Width" Value="34" />
@@ -118,6 +121,7 @@
     </Style>
   </suki:SukiWindow.Styles>
   
+  <Panel>
   <Grid RowDefinitions="Auto,*,Auto"
         ColumnDefinitions="340,*"
         Margin="14"
@@ -353,7 +357,8 @@
                           Margin="0,0,0,10"
                           Background="{Binding CardBackground}"
                           BorderBrush="{Binding CardBorder}"
-                          BorderThickness="{Binding CardBorderThickness}">
+                          BorderThickness="{Binding CardBorderThickness}"
+                          PointerPressed="CardBorder_PointerPressed">
                     <StackPanel Spacing="7">
                       <Grid ColumnDefinitions="Auto,*">
                         <Border CornerRadius="999"
@@ -469,7 +474,8 @@
                           Margin="0,0,0,10"
                           Background="{Binding CardBackground}"
                           BorderBrush="{Binding CardBorder}"
-                          BorderThickness="{Binding CardBorderThickness}">
+                          BorderThickness="{Binding CardBorderThickness}"
+                          PointerPressed="CardBorder_PointerPressed">
                     <StackPanel Spacing="7">
                       <Grid ColumnDefinitions="Auto,*">
                         <Border CornerRadius="999"
@@ -556,4 +562,101 @@
       </Grid>
     </Border>
   </Grid>
+
+  <!-- Detail popup overlay -->
+  <Panel IsVisible="{Binding IsDetailPopupOpen}"
+         Background="Transparent">
+    <!-- Backdrop -->
+    <Border Background="#80000000"
+            PointerPressed="DetailBackdrop_PointerPressed"/>
+
+    <!-- Content panel -->
+    <Border HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Width="800"
+            MaxHeight="680"
+            CornerRadius="20"
+            Padding="24"
+            Background="{Binding DetailPopupEvent.CardBackground}"
+            BorderBrush="{Binding DetailPopupEvent.CardBorder}"
+            BorderThickness="2"
+            BoxShadow="0 8 32 0 #40000000"
+            PointerPressed="DetailPanel_PointerPressed">
+      <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Border CornerRadius="999"
+                  Padding="10,4"
+                  Background="{Binding DetailPopupEvent.RoleBadgeBackground}">
+            <TextBlock Text="{Binding DetailPopupEvent.RoleLabel}"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       Foreground="{Binding DetailPopupEvent.RoleBadgeForeground}"/>
+          </Border>
+
+          <TextBlock Grid.Column="1"
+                     Text="{Binding DetailPopupEvent.TimeText}"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Center"
+                     FontSize="13"
+                     Foreground="#8A8178"
+                     Margin="0,0,8,0"/>
+
+          <Button Grid.Column="2"
+                  Classes="roundIconButton"
+                  Click="DetailClose_Click"
+                  ToolTip.Tip="Close">
+            <Border Width="28" Height="28" CornerRadius="14" Background="#1A000000">
+              <TextBlock Text="✕"
+                         FontSize="14"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         Foreground="#6A6460"/>
+            </Border>
+          </Button>
+        </Grid>
+
+        <!-- Scrollable body -->
+        <ScrollViewer Grid.Row="1"
+                      Margin="0,14,0,0"
+                      HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Spacing="12">
+            <TextBlock Text="{Binding DetailPopupEvent.Title}"
+                       FontWeight="Bold"
+                       FontSize="16"
+                       TextWrapping="Wrap"
+                       Foreground="#37332F"
+                       IsVisible="{Binding DetailPopupEvent.Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+            <TextBlock Text="{Binding DetailPopupEvent.Text}"
+                       TextWrapping="Wrap"
+                       FontSize="15"
+                       LineHeight="22"
+                       Foreground="#34302C"/>
+
+            <Expander Header="Raw JSON"
+                      Padding="0"
+                      Margin="0,4,0,0">
+              <Border CornerRadius="10"
+                      Padding="10"
+                      Background="#F7F5EF"
+                      BorderBrush="#E7DCCB"
+                      BorderThickness="1"
+                      MaxHeight="260">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                  <TextBlock Text="{Binding DetailPopupEvent.RawJson}"
+                             FontFamily="Consolas"
+                             FontSize="12"
+                             TextWrapping="NoWrap"
+                             Foreground="#4A4640"/>
+                </ScrollViewer>
+              </Border>
+            </Expander>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </Border>
+  </Panel>
+  </Panel>
+
 </suki:SukiWindow>

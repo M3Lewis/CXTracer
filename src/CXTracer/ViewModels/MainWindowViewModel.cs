@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SukiUI.Toasts;
 using CXTracer.Models;
 using CXTracer.Services;
 
@@ -15,6 +16,8 @@ namespace CXTracer.ViewModels;
 
 public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 {
+    public ISukiToastManager ToastManager { get; } = new SukiToastManager();
+
     private const int SessionBatchSize = 40;
     private const int EventBatchSize = 40;
 
@@ -81,6 +84,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private int _visibleEventCount;
+
+    [ObservableProperty]
+    private DisplayEvent? _detailPopupEvent;
+
+    public bool IsDetailPopupOpen => DetailPopupEvent is not null;
 
     public string SessionCountText => $"{Sessions.Count} sessions";
     public string EventCountText => $"{VisibleEventCount}/{TotalEventCount} events";
@@ -149,6 +157,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnIsCapturingSyncShortcutChanged(bool value) => OnPropertyChanged(nameof(SyncShortcutEditorText));
     partial void OnPendingSyncShortcutTextChanged(string value) => OnPropertyChanged(nameof(SyncShortcutEditorText));
+    partial void OnDetailPopupEventChanged(DisplayEvent? value) => OnPropertyChanged(nameof(IsDetailPopupOpen));
+
+    public void ShowDetailPopup(DisplayEvent evt) => DetailPopupEvent = evt;
+    public void CloseDetailPopup() => DetailPopupEvent = null;
     partial void OnIsSynchronizedNavigationEnabledChanged(bool value)
     {
         if (!_isLoadingSettings)
