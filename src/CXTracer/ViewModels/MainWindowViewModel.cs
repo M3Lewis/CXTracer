@@ -27,8 +27,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly SessionWatcher _watcher;
     private readonly AppSettingsService _settingsService;
     private readonly List<DisplayEvent> _allEvents = [];
+    private readonly List<SessionInfo> _allSessions = [];
     private CancellationTokenSource? _loadCts;
     private CancellationTokenSource? _enrichCts;
+    private CancellationTokenSource? _sessionFilterCts;
     private bool _selectionChanging;
     private bool _isLoadingSettings;
     private ShortcutGesture? _syncNavigationShortcut;
@@ -43,7 +45,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private string _rootPath = SessionScanner.DefaultRootPath();
 
     [ObservableProperty]
-    private string _searchText = string.Empty;
+    private string _sessionSearchText = string.Empty;
+
+    [ObservableProperty]
+    private string _eventSearchText = string.Empty;
 
     [ObservableProperty]
     private string _selectedFilter = "All";
@@ -133,7 +138,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _ = LoadSelectedSessionAsync(value);
     }
 
-    partial void OnSearchTextChanged(string value) => ApplyFilter();
+    partial void OnSessionSearchTextChanged(string value)
+    {
+        _sessionFilterCts?.Cancel();
+        _sessionFilterCts = new CancellationTokenSource();
+        var ct = _sessionFilterCts.Token;
+        _ = FilterSessionsAndEnrichAsync(ct);
+    }
+
+    partial void OnEventSearchTextChanged(string value) => ApplyFilter();
     partial void OnSelectedFilterChanged(string value) => ApplyFilter();
     partial void OnShowRawEventsChanged(bool value) => ApplyFilter();
     partial void OnActiveTranscriptPaneChanged(EventPane value)
@@ -179,6 +192,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             StatusMessage = "Scanning sessions...";
             ResetEvents();
             Sessions.Clear();
+            _allSessions.Clear();
             OnPropertyChanged(nameof(SessionCountText));
 
             var normalized = NormalizeRoot(RootPath);
@@ -192,7 +206,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             }
 
             var sessions = await Task.Run(() => _scanner.ScanLight(normalized)).ConfigureAwait(true);
-            await AddSessionsAsync(sessions).ConfigureAwait(true);
+            _allSessions.AddRange(sessions);
+            await PopulateSessionsFilteredAsync(CancellationToken.None).ConfigureAwait(true);
 
             _enrichCts?.Cancel();
             _enrichCts = new CancellationTokenSource();
@@ -226,7 +241,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ClearSearch()
     {
-        SearchText = string.Empty;
+        EventSearchText = string.Empty;
     }
 
     [RelayCommand]
@@ -454,6 +469,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 if (!PinSelectedSession)
                 {
                     var target = Sessions.FirstOrDefault(s => PathsEqual(s.FilePath, path));
+                    if (target is null)
+                    {
+                        var targetAll = _allSessions.FirstOrDefault(s => PathsEqual(s.FilePath, path));
+                        if (targetAll is not null)
+                        {
+                            SessionSearchText = string.Empty;
+                            target = Sessions.FirstOrDefault(s => PathsEqual(s.FilePath, path));
+                        }
+                    }
                     if (target is not null)
                     {
                         SelectedSession = target;
@@ -496,38 +520,160 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var existing = Sessions.FirstOrDefault(s => PathsEqual(s.FilePath, info.FilePath));
-        if (existing is null)
+        // 1. Update the master list
+        var existingAll = _allSessions.FirstOrDefault(s => PathsEqual(s.FilePath, info.FilePath));
+        SessionInfo targetSession;
+        if (existingAll is null)
         {
-            Sessions.Insert(0, info);
+            _allSessions.Insert(0, info);
+            targetSession = info;
             _ = EnrichSingleSessionAsync(info);
         }
         else
         {
-            existing.LastWriteTime = info.LastWriteTime;
-            existing.Length = info.Length;
+            existingAll.LastWriteTime = info.LastWriteTime;
+            existingAll.Length = info.Length;
+            targetSession = existingAll;
 
-            int oldIndex = Sessions.IndexOf(existing);
-            int targetIndex = 0;
-            while (targetIndex < Sessions.Count && Sessions[targetIndex].LastWriteTime > existing.LastWriteTime)
+            _allSessions.Remove(existingAll);
+            int targetIdx = 0;
+            while (targetIdx < _allSessions.Count && _allSessions[targetIdx].LastWriteTime > existingAll.LastWriteTime)
             {
-                targetIndex++;
+                targetIdx++;
             }
+            _allSessions.Insert(targetIdx, existingAll);
+        }
 
-            if (targetIndex > oldIndex) targetIndex--;
+        // 2. Incrementally update the visible collection
+        bool matchesFilter = MatchesSessionFilter(targetSession);
+        var existingVisible = Sessions.FirstOrDefault(s => PathsEqual(s.FilePath, targetSession.FilePath));
 
-            if (oldIndex != targetIndex)
+        if (matchesFilter)
+        {
+            if (existingVisible is null)
+            {
+                // Find correct position in Sessions
+                int targetIdx = 0;
+                while (targetIdx < Sessions.Count && Sessions[targetIdx].LastWriteTime > targetSession.LastWriteTime)
+                {
+                    targetIdx++;
+                }
+                Sessions.Insert(targetIdx, targetSession);
+            }
+            else
+            {
+                existingVisible.LastWriteTime = targetSession.LastWriteTime;
+                existingVisible.Length = targetSession.Length;
+
+                int oldIndex = Sessions.IndexOf(existingVisible);
+                int targetIndex = 0;
+                while (targetIndex < Sessions.Count && Sessions[targetIndex].LastWriteTime > existingVisible.LastWriteTime)
+                {
+                    targetIndex++;
+                }
+
+                if (targetIndex > oldIndex) targetIndex--;
+
+                if (oldIndex != targetIndex)
+                {
+                    _selectionChanging = true;
+                    var currentSelection = SelectedSession;
+                    Sessions.RemoveAt(oldIndex);
+                    Sessions.Insert(targetIndex, existingVisible);
+                    SelectedSession = currentSelection;
+                    _selectionChanging = false;
+                }
+            }
+        }
+        else
+        {
+            if (existingVisible is not null)
             {
                 _selectionChanging = true;
                 var currentSelection = SelectedSession;
-                Sessions.RemoveAt(oldIndex);
-                Sessions.Insert(targetIndex, existing);
-                SelectedSession = currentSelection;
+                Sessions.Remove(existingVisible);
+                if (currentSelection != null && PathsEqual(currentSelection.FilePath, existingVisible.FilePath))
+                {
+                    SelectedSession = Sessions.FirstOrDefault();
+                }
+                else
+                {
+                    SelectedSession = currentSelection;
+                }
                 _selectionChanging = false;
             }
         }
 
         OnPropertyChanged(nameof(SessionCountText));
+    }
+
+    private bool MatchesSessionFilter(SessionInfo s)
+    {
+        var query = SessionSearchText?.Trim();
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return true;
+        }
+
+        return (s.DisplayTitle != null && s.DisplayTitle.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+               (s.DisplaySubtitle != null && s.DisplaySubtitle.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+               (s.FilePath != null && s.FilePath.Contains(query, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task PopulateSessionsFilteredAsync(CancellationToken cancellationToken)
+    {
+        _selectionChanging = true;
+        Sessions.Clear();
+
+        var query = SessionSearchText?.Trim();
+        var filtered = string.IsNullOrWhiteSpace(query)
+            ? _allSessions
+            : _allSessions.Where(MatchesSessionFilter).ToList();
+
+        var count = 0;
+        foreach (var session in filtered)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            Sessions.Add(session);
+            count++;
+
+            if (count % SessionBatchSize == 0)
+            {
+                OnPropertyChanged(nameof(SessionCountText));
+                await YieldToUiAsync().ConfigureAwait(true);
+            }
+        }
+
+        if (SelectedSession != null && Sessions.Any(s => PathsEqual(s.FilePath, SelectedSession.FilePath)))
+        {
+            // Keep selected
+        }
+        else
+        {
+            SelectedSession = Sessions.FirstOrDefault();
+        }
+
+        _selectionChanging = false;
+        OnPropertyChanged(nameof(SessionCountText));
+    }
+
+    private async Task FilterSessionsAndEnrichAsync(CancellationToken ct)
+    {
+        try
+        {
+            await PopulateSessionsFilteredAsync(ct).ConfigureAwait(true);
+            if (ct.IsCancellationRequested) return;
+
+            _enrichCts?.Cancel();
+            _enrichCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            _ = StartBackgroundEnrichmentAsync(_enrichCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     private void ApplyFilter()
@@ -638,9 +784,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private bool PassesFilter(DisplayEvent evt)
     {
-        if (!string.IsNullOrWhiteSpace(SearchText))
+        if (!string.IsNullOrWhiteSpace(EventSearchText))
         {
-            var q = SearchText.Trim();
+            var q = EventSearchText.Trim();
             if (!evt.Title.Contains(q, StringComparison.OrdinalIgnoreCase)
                 && !evt.Text.Contains(q, StringComparison.OrdinalIgnoreCase)
                 && !evt.RawJson.Contains(q, StringComparison.OrdinalIgnoreCase))
@@ -868,6 +1014,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _loadCts?.Dispose();
         _enrichCts?.Cancel();
         _enrichCts?.Dispose();
+        _sessionFilterCts?.Cancel();
+        _sessionFilterCts?.Dispose();
         _watcher.SessionFileChanged -= OnSessionFileChanged;
         _watcher.Dispose();
 
