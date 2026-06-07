@@ -15,6 +15,7 @@
                  MinWidth="1080"
                  MinHeight="640"
                  Title="CXTracer"
+                 Icon="{StaticResource AppIcon}"
                  Background="#FBF7EF"
                  KeyDown="Window_KeyDown"
                  BackgroundStyle="Flat">
