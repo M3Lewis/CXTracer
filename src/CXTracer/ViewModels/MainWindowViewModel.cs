@@ -218,15 +218,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 ? "No .jsonl sessions found."
                 : $"Loaded {sessions.Count} session entries.";
 
-            if (SelectedSession is null && Sessions.Count > 0)
-            {
-                _selectionChanging = true;
-                SelectedSession = Sessions[0];
-                _selectionChanging = false;
-                OnPropertyChanged(nameof(SelectedSessionPath));
-
-                await LoadSelectedSessionAsync(Sessions[0]).ConfigureAwait(true);
-            }
         }
         catch (Exception ex)
         {
@@ -622,6 +613,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task PopulateSessionsFilteredAsync(CancellationToken cancellationToken)
     {
+        var currentSelectionPath = SelectedSession?.FilePath;
         _selectionChanging = true;
         Sessions.Clear();
 
@@ -658,6 +650,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         _selectionChanging = false;
         OnPropertyChanged(nameof(SessionCountText));
+
+        if (SelectedSession != null && (currentSelectionPath == null || !PathsEqual(SelectedSession.FilePath, currentSelectionPath)))
+        {
+            await LoadSelectedSessionAsync(SelectedSession).ConfigureAwait(true);
+        }
     }
 
     private async Task FilterSessionsAndEnrichAsync(CancellationToken ct)
