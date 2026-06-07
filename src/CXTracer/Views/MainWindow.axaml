@@ -84,6 +84,38 @@
       <Setter Property="BorderBrush" Value="#E97924" />
       <Setter Property="BorderThickness" Value="2" />
     </Style>
+    <!-- Transcript ListBox: no selection chrome, no keyboard nav capture -->
+    <Style Selector="ListBox.transcriptList">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+    <Style Selector="ListBox.transcriptList ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="{TemplateBinding Padding}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <!-- Accent scrollbar for transcript ListBoxes -->
+    <Style Selector="ListBox.transcriptList ScrollBar /template/ Thumb">
+      <Setter Property="Background" Value="#E97924" />
+    </Style>
+    <Style Selector="ListBox.transcriptList ScrollBar:pointerover /template/ Thumb">
+      <Setter Property="Background" Value="#D76618" />
+    </Style>
   </suki:SukiWindow.Styles>
   
   <Grid RowDefinitions="Auto,*,Auto"
@@ -309,52 +341,51 @@
               </Button>
             </Grid>
 
-            <ScrollViewer x:Name="ConversationScrollViewer"
-                          Grid.Row="1"
-                          Classes="accentScrollArea">
-              <ItemsControl x:Name="ConversationItemsControl"
-                            ItemsSource="{Binding ConversationEvents}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate x:DataType="models:DisplayEvent">
-                    <Border CornerRadius="16"
-                            Padding="12"
-                            Margin="0,0,0,10"
-                            Background="{Binding CardBackground}"
-                            BorderBrush="{Binding CardBorder}"
-                            BorderThickness="{Binding CardBorderThickness}">
-                      <StackPanel Spacing="7">
-                        <Grid ColumnDefinitions="Auto,*">
-                          <Border CornerRadius="999"
-                                  Padding="8,3"
-                                  Background="{Binding RoleBadgeBackground}">
-                            <TextBlock Text="{Binding RoleLabel}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{Binding RoleBadgeForeground}"/>
-                          </Border>
-
-                          <TextBlock Grid.Column="1"
-                                     Text="{Binding TimeText}"
-                                     HorizontalAlignment="Right"
+            <ListBox x:Name="ConversationListBox"
+                     Grid.Row="1"
+                     Classes="transcriptList"
+                     ItemsSource="{Binding ConversationEvents}"
+                     SelectionMode="Toggle">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:DisplayEvent">
+                  <Border CornerRadius="16"
+                          Padding="12"
+                          Margin="0,0,0,10"
+                          Background="{Binding CardBackground}"
+                          BorderBrush="{Binding CardBorder}"
+                          BorderThickness="{Binding CardBorderThickness}">
+                    <StackPanel Spacing="7">
+                      <Grid ColumnDefinitions="Auto,*">
+                        <Border CornerRadius="999"
+                                Padding="8,3"
+                                Background="{Binding RoleBadgeBackground}">
+                          <TextBlock Text="{Binding RoleLabel}"
                                      FontSize="12"
-                                     Foreground="#8A8178"/>
-                        </Grid>
+                                     FontWeight="SemiBold"
+                                     Foreground="{Binding RoleBadgeForeground}"/>
+                        </Border>
 
-                        <TextBlock Text="{Binding Title}"
-                                   FontWeight="Bold"
-                                   Foreground="#37332F"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TimeText}"
+                                   HorizontalAlignment="Right"
+                                   FontSize="12"
+                                   Foreground="#8A8178"/>
+                      </Grid>
 
-                        <TextBlock Text="{Binding Text}"
-                                   TextWrapping="Wrap"
-                                   FontSize="14"
-                                   LineHeight="20"
-                                   Foreground="#34302C"/>
-                      </StackPanel>
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </ScrollViewer>
+                      <TextBlock Text="{Binding Title}"
+                                 FontWeight="Bold"
+                                 Foreground="#37332F"/>
+
+                      <TextBlock Text="{Binding Text}"
+                                 TextWrapping="Wrap"
+                                 FontSize="14"
+                                 LineHeight="20"
+                                 Foreground="#34302C"/>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
           </Grid>
         </Border>
 
@@ -426,55 +457,53 @@
               </Button>
             </Grid>
 
-            <ScrollViewer x:Name="ExecutionScrollViewer"
-                          Grid.Row="1"
-                          Classes="accentScrollArea"
-                          HorizontalScrollBarVisibility="Disabled">
-              <ItemsControl x:Name="ExecutionItemsControl"
-                            ItemsSource="{Binding ExecutionEvents}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate x:DataType="models:DisplayEvent">
-                    <Border CornerRadius="16"
-                            Padding="12"
-                            Margin="0,0,0,10"
-                            Background="{Binding CardBackground}"
-                            BorderBrush="{Binding CardBorder}"
-                            BorderThickness="{Binding CardBorderThickness}">
-                      <StackPanel Spacing="7">
-                        <Grid ColumnDefinitions="Auto,*">
-                          <Border CornerRadius="999"
-                                  Padding="8,3"
-                                  Background="{Binding RoleBadgeBackground}">
-                            <TextBlock Text="{Binding RoleLabel}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{Binding RoleBadgeForeground}"/>
-                          </Border>
-
-                          <TextBlock Grid.Column="1"
-                                     Text="{Binding TimeText}"
-                                     HorizontalAlignment="Right"
+            <ListBox x:Name="ExecutionListBox"
+                     Grid.Row="1"
+                     Classes="transcriptList"
+                     ItemsSource="{Binding ExecutionEvents}"
+                     SelectionMode="Toggle">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:DisplayEvent">
+                  <Border CornerRadius="16"
+                          Padding="12"
+                          Margin="0,0,0,10"
+                          Background="{Binding CardBackground}"
+                          BorderBrush="{Binding CardBorder}"
+                          BorderThickness="{Binding CardBorderThickness}">
+                    <StackPanel Spacing="7">
+                      <Grid ColumnDefinitions="Auto,*">
+                        <Border CornerRadius="999"
+                                Padding="8,3"
+                                Background="{Binding RoleBadgeBackground}">
+                          <TextBlock Text="{Binding RoleLabel}"
                                      FontSize="12"
-                                     Foreground="#8A8178"/>
-                        </Grid>
+                                     FontWeight="SemiBold"
+                                     Foreground="{Binding RoleBadgeForeground}"/>
+                        </Border>
 
-                        <TextBlock Text="{Binding Title}"
-                                   FontWeight="Bold"
-                                   TextWrapping="Wrap"
-                                   Foreground="#37332F"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TimeText}"
+                                   HorizontalAlignment="Right"
+                                   FontSize="12"
+                                   Foreground="#8A8178"/>
+                      </Grid>
 
-                        <TextBlock Text="{Binding Text}"
-                                   TextWrapping="Wrap"
-                                   FontFamily="Consolas"
-                                   FontSize="13"
-                                   LineHeight="18"
-                                   Foreground="#34302C"/>
-                      </StackPanel>
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </ScrollViewer>
+                      <TextBlock Text="{Binding Title}"
+                                 FontWeight="Bold"
+                                 TextWrapping="Wrap"
+                                 Foreground="#37332F"/>
+
+                      <TextBlock Text="{Binding Text}"
+                                 TextWrapping="Wrap"
+                                 FontFamily="Consolas"
+                                 FontSize="13"
+                                 LineHeight="18"
+                                 Foreground="#34302C"/>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
           </Grid>
         </Border>
 
