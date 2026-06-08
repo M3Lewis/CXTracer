@@ -38,6 +38,17 @@ public sealed partial class DisplayEvent : ObservableObject
         }
     }
 
+    private string? _searchableText;
+    public string SearchableText
+    {
+        get
+        {
+            if (_searchableText != null) return _searchableText;
+            _searchableText = $"{Title} {Text}".ToLowerInvariant();
+            return _searchableText;
+        }
+    }
+
     [ObservableProperty]
     private bool _isExpanded;
 

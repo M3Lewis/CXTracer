@@ -51,6 +51,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private CancellationTokenSource? _loadCts;
     private CancellationTokenSource? _enrichCts;
     private CancellationTokenSource? _sessionFilterCts;
+    private CancellationTokenSource? _eventFilterCts;
     private bool _selectionChanging;
     private bool _isLoadingSettings;
     private ShortcutGesture? _syncNavigationShortcut;
@@ -183,14 +184,38 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     partial void OnSessionSearchTextChanged(string value)
     {
         _sessionFilterCts?.Cancel();
+        _sessionFilterCts?.Dispose();
         _sessionFilterCts = new CancellationTokenSource();
         var ct = _sessionFilterCts.Token;
         _ = FilterSessionsAndEnrichAsync(ct);
     }
 
-    partial void OnEventSearchTextChanged(string value) => ApplyFilter();
-    partial void OnSelectedFilterChanged(FilterOptionItem? value) => ApplyFilter();
-    partial void OnShowRawEventsChanged(bool value) => ApplyFilter();
+    partial void OnEventSearchTextChanged(string value)
+    {
+        _eventFilterCts?.Cancel();
+        _eventFilterCts?.Dispose();
+        _eventFilterCts = new CancellationTokenSource();
+        var ct = _eventFilterCts.Token;
+        _ = ApplyFilterAsync(ct, debounce: true);
+    }
+
+    partial void OnSelectedFilterChanged(FilterOptionItem? value)
+    {
+        _eventFilterCts?.Cancel();
+        _eventFilterCts?.Dispose();
+        _eventFilterCts = new CancellationTokenSource();
+        var ct = _eventFilterCts.Token;
+        _ = ApplyFilterAsync(ct, debounce: false);
+    }
+
+    partial void OnShowRawEventsChanged(bool value)
+    {
+        _eventFilterCts?.Cancel();
+        _eventFilterCts?.Dispose();
+        _eventFilterCts = new CancellationTokenSource();
+        var ct = _eventFilterCts.Token;
+        _ = ApplyFilterAsync(ct, debounce: false);
+    }
 
     partial void OnCurrentLanguageChanged(string value)
     {
@@ -724,19 +749,65 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void ApplyFilter()
+    private async Task ApplyFilterAsync(CancellationToken ct, bool debounce = false)
     {
-        SetCurrentTranscriptEvent(null);
-        ConversationEvents.Clear();
-        ExecutionEvents.Clear();
-        RawEvents.Clear();
-
-        foreach (var evt in _allEvents)
+        try
         {
-            AddIfVisible(evt);
-        }
+            if (debounce)
+            {
+                await Task.Delay(200, ct).ConfigureAwait(true);
+            }
 
-        UpdateVisibleEventCount();
+            SetCurrentTranscriptEvent(null);
+            ConversationEvents.Clear();
+            ExecutionEvents.Clear();
+            RawEvents.Clear();
+            UpdateVisibleEventCount();
+
+            var q = EventSearchText;
+            var hasQuery = !string.IsNullOrWhiteSpace(q);
+            var qTrimmed = hasQuery ? q.Trim() : null;
+            var qLower = qTrimmed?.ToLowerInvariant();
+            var searchRaw = ShowRawEvents || SelectedFilter?.Key == "Raw";
+
+            var count = 0;
+            foreach (var evt in _allEvents)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                if (PassesFilterInternal(evt, qLower, qTrimmed, searchRaw))
+                {
+                    switch (evt.Pane)
+                    {
+                        case EventPane.Conversation:
+                            ConversationEvents.Add(evt);
+                            break;
+                        case EventPane.Execution:
+                            ExecutionEvents.Add(evt);
+                            break;
+                        case EventPane.Raw:
+                            if (ShowRawEvents || SelectedFilter?.Key == "Raw")
+                            {
+                                RawEvents.Add(evt);
+                            }
+                            break;
+                    }
+                }
+
+                count++;
+
+                if (count % EventBatchSize == 0)
+                {
+                    UpdateVisibleEventCount();
+                    await YieldToUiAsync().ConfigureAwait(true);
+                }
+            }
+
+            UpdateVisibleEventCount();
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     private async Task AddSessionsAsync(IReadOnlyList<SessionInfo> sessions)
@@ -832,12 +903,23 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private bool PassesFilter(DisplayEvent evt)
     {
-        if (!string.IsNullOrWhiteSpace(EventSearchText))
+        var q = EventSearchText;
+        if (!string.IsNullOrWhiteSpace(q))
         {
-            var q = EventSearchText.Trim();
-            if (!evt.Title.Contains(q, StringComparison.OrdinalIgnoreCase)
-                && !evt.Text.Contains(q, StringComparison.OrdinalIgnoreCase)
-                && !evt.RawJson.Contains(q, StringComparison.OrdinalIgnoreCase))
+            var qTrimmed = q.Trim();
+            var qLower = qTrimmed.ToLowerInvariant();
+            var searchRaw = ShowRawEvents || SelectedFilter?.Key == "Raw";
+            return PassesFilterInternal(evt, qLower, qTrimmed, searchRaw);
+        }
+        return PassesFilterInternal(evt, null, null, false);
+    }
+
+    private bool PassesFilterInternal(DisplayEvent evt, string? qLower, string? qTrimmed, bool searchRaw)
+    {
+        if (qLower != null && qTrimmed != null)
+        {
+            if (!evt.SearchableText.Contains(qLower)
+                && (!searchRaw || !evt.RawJson.Contains(qTrimmed, StringComparison.OrdinalIgnoreCase)))
             {
                 return false;
             }
@@ -1152,6 +1234,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _enrichCts?.Dispose();
         _sessionFilterCts?.Cancel();
         _sessionFilterCts?.Dispose();
+        _eventFilterCts?.Cancel();
+        _eventFilterCts?.Dispose();
         _watcher.SessionFileChanged -= OnSessionFileChanged;
         _watcher.Dispose();
 
