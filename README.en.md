@@ -23,6 +23,8 @@
 
 ---
 
+![01](images/01-en.png)
+
 A Multi-Platform, extremely fast session viewer for Codex CLI.
 
 By scanning and monitoring `~/.codex/sessions/**/*.jsonl` in the background, CXTracer displays Codex conversation threads and execution tracks in an elegant, real-time two-column layout (Conversation & Execution) to provide a seamless auditing experience.
