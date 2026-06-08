@@ -38,6 +38,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 {
     public ISukiToastManager ToastManager { get; } = new SukiToastManager();
 
+    public event Action<DisplayEvent>? FilterAppliedScrollRequest;
+
     private const int SessionBatchSize = 40;
     private const int EventBatchSize = 40;
 
@@ -764,7 +766,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 await Task.Delay(200, ct).ConfigureAwait(true);
             }
 
-            SetCurrentTranscriptEvent(null);
+            var previousSelected = CurrentTranscriptEvent;
             ConversationEvents.Clear();
             ExecutionEvents.Clear();
             RawEvents.Clear();
@@ -810,6 +812,29 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             }
 
             UpdateVisibleEventCount();
+
+            if (previousSelected is not null)
+            {
+                bool isStillVisible = false;
+                if (previousSelected.Pane == EventPane.Conversation)
+                {
+                    isStillVisible = ConversationEvents.Contains(previousSelected);
+                }
+                else if (previousSelected.Pane == EventPane.Execution)
+                {
+                    isStillVisible = ExecutionEvents.Contains(previousSelected);
+                }
+
+                if (isStillVisible)
+                {
+                    SetCurrentTranscriptEvent(previousSelected);
+                    FilterAppliedScrollRequest?.Invoke(previousSelected);
+                }
+                else
+                {
+                    SetCurrentTranscriptEvent(null);
+                }
+            }
         }
         catch (OperationCanceledException)
         {

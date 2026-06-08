@@ -15,6 +15,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia%2012.0.4-007ACC?style=flat-square" alt="Avalonia">
   <img src="https://img.shields.io/badge/Theme-SukiUI%20Orange-FF6B00?style=flat-square" alt="SukiUI">
   <img src="https://img.shields.io/badge/MVVM-CommunityToolkit-217345?style=flat-square" alt="MVVM">
+  <a href="https://deepwiki.com/M3Lewis/CXTracer"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </p>
 
 <p align="center">

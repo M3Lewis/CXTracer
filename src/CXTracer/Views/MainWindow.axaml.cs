@@ -9,6 +9,7 @@ using Avalonia.VisualTree;
 using SukiUI.Controls;
 using SukiUI.Toasts;
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,10 +23,38 @@ public partial class MainWindow : SukiWindow
     private SettingsWindow? _settingsWindow;
     private ScrollViewer? _conversationScrollViewer;
     private ScrollViewer? _executionScrollViewer;
+    private MainWindowViewModel? _registeredViewModel;
 
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (_registeredViewModel is not null)
+        {
+            _registeredViewModel.FilterAppliedScrollRequest -= ViewModel_FilterAppliedScrollRequest;
+        }
+
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            _registeredViewModel = viewModel;
+            viewModel.FilterAppliedScrollRequest += ViewModel_FilterAppliedScrollRequest;
+        }
+        else
+        {
+            _registeredViewModel = null;
+        }
+    }
+
+    private void ViewModel_FilterAppliedScrollRequest(DisplayEvent selected)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            ScrollEventIntoView(selected);
+        }, DispatcherPriority.Background);
     }
 
     private void ConversationUp_Click(object? sender, RoutedEventArgs e)
@@ -83,7 +112,13 @@ public partial class MainWindow : SukiWindow
         var props = e.GetCurrentPoint(null).Properties;
         if (props.IsLeftButtonPressed)
         {
-            viewModel.ShowDetailPopup(evt);
+            viewModel.SetCurrentTranscriptEvent(evt);
+            this.Focus();
+
+            if (e.ClickCount == 2)
+            {
+                viewModel.ShowDetailPopup(evt);
+            }
         }
         else if (props.IsRightButtonPressed)
         {
@@ -167,7 +202,10 @@ public partial class MainWindow : SukiWindow
 
         if (IsTextInputFocused(e.Source))
         {
-            return;
+            if (e.Key != Key.Up && e.Key != Key.Down)
+            {
+                return;
+            }
         }
 
         var keyText = ShortcutKeyInput.ToShortcutKeyText(e.Key);
