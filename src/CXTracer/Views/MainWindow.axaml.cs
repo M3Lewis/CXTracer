@@ -337,25 +337,37 @@ public partial class MainWindow : SukiWindow
         return candidate.DataContext as DisplayEvent;
     }
 
+    private static void Log(string message)
+    {
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+    }
+
     private void ScrollEventIntoView(DisplayEvent evt)
     {
+        Log("==================== SCROLL START ====================");
         var (listBox, scrollViewer) = ControlsForPane(evt.Pane);
         var requestVersion = IncrementScrollRequestVersion(evt.Pane);
+        Log($"[ScrollEventIntoView] Entry. Pane: {evt.Pane}, Event: {evt.Id}, ReqVersion: {requestVersion}");
 
         if (scrollViewer is null)
         {
+            Log($"[ScrollEventIntoView] Abort: ScrollViewer is null. Pane: {evt.Pane}");
+            Log("==================== SCROLL END (Viewer Null) ====================");
             return;
         }
 
         if (TryScrollEventContainerToTop(listBox, scrollViewer, evt))
         {
+            Log($"[ScrollEventIntoView] SUCCESS: TryScrollEventContainerToTop was successful immediately. Queuing 3 alignments for Event: {evt.Id}");
             QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 3);
             return;
         }
 
         var estimatedOffset = EstimateExtentOffset(listBox, scrollViewer, evt);
+        Log($"[ScrollEventIntoView] Immediate alignment failed. EstimatedOffset Y: {estimatedOffset}");
         if (estimatedOffset.HasValue)
         {
+            Log($"[ScrollEventIntoView] Setting estimated offset.Y to {estimatedOffset.Value}");
             scrollViewer.Offset = new Vector(0, estimatedOffset.Value);
         }
 
@@ -373,18 +385,21 @@ public partial class MainWindow : SukiWindow
 
         if (targetIndex < 0)
         {
+            Log($"[EstimateExtentOffset] Target Index not found in Items Source for Event: {evt.Id}");
             return null;
         }
 
         var totalItems = allItems.Count;
         if (totalItems == 0)
         {
+            Log("[EstimateExtentOffset] Total Items is 0");
             return null;
         }
 
         var extentHeight = scrollViewer.Extent.Height;
         if (extentHeight <= 0)
         {
+            Log($"[EstimateExtentOffset] scrollViewer.Extent.Height is <= 0 ({extentHeight})");
             return null;
         }
 
@@ -393,7 +408,9 @@ public partial class MainWindow : SukiWindow
         const double topPadding = 8;
         var estimatedTop = targetIndex * avgItemHeight;
         var maxOffset = Math.Max(0, extentHeight - scrollViewer.Viewport.Height);
-        return Math.Clamp(estimatedTop - topPadding, 0, maxOffset);
+        var result = Math.Clamp(estimatedTop - topPadding, 0, maxOffset);
+        Log($"[EstimateExtentOffset] Event: {evt.Id}, targetIndex: {targetIndex}, totalItems: {totalItems}, extentHeight: {extentHeight}, avgItemHeight: {avgItemHeight}, estimatedTop: {estimatedTop}, maxOffset: {maxOffset}, result: {result}");
+        return result;
     }
 
     private static int FindEventIndex(ListBox listBox, DisplayEvent evt)
@@ -433,24 +450,32 @@ public partial class MainWindow : SukiWindow
     {
         if (!IsCurrentScrollRequest(evt.Pane, requestVersion))
         {
+            Log($"[VerifyScrollEventAlignment] Discarded (stale version). Pane: {evt.Pane}, Event: {evt.Id}, RequestVersion: {requestVersion}");
             return;
         }
 
         var (listBox, scrollViewer) = ControlsForPane(evt.Pane);
         if (scrollViewer is null)
         {
+            Log($"[VerifyScrollEventAlignment] ScrollViewer is null. Pane: {evt.Pane}");
+            Log("==================== SCROLL END (Viewer Null) ====================");
             return;
         }
 
         listBox.UpdateLayout();
 
-        if (IsEventVisibleAndAligned(listBox, scrollViewer, evt))
+        bool isAligned = IsEventVisibleAndAligned(listBox, scrollViewer, evt);
+        Log($"[VerifyScrollEventAlignment] Entry. Event: {evt.Id}, RemainingAttempts: {remainingAttempts}, IsAligned: {isAligned}");
+        if (isAligned)
         {
+            Log($"[VerifyScrollEventAlignment] ALIGNED SUCCESS. Exiting loop for Event: {evt.Id}");
+            Log("==================== SCROLL END ====================");
             return;
         }
 
         if (TryScrollEventContainerToTop(listBox, scrollViewer, evt))
         {
+            Log($"[VerifyScrollEventAlignment] TryScrollEventContainerToTop SUCCESS for Event: {evt.Id}. Queuing 1 final alignment verify.");
             if (remainingAttempts > 0)
             {
                 QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 1);
@@ -460,8 +485,14 @@ public partial class MainWindow : SukiWindow
 
         if (remainingAttempts > 0)
         {
+            Log($"[VerifyScrollEventAlignment] TryScrollEventContainerToTop failed, calling RefineOffsetFromRealizedContainers...");
             RefineOffsetFromRealizedContainers(listBox, scrollViewer, evt);
             QueueScrollEventAlignment(evt, requestVersion, remainingAttempts - 1);
+        }
+        else
+        {
+            Log($"[VerifyScrollEventAlignment] Attempts exhausted! Event {evt.Id} is still not aligned.");
+            Log("==================== SCROLL END (Attempts Exhausted) ====================");
         }
     }
 
@@ -476,10 +507,12 @@ public partial class MainWindow : SukiWindow
 
         if (targetIndex < 0)
         {
+            Log($"[RefineOffsetFromRealizedContainers] Target Event {evt.Id} not found in Items Source.");
             return;
         }
 
         var containers = GetItemContainers(listBox);
+        Log($"[RefineOffsetFromRealizedContainers] Event: {evt.Id}, Realized containers count: {containers.Count}");
         if (containers.Count == 0)
         {
             return;
@@ -515,10 +548,15 @@ public partial class MainWindow : SukiWindow
 
         if (nearest is null || nearestIndex < 0)
         {
+            Log($"[RefineOffsetFromRealizedContainers] No valid nearest realized container found for Event: {evt.Id}");
             return;
         }
 
-        if (!TryGetContainerExtentBounds(nearest, scrollViewer, out var nearestTop, out var nearestBottom))
+        var nearestEvt = nearest.DataContext as DisplayEvent;
+        bool gotBounds = TryGetContainerExtentBounds(nearest, scrollViewer, out var nearestTop, out var nearestBottom);
+        Log($"[RefineOffsetFromRealizedContainers] Nearest container is Event: {nearestEvt?.Id} at Index: {nearestIndex} (Dist: {minDist}). GotBounds: {gotBounds}, Top: {nearestTop}, Bottom: {nearestBottom}");
+
+        if (!gotBounds)
         {
             return;
         }
@@ -526,6 +564,7 @@ public partial class MainWindow : SukiWindow
         var itemHeight = nearestBottom - nearestTop;
         if (itemHeight <= 0)
         {
+            Log($"[RefineOffsetFromRealizedContainers] Abort: itemHeight is <= 0 ({itemHeight})");
             return;
         }
 
@@ -535,6 +574,7 @@ public partial class MainWindow : SukiWindow
         const double topPadding = 8;
         var maxOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
         var newOffset = Math.Clamp(estimatedTop - topPadding, 0, maxOffset);
+        Log($"[RefineOffsetFromRealizedContainers] indexDiff: {indexDiff}, estimatedTop: {estimatedTop}, newOffset Y: {newOffset}, current offset Y: {scrollViewer.Offset.Y}");
         scrollViewer.Offset = new Vector(0, newOffset);
     }
 
@@ -620,12 +660,18 @@ public partial class MainWindow : SukiWindow
         ScrollViewer scrollViewer,
         ContentPresenter target)
     {
-        if (!TryGetDesiredScrollOffset(scrollViewer, target, out var clampedY))
+        bool hasOffset = TryGetDesiredScrollOffset(scrollViewer, target, out var clampedY);
+        var evt = target.DataContext as DisplayEvent;
+        Log($"[TryScrollContainerToTop] Event: {evt?.Id}, HasDesiredOffset: {hasOffset}, DesiredY: {clampedY}, CurrentOffset.Y: {scrollViewer.Offset.Y}");
+
+        if (!hasOffset)
         {
+            Log($"[TryScrollContainerToTop] Desired Y failed, invoking target.BringIntoView() as fallback for Event: {evt?.Id}");
             target.BringIntoView();
             return false;
         }
 
+        Log($"[TryScrollContainerToTop] Aligning scrollViewer.Offset to Y: {clampedY} for Event: {evt?.Id}");
         scrollViewer.Offset = new Vector(0, clampedY);
         return true;
     }
@@ -683,9 +729,18 @@ public partial class MainWindow : SukiWindow
         out double top,
         out double bottom)
     {
+        var evt = target.DataContext as DisplayEvent;
         var item = target.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault();
-        if (item is null || item.Bounds.Height <= 0)
+        if (item is null)
         {
+            Log($"[TryGetContainerExtentBounds] ListBoxItem not found for Event: {evt?.Id}");
+            top = 0;
+            bottom = 0;
+            return false;
+        }
+        if (item.Bounds.Height <= 0)
+        {
+            Log($"[TryGetContainerExtentBounds] ListBoxItem bounds height is 0 (unmeasured) for Event: {evt?.Id}");
             top = 0;
             bottom = 0;
             return false;
@@ -703,13 +758,23 @@ public partial class MainWindow : SukiWindow
             {
                 top = pt.Value.Y + scrollViewer.Offset.Y;
                 bottom = top + item.Bounds.Height;
+                Log($"[TryGetContainerExtentBounds] TranslatePoint SUCCESS. Event: {evt?.Id}, Top: {top}, Bottom: {bottom}, Translate Y: {pt.Value.Y}, ScrollViewer Offset.Y: {scrollViewer.Offset.Y}, ItemHeight: {item.Bounds.Height}");
                 return true;
             }
+            else
+            {
+                Log($"[TryGetContainerExtentBounds] TranslatePoint returned null for Event: {evt?.Id}");
+            }
+        }
+        else
+        {
+            Log($"[TryGetContainerExtentBounds] ScrollContentPresenter is null for Event: {evt?.Id}");
         }
 
         // 回退
         top = item.Bounds.Y;
         bottom = top + item.Bounds.Height;
+        Log($"[TryGetContainerExtentBounds] Fallback to Bounds.Y. Event: {evt?.Id}, Top: {top}, Bottom: {bottom}, Bounds.Y: {item.Bounds.Y}, ItemHeight: {item.Bounds.Height}");
         return true;
     }
 
