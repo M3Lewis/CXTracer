@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 21
+- **Total Sessions**: 22
 - **Last Active**: 2026-06-08
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~733 | Active |
+| `journal-1.md` | ~766 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 22 | 2026-06-08 | Optimize synchronized navigation pane switching lag | <your-commit-hash> | `master` |
 | 21 | 2026-06-08 | Optimize event search box performance | `110b726` | `master` |
 | 20 | 2026-06-08 | Disable virtualization and simplify scroll alignment in transcript ListBox | `72e7c01`, `872fbb2`, `cb7fbd9`, `fcdac37` | `master` |
 | 19 | 2026-06-07 | Fix Native AOT i18n dynamic swapping | `9c5be8c` | `master` |

@@ -731,3 +731,36 @@ Optimized the event search box performance to resolve UI lag by implementing deb
 ### Next Steps
 
 - None - task complete
+
+
+## Session 22: Optimize synchronized navigation pane switching lag
+
+**Date**: 2026-06-08
+**Task**: Optimize synchronized navigation pane switching lag
+**Branch**: `master`
+
+### Summary
+
+Optimized synchronized navigation scrolling by implementing binary search for anchor lookup and O(1) direct container indexing in MainWindow.axaml.cs, and caching the sorted sync events on the ViewModel side in MainWindowViewModel.cs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `<your-commit-hash>` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
