@@ -47,6 +47,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly SessionWatcher _watcher;
     private readonly AppSettingsService _settingsService;
     private readonly List<DisplayEvent> _allEvents = [];
+    private List<DisplayEvent>? _sortedSyncEventsCache;
     private readonly List<SessionInfo> _allSessions = [];
     private CancellationTokenSource? _loadCts;
     private CancellationTokenSource? _enrichCts;
@@ -419,11 +420,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         int direction,
         DisplayEvent? anchor)
     {
-        var events = ConversationEvents
-            .Concat(ExecutionEvents)
-            .OrderBy(EventSortTimestamp)
-            .ThenBy(x => x.LineNumber)
-            .ToList();
+        if (_sortedSyncEventsCache is null)
+        {
+            _sortedSyncEventsCache = ConversationEvents
+                .Concat(ExecutionEvents)
+                .OrderBy(EventSortTimestamp)
+                .ThenBy(x => x.LineNumber)
+                .ToList();
+        }
+
+        var events = _sortedSyncEventsCache;
 
         if (events.Count == 0)
         {
@@ -862,6 +868,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private void ResetEvents()
     {
         _allEvents.Clear();
+        _sortedSyncEventsCache = null;
         ConversationEvents.Clear();
         ExecutionEvents.Clear();
         RawEvents.Clear();
@@ -873,6 +880,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void UpdateVisibleEventCount()
     {
+        _sortedSyncEventsCache = null;
         VisibleEventCount = ConversationEvents.Count + ExecutionEvents.Count + RawEvents.Count;
         OnPropertyChanged(nameof(EventCountText));
     }

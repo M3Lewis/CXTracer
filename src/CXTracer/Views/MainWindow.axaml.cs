@@ -279,8 +279,7 @@ public partial class MainWindow : SukiWindow
             return null;
         }
 
-        var events = listBox.ItemsSource?.Cast<DisplayEvent>().ToList();
-        if (events == null || events.Count == 0)
+        if (listBox.ItemsSource is not System.Collections.IList list || list.Count == 0)
         {
             return null;
         }
@@ -288,52 +287,60 @@ public partial class MainWindow : SukiWindow
         var currentPane = listBox == ConversationListBox ? EventPane.Conversation : EventPane.Execution;
         var anchor = viewModel.CurrentTranscriptEvent is not null
             && viewModel.CurrentTranscriptEvent.Pane == currentPane
-            && events.Contains(viewModel.CurrentTranscriptEvent)
+            && list.Contains(viewModel.CurrentTranscriptEvent)
             ? viewModel.CurrentTranscriptEvent
             : GetAnchorEvent(listBox, scrollViewer);
 
-        int anchorIndex = anchor != null ? events.IndexOf(anchor) : -1;
+        int anchorIndex = anchor != null ? list.IndexOf(anchor) : -1;
         if (anchorIndex == -1)
         {
-            anchorIndex = direction > 0 ? -1 : events.Count;
+            anchorIndex = direction > 0 ? -1 : list.Count;
         }
 
-        int targetIndex = Math.Clamp(anchorIndex + Math.Sign(direction), 0, events.Count - 1);
-        return events[targetIndex];
+        int targetIndex = Math.Clamp(anchorIndex + Math.Sign(direction), 0, list.Count - 1);
+        return list[targetIndex] as DisplayEvent;
     }
 
     private DisplayEvent? GetAnchorEvent(ListBox listBox, ScrollViewer scrollViewer)
     {
-        var vsp = FindVirtualizingStackPanel(listBox);
-        var containers = GetItemContainers(listBox, vsp);
-
-        if (containers.Count == 0)
-        {
-            return null;
-        }
-
         const double topTolerance = 12;
-        ContentPresenter? candidate = null;
+        var targetY = scrollViewer.Offset.Y + topTolerance;
+        int count = listBox.Items.Count;
+        if (count == 0) return null;
 
-        foreach (var container in containers)
+        int low = 0;
+        int high = count - 1;
+        int candidateIndex = 0;
+
+        while (low <= high)
         {
-            var top = GetContainerExtentTop(container, vsp);
-            if (top is null)
+            int mid = low + (high - low) / 2;
+            var container = listBox.ContainerFromIndex(mid) as ListBoxItem;
+            if (container is null || !container.IsVisible)
             {
+                high = mid - 1;
                 continue;
             }
 
-            if (top.Value <= scrollViewer.Offset.Y + topTolerance)
+            if (TryGetContainerExtentBounds(container, out var top, out _))
             {
-                candidate = container;
-                continue;
+                if (top <= targetY)
+                {
+                    candidateIndex = mid;
+                    low = mid + 1;
+                }
+                else
+                {
+                    high = mid - 1;
+                }
             }
-
-            break;
+            else
+            {
+                high = mid - 1;
+            }
         }
 
-        candidate ??= containers[0];
-        return candidate.DataContext as DisplayEvent;
+        return listBox.Items[candidateIndex] as DisplayEvent;
     }
 
     // 核心：同步、无跳动滚动定位
@@ -364,10 +371,9 @@ public partial class MainWindow : SukiWindow
     }
 
     // 将容器滚动到顶部（保持 8px 间距）
-    private static void ScrollContainerToTop(ScrollViewer scrollViewer, ContentPresenter target)
+    private static void ScrollContainerToTop(ScrollViewer scrollViewer, ListBoxItem target)
     {
-        var vsp = FindVirtualizingStackPanel(target);
-        if (TryGetContainerExtentBounds(target, vsp, out var top, out _))
+        if (TryGetContainerExtentBounds(target, out var top, out _))
         {
             const double topPadding = 8;
             var maxOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
@@ -380,16 +386,16 @@ public partial class MainWindow : SukiWindow
         }
     }
 
-    private static bool TryGetEventContainer(ListBox listBox, DisplayEvent evt, out ContentPresenter target)
+    private static bool TryGetEventContainer(ListBox listBox, DisplayEvent evt, out ListBoxItem target)
     {
-        var vsp = FindVirtualizingStackPanel(listBox);
-        var match = GetItemContainers(listBox, vsp)
-            .FirstOrDefault(x => IsEventContainer(x, evt));
-
-        if (match is not null)
+        var itemIndex = FindEventIndex(listBox, evt);
+        if (itemIndex >= 0)
         {
-            target = match;
-            return true;
+            if (listBox.ContainerFromIndex(itemIndex) is ListBoxItem container)
+            {
+                target = container;
+                return true;
+            }
         }
 
         target = null!;
@@ -413,44 +419,24 @@ public partial class MainWindow : SukiWindow
         return control.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
     }
 
-    private static VirtualizingStackPanel? FindVirtualizingStackPanel(Control control)
-    {
-        return control.GetVisualDescendants()
-            .OfType<VirtualizingStackPanel>()
-            .FirstOrDefault();
-    }
-
-    private static List<ContentPresenter> GetItemContainers(ListBox listBox, VirtualizingStackPanel? vsp)
-    {
-        return listBox
-            .GetVisualDescendants()
-            .OfType<ContentPresenter>()
-            .Where(x => x.IsVisible && x.Bounds.Height > 0 && x.DataContext is DisplayEvent)
-            .OrderBy(x => GetContainerExtentTop(x, vsp) ?? double.MaxValue)
-            .ToList();
-    }
-
-    private static bool IsEventContainer(ContentPresenter container, DisplayEvent evt)
-    {
-        return ReferenceEquals(container.DataContext, evt)
-            || container.DataContext is DisplayEvent candidate
-            && string.Equals(candidate.Id, evt.Id, StringComparison.Ordinal);
-    }
-
     private static int FindEventIndex(ListBox listBox, DisplayEvent evt)
     {
-        return listBox.Items.Cast<object>().ToList().FindIndex(x =>
-            x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
+        var items = listBox.Items;
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i] is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 
-    // 使用 VirtualizingStackPanel 坐标系，保证坐标稳定不随滚动偏移
     private static bool TryGetContainerExtentBounds(
-        ContentPresenter target,
-        VirtualizingStackPanel? vsp,
+        ListBoxItem item,
         out double top,
         out double bottom)
     {
-        var item = target.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault();
         if (item is null || item.Bounds.Height <= 0)
         {
             top = 0;
@@ -458,28 +444,9 @@ public partial class MainWindow : SukiWindow
             return false;
         }
 
-        if (vsp is not null)
-        {
-            var pt = item.TranslatePoint(new Point(0, 0), vsp);
-            if (pt.HasValue)
-            {
-                top = pt.Value.Y;
-                bottom = top + item.Bounds.Height;
-                return true;
-            }
-        }
-
-        // 回退：极少数情况下 VSP 未找到时使用 Bounds.Y
         top = item.Bounds.Y;
         bottom = top + item.Bounds.Height;
         return true;
-    }
-
-    private static double? GetContainerExtentTop(ContentPresenter target, VirtualizingStackPanel? vsp)
-    {
-        return TryGetContainerExtentBounds(target, vsp, out var top, out _)
-            ? top
-            : null;
     }
 
     private static bool IsTextInputFocused(object? source)

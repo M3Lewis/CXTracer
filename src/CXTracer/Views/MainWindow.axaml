@@ -83,11 +83,10 @@
     </Style>
     <Style Selector="Border.transcriptPane">
       <Setter Property="BorderBrush" Value="#E7DCCB" />
-      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderThickness" Value="2" />
     </Style>
     <Style Selector="Border.transcriptPane.active">
       <Setter Property="BorderBrush" Value="#E97924" />
-      <Setter Property="BorderThickness" Value="2" />
     </Style>
     <!-- Transcript ListBox: no selection chrome, no keyboard nav capture -->
     <Style Selector="ListBox.transcriptList">
