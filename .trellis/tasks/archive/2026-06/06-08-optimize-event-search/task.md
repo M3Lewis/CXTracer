@@ -1,0 +1,6 @@
+- [x] Create task directory and initialize metadata (`task.json`, `prd.md`)
+- [x] Add lazy-cached pre-computed `SearchableText` (combining Title and Text in lowercase) to `DisplayEvent.cs`
+- [x] Implement cancellation token `_eventFilterCts` in `MainWindowViewModel.cs`
+- [x] Change text filtering handlers to asynchronous and debounced (200ms) operations
+- [x] Implement conditional `RawJson` search matching
+- [x] Compile and verify using `dotnet build`
