@@ -1,12 +1,13 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
+using SukiUI.Toasts;
 using Avalonia.Controls.Presenters;
 using Avalonia.Input;
-using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using SukiUI.Controls;
-using SukiUI.Toasts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,8 @@ public partial class MainWindow : SukiWindow
     private SettingsWindow? _settingsWindow;
     private ScrollViewer? _conversationScrollViewer;
     private ScrollViewer? _executionScrollViewer;
+    private int _conversationScrollRequestVersion;
+    private int _executionScrollRequestVersion;
 
     public MainWindow()
     {
@@ -87,7 +90,6 @@ public partial class MainWindow : SukiWindow
         else if (props.IsRightButtonPressed)
         {
             string copyText = evt.IsRaw ? evt.RawJson : evt.Text;
-            string description = evt.IsRaw ? "Raw JSON" : "Event text";
             _ = CopyToClipboardAsync(copyText, viewModel);
             e.Handled = true;
         }
@@ -240,8 +242,12 @@ public partial class MainWindow : SukiWindow
 
         if (!viewModel.IsSynchronizedNavigationEnabled)
         {
-            var target = ScrollToAdjacentMessage(listBox, scrollViewer, direction);
+            var target = FindAdjacentMessage(listBox, scrollViewer, direction);
             viewModel.SetCurrentTranscriptEvent(target);
+            if (target is not null)
+            {
+                ScrollEventIntoView(target);
+            }
             return;
         }
 
@@ -265,22 +271,37 @@ public partial class MainWindow : SukiWindow
         ScrollEventIntoView(navigationTarget.Target);
     }
 
-    private static DisplayEvent? ScrollToAdjacentMessage(
+    private DisplayEvent? FindAdjacentMessage(
         ListBox listBox,
         ScrollViewer scrollViewer,
         int direction)
     {
-        var containers = GetItemContainers(listBox);
-
-        if (containers.Count == 0)
+        if (DataContext is not MainWindowViewModel viewModel)
         {
             return null;
         }
 
-        var targetIndex = GetAdjacentIndex(scrollViewer, containers, direction);
-        var target = containers[targetIndex];
-        ScrollContainerToTop(scrollViewer, target);
-        return target.DataContext as DisplayEvent;
+        var events = listBox.ItemsSource?.Cast<DisplayEvent>().ToList();
+        if (events == null || events.Count == 0)
+        {
+            return null;
+        }
+
+        var currentPane = listBox == ConversationListBox ? EventPane.Conversation : EventPane.Execution;
+        var anchor = viewModel.CurrentTranscriptEvent is not null
+            && viewModel.CurrentTranscriptEvent.Pane == currentPane
+            && events.Contains(viewModel.CurrentTranscriptEvent)
+            ? viewModel.CurrentTranscriptEvent
+            : GetAnchorEvent(listBox, scrollViewer);
+
+        int anchorIndex = anchor != null ? events.IndexOf(anchor) : -1;
+        if (anchorIndex == -1)
+        {
+            anchorIndex = direction > 0 ? -1 : events.Count;
+        }
+
+        int targetIndex = Math.Clamp(anchorIndex + Math.Sign(direction), 0, events.Count - 1);
+        return events[targetIndex];
     }
 
     private DisplayEvent? GetAnchorEvent(ListBox listBox, ScrollViewer scrollViewer)
@@ -297,7 +318,7 @@ public partial class MainWindow : SukiWindow
 
         foreach (var container in containers)
         {
-            var top = GetContainerExtentTop(container);
+            var top = GetContainerExtentTop(container, scrollViewer);
             if (top is null)
             {
                 continue;
@@ -319,29 +340,243 @@ public partial class MainWindow : SukiWindow
     private void ScrollEventIntoView(DisplayEvent evt)
     {
         var (listBox, scrollViewer) = ControlsForPane(evt.Pane);
+        var requestVersion = IncrementScrollRequestVersion(evt.Pane);
 
         if (scrollViewer is null)
         {
             return;
         }
 
-        // Ensure the virtualized container is realized.
-        var itemIndex = listBox.Items.Cast<object>().ToList().FindIndex(x =>
+        if (TryScrollEventContainerToTop(listBox, scrollViewer, evt))
+        {
+            QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 3);
+            return;
+        }
+
+        var estimatedOffset = EstimateExtentOffset(listBox, scrollViewer, evt);
+        if (estimatedOffset.HasValue)
+        {
+            scrollViewer.Offset = new Vector(0, estimatedOffset.Value);
+        }
+
+        QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 10);
+    }
+
+    private static double? EstimateExtentOffset(
+        ListBox listBox,
+        ScrollViewer scrollViewer,
+        DisplayEvent evt)
+    {
+        var allItems = listBox.Items.Cast<object>().ToList();
+        var targetIndex = allItems.FindIndex(x =>
             x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
 
-        if (itemIndex >= 0)
+        if (targetIndex < 0)
         {
-            listBox.ScrollIntoView(itemIndex);
+            return null;
         }
 
-        // Top-align the container.
-        var target = GetItemContainers(listBox)
+        var totalItems = allItems.Count;
+        if (totalItems == 0)
+        {
+            return null;
+        }
+
+        var extentHeight = scrollViewer.Extent.Height;
+        if (extentHeight <= 0)
+        {
+            return null;
+        }
+
+        var avgItemHeight = extentHeight / totalItems;
+
+        const double topPadding = 8;
+        var estimatedTop = targetIndex * avgItemHeight;
+        var maxOffset = Math.Max(0, extentHeight - scrollViewer.Viewport.Height);
+        return Math.Clamp(estimatedTop - topPadding, 0, maxOffset);
+    }
+
+    private static int FindEventIndex(ListBox listBox, DisplayEvent evt)
+    {
+        return listBox.Items.Cast<object>().ToList().FindIndex(x =>
+            x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
+    }
+
+    private int IncrementScrollRequestVersion(EventPane pane)
+    {
+        return pane == EventPane.Execution
+            ? ++_executionScrollRequestVersion
+            : ++_conversationScrollRequestVersion;
+    }
+
+    private bool IsCurrentScrollRequest(EventPane pane, int requestVersion)
+    {
+        return pane == EventPane.Execution
+            ? _executionScrollRequestVersion == requestVersion
+            : _conversationScrollRequestVersion == requestVersion;
+    }
+
+    private void QueueScrollEventAlignment(
+        DisplayEvent evt,
+        int requestVersion,
+        int remainingAttempts)
+    {
+        Dispatcher.UIThread.Post(
+            () => VerifyScrollEventAlignment(evt, requestVersion, remainingAttempts),
+            DispatcherPriority.Background);
+    }
+
+    private void VerifyScrollEventAlignment(
+        DisplayEvent evt,
+        int requestVersion,
+        int remainingAttempts)
+    {
+        if (!IsCurrentScrollRequest(evt.Pane, requestVersion))
+        {
+            return;
+        }
+
+        var (listBox, scrollViewer) = ControlsForPane(evt.Pane);
+        if (scrollViewer is null)
+        {
+            return;
+        }
+
+        listBox.UpdateLayout();
+
+        if (IsEventVisibleAndAligned(listBox, scrollViewer, evt))
+        {
+            return;
+        }
+
+        if (TryScrollEventContainerToTop(listBox, scrollViewer, evt))
+        {
+            if (remainingAttempts > 0)
+            {
+                QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 1);
+            }
+            return;
+        }
+
+        if (remainingAttempts > 0)
+        {
+            RefineOffsetFromRealizedContainers(listBox, scrollViewer, evt);
+            QueueScrollEventAlignment(evt, requestVersion, remainingAttempts - 1);
+        }
+    }
+
+    private static void RefineOffsetFromRealizedContainers(
+        ListBox listBox,
+        ScrollViewer scrollViewer,
+        DisplayEvent evt)
+    {
+        var allItems = listBox.Items.Cast<object>().ToList();
+        var targetIndex = allItems.FindIndex(x =>
+            x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
+
+        if (targetIndex < 0)
+        {
+            return;
+        }
+
+        var containers = GetItemContainers(listBox);
+        if (containers.Count == 0)
+        {
+            return;
+        }
+
+        ContentPresenter? nearest = null;
+        int nearestIndex = -1;
+        int minDist = int.MaxValue;
+
+        foreach (var container in containers)
+        {
+            if (container.DataContext is not DisplayEvent de)
+            {
+                continue;
+            }
+
+            var idx = allItems.FindIndex(x =>
+                x is DisplayEvent d && string.Equals(d.Id, de.Id, StringComparison.Ordinal));
+
+            if (idx < 0)
+            {
+                continue;
+            }
+
+            int dist = Math.Abs(idx - targetIndex);
+            if (dist < minDist)
+            {
+                minDist = dist;
+                nearest = container;
+                nearestIndex = idx;
+            }
+        }
+
+        if (nearest is null || nearestIndex < 0)
+        {
+            return;
+        }
+
+        if (!TryGetContainerExtentBounds(nearest, scrollViewer, out var nearestTop, out var nearestBottom))
+        {
+            return;
+        }
+
+        var itemHeight = nearestBottom - nearestTop;
+        if (itemHeight <= 0)
+        {
+            return;
+        }
+
+        var indexDiff = targetIndex - nearestIndex;
+        var estimatedTop = nearestTop + indexDiff * itemHeight;
+
+        const double topPadding = 8;
+        var maxOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+        var newOffset = Math.Clamp(estimatedTop - topPadding, 0, maxOffset);
+        scrollViewer.Offset = new Vector(0, newOffset);
+    }
+
+    private static bool TryScrollEventContainerToTop(
+        ListBox listBox,
+        ScrollViewer scrollViewer,
+        DisplayEvent evt)
+    {
+        if (!TryGetEventContainer(listBox, evt, out var target))
+        {
+            return false;
+        }
+
+        return TryScrollContainerToTop(scrollViewer, target);
+    }
+
+    private static bool IsEventVisibleAndAligned(
+        ListBox listBox,
+        ScrollViewer scrollViewer,
+        DisplayEvent evt)
+    {
+        return TryGetEventContainer(listBox, evt, out var target)
+            && IsContainerVisible(scrollViewer, target)
+            && IsContainerAtDesiredScrollOffset(scrollViewer, target);
+    }
+
+    private static bool TryGetEventContainer(
+        ListBox listBox,
+        DisplayEvent evt,
+        out ContentPresenter target)
+    {
+        var match = GetItemContainers(listBox)
             .FirstOrDefault(x => IsEventContainer(x, evt));
 
-        if (target is not null)
+        if (match is null)
         {
-            ScrollContainerToTop(scrollViewer, target);
+            target = null!;
+            return false;
         }
+
+        target = match;
+        return true;
     }
 
     private (ListBox ListBox, ScrollViewer? ScrollViewer) ControlsForPane(EventPane pane)
@@ -363,9 +598,6 @@ public partial class MainWindow : SukiWindow
 
     private static List<ContentPresenter> GetItemContainers(ListBox listBox)
     {
-        // With VirtualizingStackPanel, only realized (on-screen + buffer) containers
-        // exist in the visual tree. This is intentional — navigation only needs the
-        // visible subset, and the list is already in visual order.
         return listBox
             .GetVisualDescendants()
             .OfType<ContentPresenter>()
@@ -373,7 +605,7 @@ public partial class MainWindow : SukiWindow
                 x.IsVisible &&
                 x.Bounds.Height > 0 &&
                 x.DataContext is DisplayEvent)
-            .OrderBy(x => GetContainerExtentTop(x) ?? double.MaxValue)
+            .OrderBy(x => x.Bounds.Y)
             .ToList();
     }
 
@@ -384,98 +616,108 @@ public partial class MainWindow : SukiWindow
             && string.Equals(candidate.Id, evt.Id, StringComparison.Ordinal);
     }
 
-    private static int GetAdjacentIndex(
-        ScrollViewer scrollViewer,
-        IReadOnlyList<ContentPresenter> containers,
-        int direction)
-    {
-        return direction > 0
-            ? GetNextIndex(scrollViewer, containers)
-            : GetPreviousIndex(scrollViewer, containers);
-    }
-
-    private static int GetNextIndex(
-        ScrollViewer scrollViewer,
-        IReadOnlyList<ContentPresenter> containers)
-    {
-        const double topTolerance = 12;
-        var threshold = scrollViewer.Offset.Y + topTolerance;
-
-        for (var i = 0; i < containers.Count; i++)
-        {
-            var top = GetContainerExtentTop(containers[i]);
-            if (top is null)
-            {
-                continue;
-            }
-
-            if (top.Value > threshold)
-            {
-                return i;
-            }
-        }
-
-        return containers.Count - 1;
-    }
-
-    private static int GetPreviousIndex(
-        ScrollViewer scrollViewer,
-        IReadOnlyList<ContentPresenter> containers)
-    {
-        const double topTolerance = 6;
-        var threshold = scrollViewer.Offset.Y - topTolerance;
-
-        for (var i = containers.Count - 1; i >= 0; i--)
-        {
-            var top = GetContainerExtentTop(containers[i]);
-            if (top is null)
-            {
-                continue;
-            }
-
-            if (top.Value < threshold)
-            {
-                return i;
-            }
-        }
-
-        return 0;
-    }
-
-    private static void ScrollContainerToTop(
+    private static bool TryScrollContainerToTop(
         ScrollViewer scrollViewer,
         ContentPresenter target)
     {
-        var top = GetContainerExtentTop(target);
-
-        if (top is null)
+        if (!TryGetDesiredScrollOffset(scrollViewer, target, out var clampedY))
         {
             target.BringIntoView();
-            return;
+            return false;
+        }
+
+        scrollViewer.Offset = new Vector(0, clampedY);
+        return true;
+    }
+
+    private static bool IsContainerVisible(
+        ScrollViewer scrollViewer,
+        ContentPresenter target)
+    {
+        if (!TryGetContainerExtentBounds(target, scrollViewer, out var top, out var bottom)
+            || scrollViewer.Viewport.Height <= 0)
+        {
+            return false;
+        }
+
+        const double visibilityTolerance = 1;
+        var viewportTop = scrollViewer.Offset.Y;
+        var viewportBottom = viewportTop + scrollViewer.Viewport.Height;
+        return bottom > viewportTop + visibilityTolerance
+            && top < viewportBottom - visibilityTolerance;
+    }
+
+    private static bool IsContainerAtDesiredScrollOffset(
+        ScrollViewer scrollViewer,
+        ContentPresenter target)
+    {
+        if (!TryGetDesiredScrollOffset(scrollViewer, target, out var desiredY))
+        {
+            return false;
+        }
+
+        const double offsetTolerance = 1;
+        return Math.Abs(scrollViewer.Offset.Y - desiredY) <= offsetTolerance;
+    }
+
+    private static bool TryGetDesiredScrollOffset(
+        ScrollViewer scrollViewer,
+        ContentPresenter target,
+        out double desiredY)
+    {
+        if (!TryGetContainerExtentBounds(target, scrollViewer, out var top, out _))
+        {
+            desiredY = 0;
+            return false;
         }
 
         const double topPadding = 8;
-        var desiredY = top.Value - topPadding;
         var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
-        var clampedY = Math.Clamp(desiredY, 0, maxY);
-
-        scrollViewer.Offset = new Vector(0, clampedY);
+        desiredY = Math.Clamp(top - topPadding, 0, maxY);
+        return true;
     }
 
-    /// <summary>
-    /// Returns the container's extent-relative Y position by walking up
-    /// to the parent ListBoxItem and reading its Bounds.Y. The ListBoxItem
-    /// is a direct child of VirtualizingStackPanel, so Bounds.Y is the
-    /// extent position — no scroll transform involved, no timing issues
-    /// with stale layout after ScrollIntoView.
-    /// </summary>
-    private static double? GetContainerExtentTop(ContentPresenter target)
+    private static bool TryGetContainerExtentBounds(
+        ContentPresenter target,
+        ScrollViewer scrollViewer,
+        out double top,
+        out double bottom)
     {
-        // Walk up to the ListBoxItem that owns this ContentPresenter.
         var item = target.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault();
-        if (item is null) return null;
-        // ListBoxItem.Bounds.Y is its arrange offset inside VirtualizingStackPanel.
-        return item.Bounds.Y;
+        if (item is null || item.Bounds.Height <= 0)
+        {
+            top = 0;
+            bottom = 0;
+            return false;
+        }
+
+        var scrollContent = scrollViewer
+            .GetVisualDescendants()
+            .OfType<ScrollContentPresenter>()
+            .FirstOrDefault();
+
+        if (scrollContent is not null)
+        {
+            var pt = item.TranslatePoint(new Point(0, 0), scrollContent);
+            if (pt.HasValue)
+            {
+                top = pt.Value.Y + scrollViewer.Offset.Y;
+                bottom = top + item.Bounds.Height;
+                return true;
+            }
+        }
+
+        // 回退
+        top = item.Bounds.Y;
+        bottom = top + item.Bounds.Height;
+        return true;
+    }
+
+    private static double? GetContainerExtentTop(ContentPresenter target, ScrollViewer scrollViewer)
+    {
+        return TryGetContainerExtentBounds(target, scrollViewer, out var top, out _)
+            ? top
+            : null;
     }
 
     private static bool IsTextInputFocused(object? source)
@@ -484,5 +726,4 @@ public partial class MainWindow : SukiWindow
             || source is Visual visual
             && visual.GetVisualAncestors().OfType<TextBox>().Any();
     }
-
 }
