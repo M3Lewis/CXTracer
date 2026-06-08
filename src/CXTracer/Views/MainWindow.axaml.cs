@@ -22,8 +22,6 @@ public partial class MainWindow : SukiWindow
     private SettingsWindow? _settingsWindow;
     private ScrollViewer? _conversationScrollViewer;
     private ScrollViewer? _executionScrollViewer;
-    private int _conversationScrollRequestVersion;
-    private int _executionScrollRequestVersion;
 
     public MainWindow()
     {
@@ -90,7 +88,6 @@ public partial class MainWindow : SukiWindow
         else if (props.IsRightButtonPressed)
         {
             string copyText = evt.IsRaw ? evt.RawJson : evt.Text;
-            string description = evt.IsRaw ? "Raw JSON" : "Event text";
             _ = CopyToClipboardAsync(copyText, viewModel);
             e.Handled = true;
         }
@@ -339,150 +336,64 @@ public partial class MainWindow : SukiWindow
         return candidate.DataContext as DisplayEvent;
     }
 
+    // 核心：同步、无跳动滚动定位
     private void ScrollEventIntoView(DisplayEvent evt)
     {
         var (listBox, scrollViewer) = ControlsForPane(evt.Pane);
-        var requestVersion = IncrementScrollRequestVersion(evt.Pane);
+        if (scrollViewer is null) return;
 
-        if (scrollViewer is null)
+        // 1. 尝试直接对齐（容器已在视觉树）
+        if (TryGetEventContainer(listBox, evt, out var target))
         {
+            ScrollContainerToTop(scrollViewer, target);
             return;
         }
 
-        var vsp = FindVirtualizingStackPanel(listBox);
-
-        // 如果容器已在视觉树中，直接精确对齐
-        if (TryScrollEventContainerToTop(listBox, scrollViewer, vsp, evt))
-        {
-            QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 3);
-            return;
-        }
-
-        // 容器未虚拟化：用 ScrollIntoView 触发虚拟化，使容器进入视觉树
-        // ScrollIntoView 只保证"最小移动使其可见"，不保证顶部对齐，
-        // 因此后续由 VerifyScrollEventAlignment 做精确对齐
+        // 2. 容器未虚拟化：用 ScrollIntoView 触发虚拟化
         var itemIndex = FindEventIndex(listBox, evt);
-        if (itemIndex >= 0)
-        {
-            listBox.ScrollIntoView(itemIndex);
-        }
+        if (itemIndex < 0) return;
 
-        QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 10);
-    }
-
-    private static int FindEventIndex(ListBox listBox, DisplayEvent evt)
-    {
-        return listBox.Items.Cast<object>().ToList().FindIndex(x =>
-            x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
-    }
-
-    private int IncrementScrollRequestVersion(EventPane pane)
-    {
-        return pane == EventPane.Execution
-            ? ++_executionScrollRequestVersion
-            : ++_conversationScrollRequestVersion;
-    }
-
-    private bool IsCurrentScrollRequest(EventPane pane, int requestVersion)
-    {
-        return pane == EventPane.Execution
-            ? _executionScrollRequestVersion == requestVersion
-            : _conversationScrollRequestVersion == requestVersion;
-    }
-
-    private void QueueScrollEventAlignment(
-        DisplayEvent evt,
-        int requestVersion,
-        int remainingAttempts)
-    {
-        Dispatcher.UIThread.Post(
-            () => VerifyScrollEventAlignment(evt, requestVersion, remainingAttempts),
-            DispatcherPriority.Background);
-    }
-
-    private void VerifyScrollEventAlignment(
-        DisplayEvent evt,
-        int requestVersion,
-        int remainingAttempts)
-    {
-        if (!IsCurrentScrollRequest(evt.Pane, requestVersion))
-        {
-            return;
-        }
-
-        var (listBox, scrollViewer) = ControlsForPane(evt.Pane);
-        if (scrollViewer is null)
-        {
-            return;
-        }
-
+        listBox.ScrollIntoView(itemIndex);
         listBox.UpdateLayout();
-        var vsp = FindVirtualizingStackPanel(listBox);
 
-        if (IsEventVisibleAndAligned(listBox, scrollViewer, vsp, evt))
+        // 3. 立即获取容器并精确对齐到顶部
+        if (TryGetEventContainer(listBox, evt, out target))
         {
-            return;
-        }
-
-        if (TryScrollEventContainerToTop(listBox, scrollViewer, vsp, evt))
-        {
-            // 对齐成功，再验证一次确认稳定
-            if (remainingAttempts > 0)
-            {
-                QueueScrollEventAlignment(evt, requestVersion, remainingAttempts: 1);
-            }
-            return;
-        }
-
-        // 容器仍未虚拟化，等待下次重试，不做任何估算
-        if (remainingAttempts > 0)
-        {
-            QueueScrollEventAlignment(evt, requestVersion, remainingAttempts - 1);
+            ScrollContainerToTop(scrollViewer, target);
         }
     }
 
-    private static bool TryScrollEventContainerToTop(
-        ListBox listBox,
-        ScrollViewer scrollViewer,
-        VirtualizingStackPanel? vsp,
-        DisplayEvent evt)
+    // 将容器滚动到顶部（保持 8px 间距）
+    private static void ScrollContainerToTop(ScrollViewer scrollViewer, ContentPresenter target)
     {
-        if (!TryGetEventContainer(listBox, evt, out var target))
+        var vsp = FindVirtualizingStackPanel(target);
+        if (TryGetContainerExtentBounds(target, vsp, out var top, out _))
         {
-            return false;
+            const double topPadding = 8;
+            var maxOffset = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+            var desiredY = Math.Clamp(top - topPadding, 0, maxOffset);
+            scrollViewer.Offset = new Vector(0, desiredY);
         }
-
-        return TryScrollContainerToTop(scrollViewer, target, vsp);
+        else
+        {
+            target.BringIntoView();
+        }
     }
 
-    private static bool IsEventVisibleAndAligned(
-        ListBox listBox,
-        ScrollViewer scrollViewer,
-        VirtualizingStackPanel? vsp,
-        DisplayEvent evt)
-    {
-        return TryGetEventContainer(listBox, evt, out var target)
-            && IsContainerVisible(scrollViewer, target, vsp)
-            && IsContainerAtDesiredScrollOffset(scrollViewer, target, vsp);
-    }
-
-    private static bool TryGetEventContainer(
-        ListBox listBox,
-        DisplayEvent evt,
-        out ContentPresenter target)
+    private static bool TryGetEventContainer(ListBox listBox, DisplayEvent evt, out ContentPresenter target)
     {
         var vsp = FindVirtualizingStackPanel(listBox);
         var match = GetItemContainers(listBox, vsp)
             .FirstOrDefault(x => IsEventContainer(x, evt));
 
-        if (match is null)
+        if (match is not null)
         {
-            target = null!;
-            return false;
+            target = match;
+            return true;
         }
 
-        target = match;
-        return true;
+        target = null!;
+        return false;
     }
 
     private (ListBox ListBox, ScrollViewer? ScrollViewer) ControlsForPane(EventPane pane)
@@ -502,19 +413,14 @@ public partial class MainWindow : SukiWindow
         return control.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
     }
 
-    // VirtualizingStackPanel 是 extent 坐标系的原点。
-    // TranslatePoint 到 VSP 得到的 Y 值与 ScrollViewer.Offset.Y 处于同一坐标系，
-    // 且不随 Offset 变化——这是与 ScrollContentPresenter 方案的关键区别。
-    private static VirtualizingStackPanel? FindVirtualizingStackPanel(Control listBox)
+    private static VirtualizingStackPanel? FindVirtualizingStackPanel(Control control)
     {
-        return listBox.GetVisualDescendants()
+        return control.GetVisualDescendants()
             .OfType<VirtualizingStackPanel>()
             .FirstOrDefault();
     }
 
-    private static List<ContentPresenter> GetItemContainers(
-        ListBox listBox,
-        VirtualizingStackPanel? vsp)
+    private static List<ContentPresenter> GetItemContainers(ListBox listBox, VirtualizingStackPanel? vsp)
     {
         return listBox
             .GetVisualDescendants()
@@ -531,81 +437,13 @@ public partial class MainWindow : SukiWindow
             && string.Equals(candidate.Id, evt.Id, StringComparison.Ordinal);
     }
 
-    private static bool TryScrollContainerToTop(
-        ScrollViewer scrollViewer,
-        ContentPresenter target,
-        VirtualizingStackPanel? vsp)
+    private static int FindEventIndex(ListBox listBox, DisplayEvent evt)
     {
-        if (!TryGetDesiredScrollOffset(scrollViewer, target, vsp, out var desiredY))
-        {
-            target.BringIntoView();
-            return false;
-        }
-
-        scrollViewer.Offset = new Vector(0, desiredY);
-        return true;
+        return listBox.Items.Cast<object>().ToList().FindIndex(x =>
+            x is DisplayEvent de && string.Equals(de.Id, evt.Id, StringComparison.Ordinal));
     }
 
-    private static bool IsContainerVisible(
-        ScrollViewer scrollViewer,
-        ContentPresenter target,
-        VirtualizingStackPanel? vsp)
-    {
-        if (!TryGetContainerExtentBounds(target, vsp, out var top, out var bottom)
-            || scrollViewer.Viewport.Height <= 0)
-        {
-            return false;
-        }
-
-        const double visibilityTolerance = 1;
-        var viewportTop = scrollViewer.Offset.Y;
-        var viewportBottom = viewportTop + scrollViewer.Viewport.Height;
-        return bottom > viewportTop + visibilityTolerance
-            && top < viewportBottom - visibilityTolerance;
-    }
-
-    private static bool IsContainerAtDesiredScrollOffset(
-        ScrollViewer scrollViewer,
-        ContentPresenter target,
-        VirtualizingStackPanel? vsp)
-    {
-        if (!TryGetDesiredScrollOffset(scrollViewer, target, vsp, out var desiredY))
-        {
-            return false;
-        }
-
-        const double offsetTolerance = 1;
-        return Math.Abs(scrollViewer.Offset.Y - desiredY) <= offsetTolerance;
-    }
-
-    private static bool TryGetDesiredScrollOffset(
-        ScrollViewer scrollViewer,
-        ContentPresenter target,
-        VirtualizingStackPanel? vsp,
-        out double desiredY)
-    {
-        if (!TryGetContainerExtentBounds(target, vsp, out var top, out _))
-        {
-            desiredY = 0;
-            return false;
-        }
-
-        const double topPadding = 8;
-        var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
-        desiredY = Math.Clamp(top - topPadding, 0, maxY);
-        return true;
-    }
-
-    /// <summary>
-    /// 用 TranslatePoint 把 ListBoxItem 的左上角变换到 VirtualizingStackPanel 坐标系。
-    ///
-    /// 为什么选 VSP 而不是 ScrollContentPresenter：
-    ///   - ScrollContentPresenter 的坐标随 Offset 偏移，TranslatePoint 到它得到视口坐标，
-    ///     需要再加 Offset.Y 才能换算成 extent 坐标。但"加 Offset.Y"这一步在两个不同帧
-    ///     之间会因 Offset 已变而算出不同结果，导致校正时闪烁。
-    ///   - VirtualizingStackPanel 本身不随滚动移动，它的坐标系就是 extent 坐标系，
-    ///     TranslatePoint 到它得到的 Y 值直接等于 extent top，无需任何补偿，跨帧稳定。
-    /// </summary>
+    // 使用 VirtualizingStackPanel 坐标系，保证坐标稳定不随滚动偏移
     private static bool TryGetContainerExtentBounds(
         ContentPresenter target,
         VirtualizingStackPanel? vsp,
@@ -631,16 +469,13 @@ public partial class MainWindow : SukiWindow
             }
         }
 
-        // 回退：VSP 未找到时用 Bounds.Y（比 ScrollContentPresenter 方案更稳定，
-        // 因为 Bounds.Y 相对于直接父节点，在 VSP 就是直接父节点的情况下等价）
+        // 回退：极少数情况下 VSP 未找到时使用 Bounds.Y
         top = item.Bounds.Y;
         bottom = top + item.Bounds.Height;
         return true;
     }
 
-    private static double? GetContainerExtentTop(
-        ContentPresenter target,
-        VirtualizingStackPanel? vsp)
+    private static double? GetContainerExtentTop(ContentPresenter target, VirtualizingStackPanel? vsp)
     {
         return TryGetContainerExtentBounds(target, vsp, out var top, out _)
             ? top
