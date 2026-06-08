@@ -69,6 +69,7 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 
 - [Background Session Enrichment](./atoms/background-session-enrichment.md) - non-blocking parallel loading flow, cancellation, and thread-safe property updates for session lists.
 - [Observable Collection Mutation](./atoms/observable-collection-mutation.md) - avoiding ListBox container reconstruction by using in-place item movements instead of Clear/Add.
+- [Event Search Performance](./atoms/event-search-performance.md) - debounced search, async filtering loop, cancellation, and lazy query caching to prevent UI locks.
 
 ### Transcript Navigation
 
