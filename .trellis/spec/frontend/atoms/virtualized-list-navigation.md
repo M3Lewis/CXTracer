@@ -30,6 +30,10 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
 4. **Stable Extent-Space Alignment**: When calculating precise top-alignment or navigation offsets, do not use `TranslatePoint` relative to the list or viewport. Viewport coordinate translations are sensitive to scroll transformations and layout passes, leading to race conditions during rapid/synchronized scrolling. Instead, locate the parent `ListBoxItem` of the realized item container and use its `Bounds.Y` coordinate (which represents the item's static extent-space layout offset inside the virtualizing panel).
 5. **Brush and Resource Caching**: Do not initialize color or thickness resources inline inside high-frequency property bindings (e.g. `IBrush CardBackground => new SolidColorBrush(...)`). Declare them as `static readonly` fields.
 6. **Virtualization Trade-off**: For dense transcript views where precise top-alignment (pinning items to the top of the viewport) is required during step-by-step navigation, completely disable virtualized panels (replace default `VirtualizingStackPanel` with standard `StackPanel`). This ensures all items remain persistently in the visual tree, maintaining static and stable bounds layout offsets. This allows instant, synchronous single-frame top alignment and completely avoids the scroll jumpiness and layout race conditions caused by dynamic recycling.
+7. **O(1) Container Lookup**: Avoid traversing the visual tree using `GetVisualDescendants()` to find container elements. Resolve item container controls directly using `ListBox.ContainerFromIndex(index)` in $O(1)$.
+8. **O(log N) Viewport Anchor Selection**: When scanning for the visible anchor element at the current scroll viewport offset, implement a Binary Search ($O(\log N)$) rather than a linear scan over all items.
+9. **High-Frequency ViewModel Caching**: Do not execute expensive list concatenation, sorting, or allocations (e.g., `.Concat().OrderBy().ToList()`) inside high-frequency navigation target query handlers (which trigger on every keypress). Maintain a sorted/combined sync-events cache in the ViewModel and invalidate it (set to null) only when the backing collections mutate or filters change.
+10. **Constant Layout Styles**: To avoid layout thrashing during active state transitions (like active pane highlight), keep layout-affecting style properties (`BorderThickness`, `Padding`, `Margin`) constant between active and inactive states. Toggle only repaint-only properties (like `BorderBrush` color) to avoid forcing expensive measure and arrange layout passes on the visual tree.
 
 # Why
 
@@ -38,6 +42,10 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
 - Calling `TranslatePoint` on a visual element relative to a parent that contains/is a `ScrollViewer` returns viewport-relative coordinates. Comparing viewport-relative offsets with `scrollViewer.Offset.Y` (which is in extent-relative coordinates) introduces a coordinate-space mismatch. Furthermore, after `ScrollIntoView()` is called, the scroll position changes asynchronously; reading viewport coordinates before the next layout pass completes yields stale positions.
 - In contrast, a virtualizing panel positions `ListBoxItem`s using arrange-pass coordinates. `ListBoxItem.Bounds.Y` is the static, absolute Y offset in the panel's scroll extent. This value is invariant to the current scroll offset and does not suffer from layout/render pass synchronization issues.
 - Dynamic recycling panels (like VirtualizingStackPanel) recycle off-screen containers, which causes layout Bounds to constantly recalculate and flicker during rapid or synchronized keyboard navigation. In contrast, disabling virtualization inside the ListBox forces all event cards to stay in the Visual Tree with invariant layout Y coordinates, making exact scroll alignment robust, instant, and flicker-free.
+- Traversing the visual tree via `GetVisualDescendants` scales poorly and locks the UI thread during scrolling and navigation. `ContainerFromIndex` provides direct, instantaneous lookup.
+- Linear search for the current scroll viewport anchor has a worst-case $O(N)$ complexity, which degrades performance as the trace session grows. Binary search reduces lookup overhead to $O(\log N)$.
+- Regenerating combined sorted lists on every navigation keypress blocks the main UI thread. Caching results in $O(1)$ lookup for subsequent navigation events.
+- Changing `BorderThickness` from 1 to 2 changes layout constraints, forcing Avalonia to re-measure and re-layout the entire pane and all its children. Keeping the thickness constant and changing only the border color restricts the update to a cheap repaint operation.
 
 # Do
 
@@ -79,6 +87,9 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
   ```csharp
   private static readonly IBrush BgUser = new SolidColorBrush(Color.Parse("#EAF7F0"));
   ```
+- Cache combined and sorted navigation sequences in the ViewModel to ensure synchronized navigation requests execute in $O(1)$ time.
+- Implement Binary Search to locate the first visible item in the viewport during scroll synchronization.
+- Define constant border thicknesses and layout dimensions for containers, changing only brush colors to highlight active/focused elements.
 
 # Do Not
 
@@ -87,3 +98,5 @@ When implementing keyboard navigation, focus switching, or scroll alignment on l
 - Do not call `GetVisualDescendants()` on list controls to find or count all items in a sequence (this destroys virtualization benefits and misses off-screen items).
 - Do not let the `ListBox` or `ListBoxItem` receive keyboard focus directly if key inputs are captured at the window level.
 - Do not force VirtualizingStackPanel when precise top-alignment scrolling is required and rendering performance is not a bottleneck. Using a simple StackPanel provides rock-solid coordinate stability.
+- Do not perform LINQ concatenation or sorting inside high-frequency input or layout event handlers.
+- Do not change layout-affecting properties (like border thickness, margin, padding) between active/inactive states on controls that house large visual subtrees.
