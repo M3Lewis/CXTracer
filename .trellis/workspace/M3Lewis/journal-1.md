@@ -662,3 +662,39 @@ Resolved Native AOT startup crash by statically merging dictionaries, and resolv
 ### Next Steps
 
 - None - task complete
+
+
+## Session 20: Disable virtualization and simplify scroll alignment in transcript ListBox
+
+**Date**: 2026-06-08
+**Task**: Disable virtualization and simplify scroll alignment in transcript ListBox
+**Branch**: `master`
+
+### Summary
+
+Resolved non-synced scroll misalignment and UI viewport jumps by completely disabling virtualization in both transcript ListBoxes and replacing them with standard StackPanels, which allows clean and instant synchronous single-frame top alignment without any async ticks or flicker.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `72e7c01` | (see git log) |
+| `872fbb2` | (see git log) |
+| `cb7fbd9` | (see git log) |
+| `fcdac37` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
