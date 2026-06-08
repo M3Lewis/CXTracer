@@ -66,7 +66,7 @@ Since Codex's JSONL format is not a public, static API, the `CodexEventParser` u
 * **Path Hover & Clipboard**: Hovering over the active session's file path displays a tooltip containing the full path. Clicking or right-clicking copies the absolute path to the clipboard with a SukiUI toast notification.
 
 ### 5. Detailed Message Popup Overlay
-* **Quick Log Reading**: To address narrow-column reading constraints for long text (e.g., full Assistant replies, verbose console output, or complex tool payloads), clicking any message card opens a detailed popup overlay.
+* **Quick Log Reading**: To address narrow-column reading constraints for long text (e.g., full Assistant replies, verbose console output, or complex tool payloads), double-clicking any message card opens a detailed popup overlay. Single-clicking is used to select and highlight the card for keyboard navigation or synchronized scrolling.
 * **Darkened Backdrop & Raw JSON**: The overlay features a semi-transparent dark backdrop and sets the card background based on its role theme. It features a collapsible **Raw JSON** expander to examine the original JSON payload. Close the overlay by pressing `Esc`, clicking outside the popup, or clicking the close button in the top-right corner.
 
 ### 6. Dynamic i18n Translation Switching
@@ -138,12 +138,26 @@ dotnet publish ./src/CXTracer/CXTracer.csproj -c Release -r linux-x64 --self-con
 
 ---
 
-## Search & Filtering
+## Search, Filtering & Keyboard Navigation
 
 * **Independent Search Input**:
   * **Session Filter (Left Column)**: The input box above the sidebar filters the sessions list by title, subtitle, or file paths in real-time.
-  * **Log Filter (Right Column)**: An input box to the left of the event filter dropdown matches keywords inside event body contents.
+  * **Log Filter (Right Column)**: An input box to the left of the event filter dropdown matches keywords inside event body contents. Features asynchronous batch filtering and debouncing to prevent UI lags on huge logs.
 * **Event Type Filters**: Quickly toggle views between `All` / `Conversation` / `Commands` / `Errors` / `Diffs` / `Final` / `Tools` / `Raw`.
+* **Single-Click vs Double-Click**:
+  * **Single-Click**: Selects and highlights the card, transferring keyboard focus back to the main window (even if the search input was focused), making arrow keys immediately available.
+  * **Double-Click**: Opens the detailed message popup overlay.
+* **Search, Select, Clear & Global Navigation Resume Flow**:
+  1. Type a query in the log filter; the list updates asynchronously to match.
+  2. Single-click or press `Up`/`Down` arrow keys to select a card in the filtered list (arrow keys work even while typing in the filter input).
+  3. Click the clear button `(x)` to clear the query.
+  4. The **selected card remains highlighted**, and the viewer automatically and smoothly scrolls to align it at the **top of the viewport**.
+  5. Press `Up`/`Down` arrow keys to immediately resume global keyboard navigation from that selected card's exact position.
+* **Absolute Event Sequence Numbers**:
+  - Two small circular capsules are displayed in the header of each Conversation/Execution card.
+  - **Left Capsule**: Represents the absolute chronological index within its respective single column.
+  - **Right Capsule**: Represents the absolute chronological index combined across both columns.
+  - These sequence numbers are fixed coordinates relative to the session log, remaining stable and unchanged during query filters or category switches for easy referencing.
 
 ---
 
