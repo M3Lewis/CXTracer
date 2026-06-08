@@ -1,0 +1,7 @@
+- [x] Optimize helper `FindEventIndex(ListBox, DisplayEvent)` in `MainWindow.axaml.cs`
+- [x] Simplify `TryGetContainerExtentBounds` to accept `ListBoxItem` and read `item.Bounds.Y`
+- [x] Refactor `ScrollContainerToTop` to accept `ListBoxItem`
+- [x] Refactor `TryGetEventContainer` to return `ListBoxItem` via direct index lookup
+- [x] Refactor `GetAnchorEvent` to use O(1) sequential loop with early exit
+- [x] Remove obsolete visual tree search methods (`GetItemContainers`, `FindVirtualizingStackPanel`)
+- [x] Verify compilation and behavior
