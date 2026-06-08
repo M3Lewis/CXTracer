@@ -479,6 +479,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
             _allEvents.Clear();
             _allEvents.AddRange(events);
+            UpdateEventSequenceNumbers();
             TotalEventCount = _allEvents.Count;
             await PopulateVisibleEventsAsync(_allEvents, ct).ConfigureAwait(true);
             StatusMessage = LF("StatusViewing", "Viewing {0}", session.FileName);
@@ -574,6 +575,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             foreach (var evt in events)
             {
                 _allEvents.Add(evt);
+            }
+
+            UpdateEventSequenceNumbers();
+
+            foreach (var evt in events)
+            {
                 AddIfVisible(evt);
             }
 
@@ -908,6 +915,35 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _sortedSyncEventsCache = null;
         VisibleEventCount = ConversationEvents.Count + ExecutionEvents.Count + RawEvents.Count;
         OnPropertyChanged(nameof(EventCountText));
+    }
+
+    private void UpdateEventSequenceNumbers()
+    {
+        var sorted = _allEvents
+            .Where(e => e.Pane is EventPane.Conversation or EventPane.Execution)
+            .OrderBy(EventSortTimestamp)
+            .ThenBy(e => e.LineNumber)
+            .ToList();
+
+        int convCount = 0;
+        int execCount = 0;
+        for (int i = 0; i < sorted.Count; i++)
+        {
+            var evt = sorted[i];
+            int paneSeq;
+            if (evt.Pane == EventPane.Conversation)
+            {
+                convCount++;
+                paneSeq = convCount;
+            }
+            else
+            {
+                execCount++;
+                paneSeq = execCount;
+            }
+            evt.ColumnSequenceText = paneSeq.ToString();
+            evt.MergedSequenceText = (i + 1).ToString();
+        }
     }
 
     private void AddIfVisible(DisplayEvent evt)

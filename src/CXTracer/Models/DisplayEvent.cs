@@ -55,6 +55,12 @@ public sealed partial class DisplayEvent : ObservableObject
     [ObservableProperty]
     private bool _isCurrentNavigationTarget;
 
+    [ObservableProperty]
+    private string _columnSequenceText = string.Empty;
+
+    [ObservableProperty]
+    private string _mergedSequenceText = string.Empty;
+
     public string TimeText => Timestamp?.ToLocalTime().ToString("HH:mm:ss") ?? $"#{LineNumber}";
     public bool IsError => Kind == EventKind.Error || Text.Contains("error", StringComparison.OrdinalIgnoreCase) || Text.Contains("exception", StringComparison.OrdinalIgnoreCase);
     public bool IsDiff => Kind == EventKind.Diff;

@@ -392,11 +392,48 @@
                                      Foreground="{Binding RoleBadgeForeground}"/>
                         </Border>
 
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding TimeText}"
-                                   HorizontalAlignment="Right"
-                                   FontSize="12"
-                                   Foreground="#8A8178"/>
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="5"
+                                    VerticalAlignment="Center">
+                          <Border Background="#F3EBE0"
+                                  BorderBrush="#DDD5C8"
+                                  BorderThickness="1"
+                                  CornerRadius="999"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding ColumnSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding ColumnSequenceText}"
+                                       FontSize="11"
+                                       Foreground="#8A8178"
+                                       FontWeight="Medium"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+                          <Border Background="#EDE5DA"
+                                  BorderBrush="#DDD5C8"
+                                  BorderThickness="1"
+                                  CornerRadius="999"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding MergedSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding MergedSequenceText}"
+                                       FontSize="11"
+                                       Foreground="#8A8178"
+                                       FontWeight="Medium"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+                          <TextBlock Text="{Binding TimeText}"
+                                     FontSize="12"
+                                     Foreground="#8A8178"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
                       </Grid>
 
                       <TextBlock Text="{Binding Title}"
@@ -514,11 +551,48 @@
                                      Foreground="{Binding RoleBadgeForeground}"/>
                         </Border>
 
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding TimeText}"
-                                   HorizontalAlignment="Right"
-                                   FontSize="12"
-                                   Foreground="#8A8178"/>
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="5"
+                                    VerticalAlignment="Center">
+                          <Border Background="#F3EBE0"
+                                  BorderBrush="#DDD5C8"
+                                  BorderThickness="1"
+                                  CornerRadius="999"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding ColumnSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding ColumnSequenceText}"
+                                       FontSize="11"
+                                       Foreground="#8A8178"
+                                       FontWeight="Medium"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+                          <Border Background="#EDE5DA"
+                                  BorderBrush="#DDD5C8"
+                                  BorderThickness="1"
+                                  CornerRadius="999"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding MergedSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding MergedSequenceText}"
+                                       FontSize="11"
+                                       Foreground="#8A8178"
+                                       FontWeight="Medium"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+                          <TextBlock Text="{Binding TimeText}"
+                                     FontSize="12"
+                                     Foreground="#8A8178"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
                       </Grid>
 
                       <TextBlock Text="{Binding Title}"
