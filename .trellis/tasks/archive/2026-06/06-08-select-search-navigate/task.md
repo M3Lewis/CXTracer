@@ -1,0 +1,5 @@
+- [x] Phase 1: ViewModel selection preservation in `ApplyFilterAsync`
+- [x] Phase 2: View pointer pressed click selection and focus management
+- [x] Phase 3: View keyboard bypass for Arrow keys when TextBox is focused
+- [x] Phase 4: Auto scroll-into-view on search clear
+- [x] Phase 5: Verification and compilation check
