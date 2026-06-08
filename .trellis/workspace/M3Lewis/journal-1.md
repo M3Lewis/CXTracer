@@ -698,3 +698,36 @@ Resolved non-synced scroll misalignment and UI viewport jumps by completely disa
 ### Next Steps
 
 - None - task complete
+
+
+## Session 21: Optimize event search box performance
+
+**Date**: 2026-06-08
+**Task**: Optimize event search box performance
+**Branch**: `master`
+
+### Summary
+
+Optimized the event search box performance to resolve UI lag by implementing debouncing, async batching, conditional RawJson search, and pre-computed lowercase text caching.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `110b726` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
