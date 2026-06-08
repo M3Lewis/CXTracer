@@ -764,3 +764,36 @@ Optimized synchronized navigation scrolling by implementing binary search for an
 ### Next Steps
 
 - None - task complete
+
+
+## Session 23: Search Selection Navigation
+
+**Date**: 2026-06-08
+**Task**: Search Selection Navigation
+**Branch**: `master`
+
+### Summary
+
+Preserved card selection when search query is cleared/changed, bypassed navigation arrow keys when search text box has focus, disabled focus on transcript ListBoxItems to prevent event interception, and scrolled the restored selected card back into view after filter finishes.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d51b0c5` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
