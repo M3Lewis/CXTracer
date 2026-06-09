@@ -797,3 +797,36 @@ Preserved card selection when search query is cleared/changed, bypassed navigati
 ### Next Steps
 
 - None - task complete
+
+
+## Session 24: System Tray Icon and Settings
+
+**Date**: 2026-06-09
+**Task**: System Tray Icon and Settings
+**Branch**: `master`
+
+### Summary
+
+Implemented system tray icon with minimize and close to tray background running options
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `<commit-hash>` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
