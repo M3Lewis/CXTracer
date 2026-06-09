@@ -7,6 +7,7 @@
                  xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
                  xmlns:vm="clr-namespace:CXTracer.ViewModels"
                  xmlns:models="clr-namespace:CXTracer.Models"
+                 xmlns:behaviors="clr-namespace:CXTracer.Behaviors"
                  x:Class="CXTracer.Views.MainWindow"
                  x:DataType="vm:MainWindowViewModel"
                  mc:Ignorable="d"
@@ -436,11 +437,11 @@
                         </StackPanel>
                       </Grid>
 
-                      <TextBlock Text="{Binding Title}"
+                      <TextBlock behaviors:SearchHighlight.Text="{Binding Title}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                  FontWeight="Bold"
                                  Foreground="#37332F"/>
 
-                      <TextBlock Text="{Binding Text}"
+                      <TextBlock behaviors:SearchHighlight.Text="{Binding Text}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                  TextWrapping="Wrap"
                                  FontSize="14"
                                  LineHeight="20"
@@ -595,12 +596,12 @@
                         </StackPanel>
                       </Grid>
 
-                      <TextBlock Text="{Binding Title}"
+                      <TextBlock behaviors:SearchHighlight.Text="{Binding Title}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                  FontWeight="Bold"
                                  TextWrapping="Wrap"
                                  Foreground="#37332F"/>
 
-                      <TextBlock Text="{Binding Text}"
+                      <TextBlock behaviors:SearchHighlight.Text="{Binding Text}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                  TextWrapping="Wrap"
                                  FontFamily="Consolas"
                                  FontSize="13"
