@@ -830,3 +830,38 @@ Implemented system tray icon with minimize and close to tray background running 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 25: Optimize CXTracer Memory Usage
+
+**Date**: 2026-06-09
+**Task**: Optimize CXTracer Memory Usage
+**Branch**: `master`
+
+### Summary
+
+Optimized CXTracer memory footprint by eliminating eager string caches in `DisplayEvent` (lazy JSON formatting and removing `SearchableText` concatenation), converting the search matching system to use zero-allocation case-insensitive comparisons, and introducing a native 250ms debounce delay to the search box binding.
+
+### Main Changes
+
+- Removed the eager `_formattedRawJson` and `_searchableText` caches in `DisplayEvent.cs`.
+- Refactored `PassesFilterInternal` in `MainWindowViewModel.cs` to search `Title` and `Text` directly using `StringComparison.OrdinalIgnoreCase`.
+- Added `Delay=250` to the `EventSearchText` binding in `MainWindow.axaml` to throttle search filtering.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ae7cc6c` | (see git log) |
+
+### Testing
+
+- [OK] Verified compilation and zero-allocation search.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
