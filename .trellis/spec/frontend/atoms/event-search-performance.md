@@ -21,8 +21,8 @@ last_checked: 2026-06-08
 
 When implementing text search, query filtering, or dynamic display filters on large lists (such as transcript event streams), follow these guidelines:
 
-1. **Pre-computed Search Targets**: Do not perform string concatenation or case-insensitive operations on every event during the filter loop. Cache a combined, lowercase representation (e.g. `SearchableText`) during event initialization/lazy-loading.
-2. **Debounce User Typing**: Debounce text input handlers (e.g. 200ms) before triggering query evaluation to prevent restarting heavy filtering operations on every single keystroke.
+1. **Zero-Allocation Search Matching**: Do not use concatenated search helper strings (e.g., `SearchableText`) stored permanently in model classes if the list is non-virtualized. Caching strings on thousands of items multiplies memory consumption. Instead, perform direct, field-by-field search matching using zero-allocation case-insensitive comparisons like `StringComparison.OrdinalIgnoreCase`.
+2. **Debounce User Typing**: Debounce text input handlers (e.g., `Delay=250` on XAML TextBox bindings or code-behind timers) before triggering query evaluation to prevent restarting heavy filtering operations on every single keystroke.
 3. **Cancellation Token Recycling**: Maintain a class-scoped `CancellationTokenSource` for filtering. Cancel and dispose of any active filtering tasks immediately before starting a new search, and also during ViewModel reset/disposal.
 4. **Asynchronous Batch Yielding**: Do not block the UI thread while filtering thousands of events. Implement the filter loop asynchronously and yield to the UI thread (via `Task.Yield()` or `await Task.Delay(1)`) in batches (e.g., every 40 events) to maintain UI responsiveness and support incremental UI rendering.
 5. **Lazy/Conditional Heavy Matching**: Do not scan heavy fields (like serialized Raw JSON blocks) by default. Restrict Raw JSON matching to cases where the user explicitly requests it (e.g., check `ShowRawEvents` or filter is set to `"Raw"`).
@@ -30,7 +30,8 @@ When implementing text search, query filtering, or dynamic display filters on la
 
 # Why
 
-- Performing `String.Contains` with `StringComparison.OrdinalIgnoreCase` or combining `Title` and `Text` on every iteration allocates significant short-lived strings, triggering frequent Garbage Collection (GC) pauses and UI stutter.
+- Creating pre-computed lowercase helper strings (like `.ToLowerInvariant()`) for every loaded event consumes significant persistent heap memory, which is especially problematic when UI virtualization is disabled.
+- Performing `String.Contains` with `StringComparison.OrdinalIgnoreCase` directly on original string properties is highly optimized in modern .NET and performs case-insensitive comparisons with zero heap allocations.
 - Without debouncing, rapid typing triggers multiple parallel filtering loops, which waste CPU cycles and pile up layout requests.
 - Yielding control back to the UI thread in batches allows the UI layout and rendering passes to execute concurrently with the filter loop, maintaining a high frame rate and avoiding "Application Not Responding" (ANR) lockups.
 - Raw JSON strings can be very large. Scanning them for matches is highly CPU intensive and degrades search performance by orders of magnitude if run unconditionally.
@@ -38,10 +39,14 @@ When implementing text search, query filtering, or dynamic display filters on la
 
 # Do
 
-- Lazy-initialize and cache the searchable text inside the model:
+- Perform zero-allocation case-insensitive string matching directly on separate properties instead of pre-concatenated buffers:
   ```csharp
-  private string? _searchableText;
-  public string SearchableText => _searchableText ??= $"{Title} {Text}".ToLowerInvariant();
+  var matchText = evt.Title.Contains(qTrimmed, StringComparison.OrdinalIgnoreCase) || 
+                  evt.Text.Contains(qTrimmed, StringComparison.OrdinalIgnoreCase);
+  ```
+- Use native XAML binding Delay or code-behind timers to debounce typing inputs:
+  ```xml
+  Text="{Binding EventSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Delay=250}"
   ```
 - Cancel previous search tasks and yield periodically:
   ```csharp
@@ -85,7 +90,8 @@ When implementing text search, query filtering, or dynamic display filters on la
 
 # Do Not
 
-- Do not perform inline string concatenation or ordinal case-insensitive matching in the inner loop of a search filter.
+- Do not perform inline string concatenation in the inner loop of a search filter.
+- Do not pre-allocate and cache large search-helper strings (e.g. `.ToLowerInvariant()`) permanently on every model item.
 - Do not scan the `RawJson` property unless the search filter context explicitly demands it.
 - Do not run the filter loop synchronously on the main thread for collections exceeding 100 elements.
 - Do not trigger scroll restoration on property changed events of the search query text itself, as it fires before the debounced/asynchronous repopulation finishes.
