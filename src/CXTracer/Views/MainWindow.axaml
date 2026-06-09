@@ -277,7 +277,7 @@
                   Click="Settings_Click"/>
 
           <TextBox Grid.Column="3"
-                   Text="{Binding EventSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                   Text="{Binding EventSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Delay=250}"
                    PlaceholderText="{DynamicResource FilterPlaceholder}"
                    VerticalAlignment="Center"/>
 

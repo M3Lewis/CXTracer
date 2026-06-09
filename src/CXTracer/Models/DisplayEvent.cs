@@ -18,34 +18,20 @@ public sealed partial class DisplayEvent : ObservableObject
     public required string RawJson { get; init; }
     public DateTimeOffset? Timestamp { get; init; }
 
-    private string? _formattedRawJson;
     public string FormattedRawJson
     {
         get
         {
-            if (_formattedRawJson != null) return _formattedRawJson;
             if (string.IsNullOrWhiteSpace(RawJson)) return string.Empty;
             try
             {
                 using var doc = JsonDocument.Parse(RawJson);
-                _formattedRawJson = JsonSerializer.Serialize(doc.RootElement, AppJsonContext.Default.JsonElement);
+                return JsonSerializer.Serialize(doc.RootElement, AppJsonContext.Default.JsonElement);
             }
             catch
             {
-                _formattedRawJson = RawJson;
+                return RawJson;
             }
-            return _formattedRawJson;
-        }
-    }
-
-    private string? _searchableText;
-    public string SearchableText
-    {
-        get
-        {
-            if (_searchableText != null) return _searchableText;
-            _searchableText = $"{Title} {Text}".ToLowerInvariant();
-            return _searchableText;
         }
     }
 

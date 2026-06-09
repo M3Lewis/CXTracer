@@ -804,7 +804,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             var q = EventSearchText;
             var hasQuery = !string.IsNullOrWhiteSpace(q);
             var qTrimmed = hasQuery ? q.Trim() : null;
-            var qLower = qTrimmed?.ToLowerInvariant();
             var searchRaw = ShowRawEvents || SelectedFilter?.Key == "Raw";
 
             var count = 0;
@@ -812,7 +811,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 ct.ThrowIfCancellationRequested();
 
-                if (PassesFilterInternal(evt, qLower, qTrimmed, searchRaw))
+                if (PassesFilterInternal(evt, qTrimmed, searchRaw))
                 {
                     switch (evt.Pane)
                     {
@@ -998,19 +997,20 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         if (!string.IsNullOrWhiteSpace(q))
         {
             var qTrimmed = q.Trim();
-            var qLower = qTrimmed.ToLowerInvariant();
             var searchRaw = ShowRawEvents || SelectedFilter?.Key == "Raw";
-            return PassesFilterInternal(evt, qLower, qTrimmed, searchRaw);
+            return PassesFilterInternal(evt, qTrimmed, searchRaw);
         }
-        return PassesFilterInternal(evt, null, null, false);
+        return PassesFilterInternal(evt, null, false);
     }
 
-    private bool PassesFilterInternal(DisplayEvent evt, string? qLower, string? qTrimmed, bool searchRaw)
+    private bool PassesFilterInternal(DisplayEvent evt, string? qTrimmed, bool searchRaw)
     {
-        if (qLower != null && qTrimmed != null)
+        if (qTrimmed != null)
         {
-            if (!evt.SearchableText.Contains(qLower)
-                && (!searchRaw || !evt.RawJson.Contains(qTrimmed, StringComparison.OrdinalIgnoreCase)))
+            var matchText = evt.Title.Contains(qTrimmed, StringComparison.OrdinalIgnoreCase) || 
+                            evt.Text.Contains(qTrimmed, StringComparison.OrdinalIgnoreCase);
+
+            if (!matchText && (!searchRaw || !evt.RawJson.Contains(qTrimmed, StringComparison.OrdinalIgnoreCase)))
             {
                 return false;
             }
