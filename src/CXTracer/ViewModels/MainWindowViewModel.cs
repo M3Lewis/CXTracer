@@ -97,6 +97,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private string _currentLanguage = "en";
 
     [ObservableProperty]
+    private bool _minimizeToTray;
+
+    [ObservableProperty]
+    private bool _closeToTray;
+
+    [ObservableProperty]
     private SessionInfo? _selectedSession;
 
     [ObservableProperty]
@@ -255,6 +261,22 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public void ShowDetailPopup(DisplayEvent evt) => DetailPopupEvent = evt;
     public void CloseDetailPopup() => DetailPopupEvent = null;
     partial void OnIsSynchronizedNavigationEnabledChanged(bool value)
+    {
+        if (!_isLoadingSettings)
+        {
+            SaveSettings();
+        }
+    }
+
+    partial void OnMinimizeToTrayChanged(bool value)
+    {
+        if (!_isLoadingSettings)
+        {
+            SaveSettings();
+        }
+    }
+
+    partial void OnCloseToTrayChanged(bool value)
     {
         if (!_isLoadingSettings)
         {
@@ -1018,6 +1040,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             _syncNavigationShortcut = settings.SyncNavigationShortcut?.IsValid == true
                 ? settings.SyncNavigationShortcut
                 : null;
+            MinimizeToTray = settings.MinimizeToTray;
+            CloseToTray = settings.CloseToTray;
 
             var lang = settings.Language;
             if (string.IsNullOrWhiteSpace(lang))
@@ -1048,7 +1072,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 IsSynchronizedNavigationEnabled = IsSynchronizedNavigationEnabled,
                 SyncNavigationShortcut = _syncNavigationShortcut,
-                Language = CurrentLanguage
+                Language = CurrentLanguage,
+                MinimizeToTray = MinimizeToTray,
+                CloseToTray = CloseToTray
             });
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)

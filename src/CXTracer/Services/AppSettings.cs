@@ -7,4 +7,7 @@ public sealed class AppSettings
     public bool IsSynchronizedNavigationEnabled { get; set; }
     public ShortcutGesture? SyncNavigationShortcut { get; set; }
     public string Language { get; set; } = "en";
+    public bool MinimizeToTray { get; set; }
+    public bool CloseToTray { get; set; }
 }
+

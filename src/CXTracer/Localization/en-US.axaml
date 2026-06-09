@@ -37,6 +37,12 @@
   <sys:String x:Key="Author">Author</sys:String>
   <sys:String x:Key="Language">Language</sys:String>
   <sys:String x:Key="NoSessionSelected">No session selected</sys:String>
+  <sys:String x:Key="SystemTray">System Tray</sys:String>
+  <sys:String x:Key="MinimizeToTray">Minimize to tray</sys:String>
+  <sys:String x:Key="CloseToTray">Close to tray</sys:String>
+  <sys:String x:Key="TrayOpen">Open CXTracer</sys:String>
+  <sys:String x:Key="TrayExit">Exit</sys:String>
+  <sys:String x:Key="TrayToolTip">CXTracer</sys:String>
 
   <!-- Filter options -->
   <sys:String x:Key="FilterAll">All</sys:String>

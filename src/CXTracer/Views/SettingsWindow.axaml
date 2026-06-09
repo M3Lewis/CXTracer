@@ -22,7 +22,7 @@
           Background="#FFFDF8"
           BorderBrush="#E7DCCB"
           BorderThickness="1">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
       <TextBlock Text="{DynamicResource Navigation}"
                  FontSize="18"
                  FontWeight="Bold"
@@ -63,8 +63,35 @@
               Background="#E7DCCB"
               HorizontalAlignment="Stretch"/>
 
+      <!-- System Tray Section -->
+      <TextBlock Grid.Row="4"
+                 Text="{DynamicResource SystemTray}"
+                 FontSize="18"
+                 FontWeight="Bold"
+                 Foreground="#3A3732"/>
+
+      <CheckBox Grid.Row="5"
+                Classes="preferenceCheckBox"
+                Content="{DynamicResource MinimizeToTray}"
+                IsThreeState="False"
+                IsChecked="{Binding MinimizeToTray, Mode=TwoWay}"
+                VerticalAlignment="Center"/>
+
+      <CheckBox Grid.Row="6"
+                Classes="preferenceCheckBox"
+                Content="{DynamicResource CloseToTray}"
+                IsThreeState="False"
+                IsChecked="{Binding CloseToTray, Mode=TwoWay}"
+                VerticalAlignment="Center"/>
+
+      <!-- Divider -->
+      <Border Grid.Row="7"
+              Height="1"
+              Background="#E7DCCB"
+              HorizontalAlignment="Stretch"/>
+
       <!-- Language Section -->
-      <Grid Grid.Row="4"
+      <Grid Grid.Row="8"
             ColumnDefinitions="Auto,*"
             ColumnSpacing="10"
             VerticalAlignment="Center">
@@ -81,13 +108,13 @@
       </Grid>
 
       <!-- Divider -->
-      <Border Grid.Row="5"
+      <Border Grid.Row="9"
               Height="1"
               Background="#E7DCCB"
               HorizontalAlignment="Stretch"/>
 
       <!-- About Section -->
-      <Grid Grid.Row="6"
+      <Grid Grid.Row="10"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="10"
             VerticalAlignment="Center">
@@ -119,7 +146,7 @@
         </Button>
       </Grid>
 
-      <Grid Grid.Row="7"
+      <Grid Grid.Row="11"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="12">
         <TextBlock Text="{Binding StatusMessage}"

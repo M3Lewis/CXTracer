@@ -37,6 +37,12 @@
   <sys:String x:Key="Author">作者</sys:String>
   <sys:String x:Key="Language">语言</sys:String>
   <sys:String x:Key="NoSessionSelected">未选择会话</sys:String>
+  <sys:String x:Key="SystemTray">系统托盘</sys:String>
+  <sys:String x:Key="MinimizeToTray">最小化到系统托盘</sys:String>
+  <sys:String x:Key="CloseToTray">关闭到系统托盘</sys:String>
+  <sys:String x:Key="TrayOpen">打开 CXTracer</sys:String>
+  <sys:String x:Key="TrayExit">退出</sys:String>
+  <sys:String x:Key="TrayToolTip">CXTracer</sys:String>
 
   <!-- Filter options -->
   <sys:String x:Key="FilterAll">全部</sys:String>

@@ -33,6 +33,28 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
         }
     }
 
+    public bool MinimizeToTray
+    {
+        get => _main.MinimizeToTray;
+        set
+        {
+            if (_main.MinimizeToTray == value) return;
+            _main.MinimizeToTray = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool CloseToTray
+    {
+        get => _main.CloseToTray;
+        set
+        {
+            if (_main.CloseToTray == value) return;
+            _main.CloseToTray = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string CurrentLanguage
     {
         get => _main.CurrentLanguage;
@@ -152,6 +174,12 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
             case nameof(MainWindowViewModel.CurrentLanguage):
                 OnPropertyChanged(nameof(CurrentLanguage));
                 OnPropertyChanged(nameof(SelectedLanguageIndex));
+                break;
+            case nameof(MainWindowViewModel.MinimizeToTray):
+                OnPropertyChanged(nameof(MinimizeToTray));
+                break;
+            case nameof(MainWindowViewModel.CloseToTray):
+                OnPropertyChanged(nameof(CloseToTray));
                 break;
         }
     }
