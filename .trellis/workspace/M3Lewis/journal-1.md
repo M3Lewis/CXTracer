@@ -865,3 +865,38 @@ Optimized CXTracer memory footprint by eliminating eager string caches in `Displ
 ### Next Steps
 
 - None - task complete
+
+
+## Session 26: Highlight Search Keywords
+
+**Date**: 2026-06-09
+**Task**: Highlight Search Keywords
+**Branch**: `master`
+
+### Summary
+
+Implemented search keyword highlighting in event cards using an Avalonia attached property to split and render text runs dynamically, maintaining zero-allocation baseline memory when search is idle.
+
+### Main Changes
+
+- Created `SearchHighlight.cs` containing `Text`, `Query`, and `HighlightBrush` attached properties on `TextBlock`.
+- Replaced direct `Text="{Binding ...}"` bindings in `MainWindow.axaml` with custom `SearchHighlight.Text` and `SearchHighlight.Query` bindings.
+- Avoided the `TextBlock.Text` and `TextBlock.Inlines` mutual exclusivity gotcha by only populating `Inlines` when there is a search match, preventing double-binding nullification loops.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `Pending` | (see git log) |
+
+### Testing
+
+- [OK] Verified compilation and zero-allocation dynamic run splitting.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
