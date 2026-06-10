@@ -533,7 +533,8 @@
                                     Padding="6,2"
                                     Margin="0,1"
                                     CornerRadius="4">
-                              <TextBlock Text="{Binding Text}"
+                              <TextBlock behaviors:SearchHighlight.Text="{Binding Text}"
+                                         behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                          FontFamily="Consolas"
                                          FontSize="13"
                                          Foreground="{Binding Foreground}"
@@ -795,7 +796,8 @@
                                     Padding="6,2"
                                     Margin="0,1"
                                     CornerRadius="4">
-                              <TextBlock Text="{Binding Text}"
+                              <TextBlock behaviors:SearchHighlight.Text="{Binding Text}"
+                                         behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                          FontFamily="Consolas"
                                          FontSize="13"
                                          Foreground="{Binding Foreground}"
@@ -955,14 +957,16 @@
                       Margin="0,14,0,0"
                       HorizontalScrollBarVisibility="Disabled">
           <StackPanel Spacing="12">
-            <TextBlock Text="{Binding DetailPopupEvent.Title}"
+            <TextBlock behaviors:SearchHighlight.Text="{Binding DetailPopupEvent.Title}"
+                       behaviors:SearchHighlight.Query="{Binding EventSearchText}"
                        FontWeight="Bold"
                        FontSize="16"
                        TextWrapping="Wrap"
                        Foreground="#37332F"
                        IsVisible="{Binding DetailPopupEvent.Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-            <TextBlock Text="{Binding DetailPopupEvent.Text}"
+            <TextBlock behaviors:SearchHighlight.Text="{Binding DetailPopupEvent.Text}"
+                       behaviors:SearchHighlight.Query="{Binding EventSearchText}"
                        TextWrapping="Wrap"
                        FontSize="15"
                        LineHeight="22"
@@ -977,7 +981,8 @@
                           Padding="6,2"
                           Margin="0,1"
                           CornerRadius="4">
-                    <TextBlock Text="{Binding Text}"
+                    <TextBlock behaviors:SearchHighlight.Text="{Binding Text}"
+                               behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                FontFamily="Consolas"
                                FontSize="13.5"
                                Foreground="{Binding Foreground}"

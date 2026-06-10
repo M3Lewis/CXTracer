@@ -27,7 +27,7 @@ When implementing text search, query filtering, or dynamic display filters on la
 4. **Asynchronous Batch Yielding**: Do not block the UI thread while filtering thousands of events. Implement the filter loop asynchronously and yield to the UI thread (via `Task.Yield()` or `await Task.Delay(1)`) in batches (e.g., every 40 events) to maintain UI responsiveness and support incremental UI rendering.
 5. **Lazy/Conditional Heavy Matching**: Do not scan heavy fields (like serialized Raw JSON blocks) by default. Restrict Raw JSON matching to cases where the user explicitly requests it (e.g., check `ShowRawEvents` or filter is set to `"Raw"`).
 6. **Selection and Scroll Position Restoration**: Rebuilding list collections causes selection loss and resets the scrollbar position to the top of the viewport. The ViewModel must capture and restore the selection (if still visible) after the filter completes. To align the restored selection in the View, the ViewModel must raise a dedicated event (e.g. `FilterAppliedScrollRequest`) upon filter completion. The View must subscribe to this event and call `ScrollEventIntoView` using a low-priority background dispatcher call (e.g. `DispatcherPriority.Background`) to ensure it executes after layout passes.
-7. **Text and Inlines Mutual Exclusivity**: In Avalonia, setting the built-in `TextBlock.Text` property clears its `Inlines` collection, and adding `Inlines` clears `TextBlock.Text` (sets it to `null`). When implementing search keyword highlighting using inline `Run`s, do not bind `TextBlock.Text` directly in XAML. Instead, use a custom attached property (e.g. `SearchHighlight.Text`) to hold the source text. Modify `Inlines` or fall back to the built-in `TextBlock.Text` inside the attached behavior's callback.
+7. **Text and Inlines Mutual Exclusivity and Duplication**: In Avalonia, setting the built-in TextBlock.Text property clears its Inlines collection, and adding Inlines clears TextBlock.Text (sets it to null). However, if the Text property was already set (e.g., in a fast path callback), subsequently populating Inlines does not automatically clear Text, leading to duplicate rendering of both the Text and Inlines. When implementing search keyword highlighting, use a custom attached property (e.g. SearchHighlight.Text) to hold the source text, and you must explicitly clear the built-in Text property (e.g., set it to string.Empty) before populating Inlines in the behavior's highlight path.
 
 # Why
 
@@ -37,7 +37,7 @@ When implementing text search, query filtering, or dynamic display filters on la
 - Yielding control back to the UI thread in batches allows the UI layout and rendering passes to execute concurrently with the filter loop, maintaining a high frame rate and avoiding "Application Not Responding" (ANR) lockups.
 - Raw JSON strings can be very large. Scanning them for matches is highly CPU intensive and degrades search performance by orders of magnitude if run unconditionally.
 - Rebuilding collections triggers list clearing, resetting the scroll position. Since filter execution is debounced and asynchronous, triggering scroll restoration on search text property changes executes before the new items are rendered. Broadcasting a completion event from the ViewModel guarantees correct timing for scroll positioning.
-- Modifying `TextBlock.Inlines` when `TextBlock.Text` is bound directly in XAML triggers Avalonia to clear `TextBlock.Text` to `null`. If the binding is `TwoWay`, this nullifies the source data in the ViewModel (data corruption). Even if it is `OneWay`, it causes invalidation loops. Custom attached properties isolate the UI-only inline creation from the source data bindings.
+- Modifying `TextBlock.Inlines` when `TextBlock.Text` is bound directly in XAML triggers Avalonia to clear `TextBlock.Text` to `null`. If the binding is `TwoWay`, this nullifies the source data in the ViewModel (data corruption). Even if it is `OneWay`, it causes invalidation loops. Custom attached properties isolate the UI-only inline creation from the source data bindings. Additionally, explicitly clearing `Text` when building `Inlines` prevents Avalonia from rendering duplicate text (the plain text and the inline runs concurrently).
 
 # Do
 
@@ -94,6 +94,12 @@ When implementing text search, query filtering, or dynamic display filters on la
   <TextBlock behaviors:SearchHighlight.Text="{Binding Title}"
              behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}" />
   ```
+- Explicitly clear the built-in `TextBlock.Text` property before populating `Inlines` in the custom attached property callback:
+  ```csharp
+  textBlock.Text = string.Empty;
+  var inlines = textBlock.Inlines;
+  // populate inlines with Run...
+  ```
 
 # Do Not
 
@@ -103,3 +109,4 @@ When implementing text search, query filtering, or dynamic display filters on la
 - Do not run the filter loop synchronously on the main thread for collections exceeding 100 elements.
 - Do not trigger scroll restoration on property changed events of the search query text itself, as it fires before the debounced/asynchronous repopulation finishes.
 - Do not bind the built-in `TextBlock.Text` property directly in XAML if `TextBlock.Inlines` are dynamically modified during keyword highlighting.
+- Do not leave the built-in `TextBlock.Text` property set when building `Inlines` for keyword highlighting, as Avalonia will render both, duplicating the text.

@@ -68,6 +68,7 @@ public static class SearchHighlight
         }
 
         // Highlight Path: Match found
+        textBlock.Text = string.Empty;
         var inlines = textBlock.Inlines;
         if (inlines == null)
         {
