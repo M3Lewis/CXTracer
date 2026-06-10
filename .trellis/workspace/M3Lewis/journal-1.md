@@ -900,3 +900,34 @@ Implemented search keyword highlighting in event cards using an Avalonia attache
 ### Next Steps
 
 - None - task complete
+
+
+## Session 26: UI Enhancements & WSL Compatibility
+
+**Date**: 2026-06-11
+**Task**: UI Enhancements & WSL Compatibility
+**Branch**: `master`
+
+### Summary
+
+Implemented collapsible event cards, formatted diff lines, translated WSL image paths, detail popup adaptation, and default-expansion setting.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
