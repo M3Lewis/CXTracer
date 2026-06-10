@@ -931,3 +931,34 @@ Implemented collapsible event cards, formatted diff lines, translated WSL image 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 27: UI Enhancements & Search Highlighting
+
+**Date**: 2026-06-11
+**Task**: UI Enhancements & Search Highlighting
+**Branch**: `master`
+
+### Summary
+
+Implemented collapsible event cards, WSL path translation, settings integration, diff line highlighting, and resolved TextBlock duplication bugs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
