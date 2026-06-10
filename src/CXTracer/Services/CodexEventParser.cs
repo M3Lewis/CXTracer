@@ -19,7 +19,7 @@ public sealed class CodexEventParser
     private static readonly string[] DiffKeys = ["diff", "patch", "apply_patch"];
     private static readonly string[] PathKeys = ["cwd", "workdir", "working_directory", "project", "repo", "root", "path"];
 
-    public DisplayEvent ParseLine(string line, int lineNumber)
+    public DisplayEvent ParseLine(string line, int lineNumber, string? sessionFilePath = null)
     {
         try
         {
@@ -33,7 +33,7 @@ public sealed class CodexEventParser
             var text = BuildText(kind, flat, line);
             var timestamp = FindTimestamp(flat);
 
-            return new DisplayEvent
+            var evt = new DisplayEvent
             {
                 Id = $"{lineNumber}:{HashCode.Combine(lineNumber, line.Length)}",
                 LineNumber = lineNumber,
@@ -44,10 +44,12 @@ public sealed class CodexEventParser
                 RawJson = line,
                 Timestamp = timestamp
             };
+            evt.Initialize(sessionFilePath);
+            return evt;
         }
         catch (Exception ex)
         {
-            return new DisplayEvent
+            var errEvt = new DisplayEvent
             {
                 Id = $"{lineNumber}:parse-error",
                 LineNumber = lineNumber,
@@ -58,6 +60,8 @@ public sealed class CodexEventParser
                 RawJson = line,
                 Timestamp = null
             };
+            errEvt.Initialize(sessionFilePath);
+            return errEvt;
         }
     }
 
@@ -131,8 +135,18 @@ public sealed class CodexEventParser
         if (ContainsAny(hay, "exec_command", "command_execution", "shell_command", "terminal", "stdout", "stderr", "exit_code") || flat.Any(v => IsAnyKey(v.Key, CommandKeys)))
             return flat.Any(v => IsAnyKey(v.Key, OutputKeys)) ? EventKind.CommandOutput : EventKind.Command;
 
-        if (ContainsAny(hay, "tool_call", "tool_result", "function_call", "mcp", "web_search", "read_file", "write_file"))
-            return EventKind.Tool;
+        if (types.Any(t => t == "custom_tool_call_output" || t == "tool_result" || t == "tool_output" || t.Contains("tool_result") || t.Contains("tool_output"))
+            || ContainsAny(hay, "custom_tool_call_output", "tool_result", "tool_output")
+            || (ContainsAny(hay, "mcp", "web_search", "read_file", "write_file") && ContainsAny(hay, "result", "output_text", "stdout", "stderr", "exit_code")))
+        {
+            return EventKind.ToolResult;
+        }
+
+        if (types.Any(t => t == "custom_tool_call" || t == "tool_call" || t == "function_call" || t.Contains("tool_call") || t.Contains("function_call"))
+            || ContainsAny(hay, "custom_tool_call", "tool_call", "function_call", "mcp", "web_search", "read_file", "write_file"))
+        {
+            return EventKind.ToolCall;
+        }
 
         // Internal reasoning/thinking events can be very long. Detect them before the
         // generic assistant/message checks so they do not leak into the Conversation pane.
@@ -167,7 +181,7 @@ public sealed class CodexEventParser
         // The left pane is intentionally chat-only: user prompts and Codex's human-readable answer.
         // Reasoning and plan events stay hidden in Raw unless the user enables Raw events.
         EventKind.User or EventKind.Assistant or EventKind.Final => EventPane.Conversation,
-        EventKind.Command or EventKind.CommandOutput or EventKind.Diff or EventKind.Tool or EventKind.Error => EventPane.Execution,
+        EventKind.Command or EventKind.CommandOutput or EventKind.Diff or EventKind.Tool or EventKind.ToolCall or EventKind.ToolResult or EventKind.Error => EventPane.Execution,
         _ => EventPane.Raw
     };
 
@@ -183,6 +197,8 @@ public sealed class CodexEventParser
             EventKind.Command => OneLine(FirstValueByKeys(flat, CommandKeys) ?? "Command", 96),
             EventKind.CommandOutput => "Command output",
             EventKind.Diff => "File changes / diff",
+            EventKind.ToolCall => OneLine(FirstValueByKeys(flat, ["tool", "name", "server", "function"]) ?? "Tool call", 96),
+            EventKind.ToolResult => "Tool output",
             EventKind.Tool => OneLine(FirstValueByKeys(flat, ["tool", "name", "server", "function"]) ?? "Tool call", 96),
             EventKind.Error => "Error",
             _ => "Raw event"
@@ -221,7 +237,7 @@ public sealed class CodexEventParser
             return string.IsNullOrWhiteSpace(diff) ? PrettyCompact(raw) : diff.Trim();
         }
 
-        if (kind == EventKind.Tool)
+        if (kind is EventKind.Tool or EventKind.ToolCall or EventKind.ToolResult)
         {
             var name = FirstValueByKeys(flat, ["tool", "name", "server", "function"]);
             var input = FirstValueByKeys(flat, ["input", "arguments", "args"]);

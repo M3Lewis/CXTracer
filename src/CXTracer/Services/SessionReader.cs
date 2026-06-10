@@ -52,7 +52,7 @@ public sealed class SessionReader
                     continue;
                 }
 
-                events.Add(_parser.ParseLine(line, lineNo));
+                events.Add(_parser.ParseLine(line, lineNo, filePath));
             }
 
             // 关键修复：
@@ -188,7 +188,7 @@ public sealed class SessionReader
                 continue;
             }
 
-            events.Add(_parser.ParseLine(line, lineNo));
+            events.Add(_parser.ParseLine(line, lineNo, filePath));
         }
 
         lock (_sync)

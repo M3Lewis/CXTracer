@@ -55,6 +55,17 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
         }
     }
 
+    public bool ExpandAllEventsByDefault
+    {
+        get => _main.ExpandAllEventsByDefault;
+        set
+        {
+            if (_main.ExpandAllEventsByDefault == value) return;
+            _main.ExpandAllEventsByDefault = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string CurrentLanguage
     {
         get => _main.CurrentLanguage;
@@ -180,6 +191,9 @@ public sealed partial class SettingsWindowViewModel : ObservableObject, IDisposa
                 break;
             case nameof(MainWindowViewModel.CloseToTray):
                 OnPropertyChanged(nameof(CloseToTray));
+                break;
+            case nameof(MainWindowViewModel.ExpandAllEventsByDefault):
+                OnPropertyChanged(nameof(ExpandAllEventsByDefault));
                 break;
         }
     }

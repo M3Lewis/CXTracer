@@ -8,6 +8,7 @@
                  xmlns:vm="clr-namespace:CXTracer.ViewModels"
                  xmlns:models="clr-namespace:CXTracer.Models"
                  xmlns:behaviors="clr-namespace:CXTracer.Behaviors"
+                 xmlns:converters="clr-namespace:CXTracer.Converters"
                  x:Class="CXTracer.Views.MainWindow"
                  x:DataType="vm:MainWindowViewModel"
                  mc:Ignorable="d"
@@ -20,6 +21,9 @@
                  Background="#FBF7EF"
                  KeyDown="Window_KeyDown"
                  BackgroundStyle="Flat">
+  <suki:SukiWindow.Resources>
+    <converters:ImagePathToBitmapConverter x:Key="ImagePathToBitmapConverter" />
+  </suki:SukiWindow.Resources>
   <suki:SukiWindow.Hosts>
     <suki:SukiToastHost Manager="{Binding ToastManager}" />
   </suki:SukiWindow.Hosts>
@@ -384,20 +388,93 @@
                           PointerPressed="CardBorder_PointerPressed">
                     <StackPanel Spacing="7">
                       <Grid ColumnDefinitions="Auto,*">
-                        <Border CornerRadius="999"
-                                Padding="8,3"
-                                Background="{Binding RoleBadgeBackground}">
-                          <TextBlock Text="{Binding RoleLabel}"
-                                     FontSize="12"
-                                     FontWeight="SemiBold"
-                                     Foreground="{Binding RoleBadgeForeground}"/>
-                        </Border>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                          <Border CornerRadius="999"
+                                  Padding="8,3"
+                                  Background="{Binding RoleBadgeBackground}"
+                                  VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RoleLabel}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding RoleBadgeForeground}"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+
+                          <Button Classes="roundIconButton"
+                                  Command="{Binding ToggleExpandCommand}"
+                                  IsVisible="{Binding CanExpand}"
+                                  VerticalAlignment="Center"
+                                  ToolTip.Tip="Toggle Expand/Collapse"
+                                  Width="24"
+                                  Height="24"
+                                  Padding="0"
+                                  Background="Transparent"
+                                  BorderThickness="0">
+                            <Border Width="20"
+                                    Height="20"
+                                    CornerRadius="10"
+                                    Background="#FFFFFF"
+                                    BorderBrush="#E7DCCB"
+                                    BorderThickness="1">
+                              <Panel>
+                                <Path Width="8"
+                                      Height="8"
+                                      Stretch="Uniform"
+                                      Fill="#6F655C"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Data="{StaticResource IconChevronDown}"
+                                      IsVisible="{Binding !IsExpanded}"/>
+                                <Path Width="8"
+                                      Height="8"
+                                      Stretch="Uniform"
+                                      Fill="#6F655C"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Data="{StaticResource IconChevronUp}"
+                                      IsVisible="{Binding IsExpanded}"/>
+                              </Panel>
+                            </Border>
+                          </Button>
+                        </StackPanel>
 
                         <StackPanel Grid.Column="1"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Right"
                                     Spacing="5"
                                     VerticalAlignment="Center">
+                          <Border Background="#E8F5E9"
+                                  BorderBrush="#2E7D32"
+                                  BorderThickness="1"
+                                  CornerRadius="4"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding IsDiff}">
+                            <TextBlock Text="{Binding AdditionsCount, StringFormat='+{0}'}"
+                                       FontSize="11"
+                                       Foreground="#2E7D32"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+                          <Border Background="#FFEBEE"
+                                  BorderBrush="#C62828"
+                                  BorderThickness="1"
+                                  CornerRadius="4"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding IsDiff}">
+                            <TextBlock Text="{Binding DeletionsCount, StringFormat='-{0}'}"
+                                       FontSize="11"
+                                       Foreground="#C62828"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
                           <Border Background="#F3EBE0"
                                   BorderBrush="#DDD5C8"
                                   BorderThickness="1"
@@ -441,11 +518,39 @@
                                  FontWeight="Bold"
                                  Foreground="#37332F"/>
 
-                      <TextBlock behaviors:SearchHighlight.Text="{Binding Text}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
+                      <TextBlock behaviors:SearchHighlight.Text="{Binding DisplayText}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                  TextWrapping="Wrap"
                                  FontSize="14"
                                  LineHeight="20"
-                                 Foreground="#34302C"/>
+                                 Foreground="#34302C"
+                                 IsVisible="{Binding !IsDiffAndExpanded}"/>
+
+                      <ItemsControl ItemsSource="{Binding DiffLines}"
+                                    IsVisible="{Binding IsDiffAndExpanded}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="models:DiffLine">
+                            <Border Background="{Binding Background}"
+                                    Padding="6,2"
+                                    Margin="0,1"
+                                    CornerRadius="4">
+                              <TextBlock Text="{Binding Text}"
+                                         FontFamily="Consolas"
+                                         FontSize="13"
+                                         Foreground="{Binding Foreground}"
+                                         TextWrapping="Wrap"/>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+
+                      <Border CornerRadius="8"
+                              ClipToBounds="True"
+                              MaxHeight="300"
+                              IsVisible="{Binding HasImage}"
+                              Margin="0,4,0,0">
+                        <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                               Stretch="Uniform" />
+                      </Border>
                     </StackPanel>
                   </Border>
                 </DataTemplate>
@@ -543,20 +648,93 @@
                           PointerPressed="CardBorder_PointerPressed">
                     <StackPanel Spacing="7">
                       <Grid ColumnDefinitions="Auto,*">
-                        <Border CornerRadius="999"
-                                Padding="8,3"
-                                Background="{Binding RoleBadgeBackground}">
-                          <TextBlock Text="{Binding RoleLabel}"
-                                     FontSize="12"
-                                     FontWeight="SemiBold"
-                                     Foreground="{Binding RoleBadgeForeground}"/>
-                        </Border>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                          <Border CornerRadius="999"
+                                  Padding="8,3"
+                                  Background="{Binding RoleBadgeBackground}"
+                                  VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RoleLabel}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding RoleBadgeForeground}"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+
+                          <Button Classes="roundIconButton"
+                                  Command="{Binding ToggleExpandCommand}"
+                                  IsVisible="{Binding CanExpand}"
+                                  VerticalAlignment="Center"
+                                  ToolTip.Tip="Toggle Expand/Collapse"
+                                  Width="24"
+                                  Height="24"
+                                  Padding="0"
+                                  Background="Transparent"
+                                  BorderThickness="0">
+                            <Border Width="20"
+                                    Height="20"
+                                    CornerRadius="10"
+                                    Background="#FFFFFF"
+                                    BorderBrush="#E7DCCB"
+                                    BorderThickness="1">
+                              <Panel>
+                                <Path Width="8"
+                                      Height="8"
+                                      Stretch="Uniform"
+                                      Fill="#6F655C"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Data="{StaticResource IconChevronDown}"
+                                      IsVisible="{Binding !IsExpanded}"/>
+                                <Path Width="8"
+                                      Height="8"
+                                      Stretch="Uniform"
+                                      Fill="#6F655C"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Data="{StaticResource IconChevronUp}"
+                                      IsVisible="{Binding IsExpanded}"/>
+                              </Panel>
+                            </Border>
+                          </Button>
+                        </StackPanel>
 
                         <StackPanel Grid.Column="1"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Right"
                                     Spacing="5"
                                     VerticalAlignment="Center">
+                          <Border Background="#E8F5E9"
+                                  BorderBrush="#2E7D32"
+                                  BorderThickness="1"
+                                  CornerRadius="4"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding IsDiff}">
+                            <TextBlock Text="{Binding AdditionsCount, StringFormat='+{0}'}"
+                                       FontSize="11"
+                                       Foreground="#2E7D32"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
+                          <Border Background="#FFEBEE"
+                                  BorderBrush="#C62828"
+                                  BorderThickness="1"
+                                  CornerRadius="4"
+                                  Padding="5,1"
+                                  MinWidth="22"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding IsDiff}">
+                            <TextBlock Text="{Binding DeletionsCount, StringFormat='-{0}'}"
+                                       FontSize="11"
+                                       Foreground="#C62828"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Border>
                           <Border Background="#F3EBE0"
                                   BorderBrush="#DDD5C8"
                                   BorderThickness="1"
@@ -601,12 +779,40 @@
                                  TextWrapping="Wrap"
                                  Foreground="#37332F"/>
 
-                      <TextBlock behaviors:SearchHighlight.Text="{Binding Text}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
+                      <TextBlock behaviors:SearchHighlight.Text="{Binding DisplayText}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
                                  TextWrapping="Wrap"
                                  FontFamily="Consolas"
                                  FontSize="13"
                                  LineHeight="18"
-                                 Foreground="#34302C"/>
+                                 Foreground="#34302C"
+                                 IsVisible="{Binding !IsDiffAndExpanded}"/>
+
+                      <ItemsControl ItemsSource="{Binding DiffLines}"
+                                    IsVisible="{Binding IsDiffAndExpanded}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="models:DiffLine">
+                            <Border Background="{Binding Background}"
+                                    Padding="6,2"
+                                    Margin="0,1"
+                                    CornerRadius="4">
+                              <TextBlock Text="{Binding Text}"
+                                         FontFamily="Consolas"
+                                         FontSize="13"
+                                         Foreground="{Binding Foreground}"
+                                         TextWrapping="Wrap"/>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+
+                      <Border CornerRadius="8"
+                              ClipToBounds="True"
+                              MaxHeight="300"
+                              IsVisible="{Binding HasImage}"
+                              Margin="0,4,0,0">
+                        <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                               Stretch="Uniform" />
+                      </Border>
                     </StackPanel>
                   </Border>
                 </DataTemplate>
@@ -760,7 +966,35 @@
                        TextWrapping="Wrap"
                        FontSize="15"
                        LineHeight="22"
-                       Foreground="#34302C"/>
+                       Foreground="#34302C"
+                       IsVisible="{Binding !DetailPopupEvent.IsDiff}"/>
+
+            <ItemsControl ItemsSource="{Binding DetailPopupEvent.DiffLines}"
+                          IsVisible="{Binding DetailPopupEvent.IsDiff}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:DiffLine">
+                  <Border Background="{Binding Background}"
+                          Padding="6,2"
+                          Margin="0,1"
+                          CornerRadius="4">
+                    <TextBlock Text="{Binding Text}"
+                               FontFamily="Consolas"
+                               FontSize="13.5"
+                               Foreground="{Binding Foreground}"
+                               TextWrapping="Wrap"/>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border CornerRadius="8"
+                    ClipToBounds="True"
+                    MaxHeight="400"
+                    IsVisible="{Binding DetailPopupEvent.HasImage}"
+                    Margin="0,4,0,0">
+              <Image Source="{Binding DetailPopupEvent.ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                     Stretch="Uniform" />
+            </Border>
 
             <Expander Header="{DynamicResource RawJson}"
                       Padding="0"

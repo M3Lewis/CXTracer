@@ -32,6 +32,7 @@
   <!-- Settings window -->
   <sys:String x:Key="Navigation">导航</sys:String>
   <sys:String x:Key="SynchronizedNavigation">双栏同步导航</sys:String>
+  <sys:String x:Key="ExpandAllEvents">默认展开长消息</sys:String>
   <sys:String x:Key="Shortcut">快捷键</sys:String>
   <sys:String x:Key="OK">确定</sys:String>
   <sys:String x:Key="Author">作者</sys:String>

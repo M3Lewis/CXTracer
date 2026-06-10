@@ -131,6 +131,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private bool _isSynchronizedNavigationEnabled;
 
     [ObservableProperty]
+    private bool _expandAllEventsByDefault;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConfirmSyncShortcutCommand))]
     private string _pendingSyncShortcutText = string.Empty;
 
@@ -281,6 +284,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         if (!_isLoadingSettings)
         {
             SaveSettings();
+        }
+    }
+
+    partial void OnExpandAllEventsByDefaultChanged(bool value)
+    {
+        if (!_isLoadingSettings)
+        {
+            SaveSettings();
+        }
+        foreach (var evt in _allEvents)
+        {
+            evt.ResetExpansionState(value);
         }
     }
 
@@ -499,6 +514,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             var events = await _reader.ReadAllAsync(session.FilePath, ct).ConfigureAwait(true);
             ct.ThrowIfCancellationRequested();
 
+            foreach (var evt in events)
+            {
+                evt.ResetExpansionState(ExpandAllEventsByDefault);
+            }
+
             _allEvents.Clear();
             _allEvents.AddRange(events);
             UpdateEventSequenceNumbers();
@@ -596,6 +616,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
             foreach (var evt in events)
             {
+                evt.ResetExpansionState(ExpandAllEventsByDefault);
                 _allEvents.Add(evt);
             }
 
@@ -1042,6 +1063,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 : null;
             MinimizeToTray = settings.MinimizeToTray;
             CloseToTray = settings.CloseToTray;
+            ExpandAllEventsByDefault = settings.ExpandAllEventsByDefault;
 
             var lang = settings.Language;
             if (string.IsNullOrWhiteSpace(lang))
@@ -1056,6 +1078,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(SyncNavigationShortcutText));
             OnPropertyChanged(nameof(SyncShortcutEditorText));
             OnPropertyChanged(nameof(CurrentLanguage));
+            OnPropertyChanged(nameof(ExpandAllEventsByDefault));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
@@ -1074,7 +1097,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 SyncNavigationShortcut = _syncNavigationShortcut,
                 Language = CurrentLanguage,
                 MinimizeToTray = MinimizeToTray,
-                CloseToTray = CloseToTray
+                CloseToTray = CloseToTray,
+                ExpandAllEventsByDefault = ExpandAllEventsByDefault
             });
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)

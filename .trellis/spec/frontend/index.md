@@ -79,6 +79,11 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 - [Card Header Metadata Alignment](./atoms/card-header-metadata-alignment.md) - vertical alignment and circular sizing rules for metadata badges/capsules in card headers.
 - [Virtualized List Navigation](./atoms/virtualized-list-navigation.md) - index-based scrolling, off-screen container realization, focus suppression, and resource caching for virtualized lists.
 
+### Threading and Rendering
+
+- [Thread-Safe Brush Rendering](./atoms/thread-safe-brush-rendering.md) - static or background-constructed brushes must use ImmutableSolidColorBrush to prevent dispatcher exceptions during rendering.
+- [WSL Path Translation and Image Resolution](./atoms/wsl-path-translation-image-resolution.md) - relative, home, and absolute WSL Unix paths must be resolved to Windows-accessible paths.
+
 ### Toolbar Controls
 
 - [Toolbar Button Visual State Metrics](./atoms/toolbar-button-visual-state-metrics.md) - toolbar button hover/pressed/checked fixes must preserve borders, size, and target scope.

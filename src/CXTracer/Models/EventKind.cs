@@ -11,6 +11,8 @@ public enum EventKind
     CommandOutput,
     Diff,
     Tool,
+    ToolCall,
+    ToolResult,
     Error,
     Raw
 }

@@ -9,5 +9,6 @@ public sealed class AppSettings
     public string Language { get; set; } = "en";
     public bool MinimizeToTray { get; set; }
     public bool CloseToTray { get; set; }
+    public bool ExpandAllEventsByDefault { get; set; }
 }
 

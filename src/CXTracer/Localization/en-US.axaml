@@ -32,6 +32,7 @@
   <!-- Settings window -->
   <sys:String x:Key="Navigation">Navigation</sys:String>
   <sys:String x:Key="SynchronizedNavigation">Synchronized navigation</sys:String>
+  <sys:String x:Key="ExpandAllEvents">Expand messages by default</sys:String>
   <sys:String x:Key="Shortcut">Shortcut</sys:String>
   <sys:String x:Key="OK">OK</sys:String>
   <sys:String x:Key="Author">Author</sys:String>

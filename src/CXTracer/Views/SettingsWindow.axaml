@@ -22,7 +22,7 @@
           Background="#FFFDF8"
           BorderBrush="#E7DCCB"
           BorderThickness="1">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
       <TextBlock Text="{DynamicResource Navigation}"
                  FontSize="18"
                  FontWeight="Bold"
@@ -35,7 +35,14 @@
                 IsChecked="{Binding IsSynchronizedNavigationEnabled, Mode=TwoWay}"
                 VerticalAlignment="Center"/>
 
-      <Grid Grid.Row="2"
+      <CheckBox Grid.Row="2"
+                Classes="preferenceCheckBox"
+                Content="{DynamicResource ExpandAllEvents}"
+                IsThreeState="False"
+                IsChecked="{Binding ExpandAllEventsByDefault, Mode=TwoWay}"
+                VerticalAlignment="Center"/>
+
+      <Grid Grid.Row="3"
             ColumnDefinitions="Auto,*,Auto"
             ColumnSpacing="10"
             VerticalAlignment="Top">
@@ -58,26 +65,26 @@
       </Grid>
 
       <!-- Divider -->
-      <Border Grid.Row="3"
+      <Border Grid.Row="4"
               Height="1"
               Background="#E7DCCB"
               HorizontalAlignment="Stretch"/>
 
       <!-- System Tray Section -->
-      <TextBlock Grid.Row="4"
+      <TextBlock Grid.Row="5"
                  Text="{DynamicResource SystemTray}"
                  FontSize="18"
                  FontWeight="Bold"
                  Foreground="#3A3732"/>
 
-      <CheckBox Grid.Row="5"
+      <CheckBox Grid.Row="6"
                 Classes="preferenceCheckBox"
                 Content="{DynamicResource MinimizeToTray}"
                 IsThreeState="False"
                 IsChecked="{Binding MinimizeToTray, Mode=TwoWay}"
                 VerticalAlignment="Center"/>
 
-      <CheckBox Grid.Row="6"
+      <CheckBox Grid.Row="7"
                 Classes="preferenceCheckBox"
                 Content="{DynamicResource CloseToTray}"
                 IsThreeState="False"
@@ -85,13 +92,13 @@
                 VerticalAlignment="Center"/>
 
       <!-- Divider -->
-      <Border Grid.Row="7"
+      <Border Grid.Row="8"
               Height="1"
               Background="#E7DCCB"
               HorizontalAlignment="Stretch"/>
 
       <!-- Language Section -->
-      <Grid Grid.Row="8"
+      <Grid Grid.Row="9"
             ColumnDefinitions="Auto,*"
             ColumnSpacing="10"
             VerticalAlignment="Center">
@@ -108,13 +115,13 @@
       </Grid>
 
       <!-- Divider -->
-      <Border Grid.Row="9"
+      <Border Grid.Row="10"
               Height="1"
               Background="#E7DCCB"
               HorizontalAlignment="Stretch"/>
 
       <!-- About Section -->
-      <Grid Grid.Row="10"
+      <Grid Grid.Row="11"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="10"
             VerticalAlignment="Center">
@@ -146,7 +153,7 @@
         </Button>
       </Grid>
 
-      <Grid Grid.Row="11"
+      <Grid Grid.Row="12"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="12">
         <TextBlock Text="{Binding StatusMessage}"
