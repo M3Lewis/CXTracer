@@ -1,0 +1,19 @@
+{
+  "name": "06-11-refactor-mainwindow-codebehind",
+  "title": "Refactor MainWindow code-behind",
+  "description": "Clean up MainWindow.axaml.cs by splitting it into partial classes based on tray management, scrolling navigation, and keyboard inputs.",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "M3Lewis",
+  "assignee": "M3Lewis",
+  "createdAt": "2026-06-11",
+  "completedAt": "2026-06-11",
+  "branch": null,
+  "base_branch": "master",
+  "worktree_path": null,
+  "pr_url": null,
+  "notes": null
+}
