@@ -148,6 +148,43 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public bool IsDetailPopupOpen => DetailPopupEvent is not null;
 
+    [ObservableProperty]
+    private bool _isImageViewerOpen;
+
+    [ObservableProperty]
+    private string? _viewerImagePath;
+
+    [ObservableProperty]
+    private string _viewerImageStretch = "None";
+
+    public string ViewerToggleText => ViewerImageStretch == "None" ? L("ViewerFitWindow", "Fit Window") : L("ViewerOriginalSize", "Original Size");
+
+    partial void OnViewerImageStretchChanged(string value)
+    {
+        OnPropertyChanged(nameof(ViewerToggleText));
+    }
+
+    [RelayCommand]
+    public void ShowImageViewer(string? imagePath)
+    {
+        if (string.IsNullOrEmpty(imagePath)) return;
+        ViewerImagePath = imagePath;
+        IsImageViewerOpen = true;
+    }
+
+    [RelayCommand]
+    public void CloseImageViewer()
+    {
+        IsImageViewerOpen = false;
+        ViewerImagePath = null;
+    }
+
+    [RelayCommand]
+    public void ToggleImageSize()
+    {
+        ViewerImageStretch = ViewerImageStretch == "None" ? "Uniform" : "None";
+    }
+
     public string SessionCountText => LF("SessionCountFormat", "{0} sessions", Sessions.Count);
     public string EventCountText => LF("EventCountFormat", "{0}/{1} events", VisibleEventCount, TotalEventCount);
     public string SelectedSessionPath => SelectedSession?.FilePath ?? L("NoSessionSelected", "No session selected");
@@ -521,6 +558,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
             _allEvents.Clear();
             _allEvents.AddRange(events);
+            DisplayEvent.ResolvePlaceholderImages(_allEvents);
             UpdateEventSequenceNumbers();
             TotalEventCount = _allEvents.Count;
             await PopulateVisibleEventsAsync(_allEvents, ct).ConfigureAwait(true);
@@ -620,6 +658,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 _allEvents.Add(evt);
             }
 
+            DisplayEvent.ResolvePlaceholderImages(_allEvents);
             UpdateEventSequenceNumbers();
 
             foreach (var evt in events)
@@ -1164,6 +1203,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SelectedSessionPath));
         OnPropertyChanged(nameof(SyncNavigationShortcutText));
         OnPropertyChanged(nameof(SyncShortcutEditorText));
+        OnPropertyChanged(nameof(ViewerToggleText));
     }
 
     /// <summary>Look up a localized string resource by key, with a fallback default.</summary>

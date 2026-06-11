@@ -544,14 +544,29 @@
                         </ItemsControl.ItemTemplate>
                       </ItemsControl>
 
-                      <Border CornerRadius="8"
-                              ClipToBounds="True"
-                              MaxHeight="300"
-                              IsVisible="{Binding HasImage}"
-                              Margin="0,4,0,0">
-                        <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
-                               Stretch="Uniform" />
-                      </Border>
+                      <Button Command="{Binding $parent[Window].DataContext.ShowImageViewerCommand}"
+                              CommandParameter="{Binding ImagePath}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="0"
+                              Cursor="Hand">
+                        <Button.Styles>
+                          <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="Transparent" />
+                          </Style>
+                          <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="Transparent" />
+                          </Style>
+                        </Button.Styles>
+                        <Border CornerRadius="8"
+                                ClipToBounds="True"
+                                MaxHeight="300"
+                                IsVisible="{Binding HasImage}"
+                                Margin="0,4,0,0">
+                          <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                                 Stretch="Uniform" />
+                        </Border>
+                      </Button>
                     </StackPanel>
                   </Border>
                 </DataTemplate>
@@ -807,14 +822,29 @@
                         </ItemsControl.ItemTemplate>
                       </ItemsControl>
 
-                      <Border CornerRadius="8"
-                              ClipToBounds="True"
-                              MaxHeight="300"
-                              IsVisible="{Binding HasImage}"
-                              Margin="0,4,0,0">
-                        <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
-                               Stretch="Uniform" />
-                      </Border>
+                      <Button Command="{Binding $parent[Window].DataContext.ShowImageViewerCommand}"
+                              CommandParameter="{Binding ImagePath}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="0"
+                              Cursor="Hand">
+                        <Button.Styles>
+                          <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="Transparent" />
+                          </Style>
+                          <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="Transparent" />
+                          </Style>
+                        </Button.Styles>
+                        <Border CornerRadius="8"
+                                ClipToBounds="True"
+                                MaxHeight="300"
+                                IsVisible="{Binding HasImage}"
+                                Margin="0,4,0,0">
+                          <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                                 Stretch="Uniform" />
+                        </Border>
+                      </Button>
                     </StackPanel>
                   </Border>
                 </DataTemplate>
@@ -992,14 +1022,29 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <Border CornerRadius="8"
-                    ClipToBounds="True"
-                    MaxHeight="400"
-                    IsVisible="{Binding DetailPopupEvent.HasImage}"
-                    Margin="0,4,0,0">
-              <Image Source="{Binding DetailPopupEvent.ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
-                     Stretch="Uniform" />
-            </Border>
+            <Button Command="{Binding ShowImageViewerCommand}"
+                    CommandParameter="{Binding DetailPopupEvent.ImagePath}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="0"
+                    Cursor="Hand"
+                    IsVisible="{Binding DetailPopupEvent.HasImage}">
+              <Button.Styles>
+                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                  <Setter Property="Background" Value="Transparent" />
+                </Style>
+                <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                  <Setter Property="Background" Value="Transparent" />
+                </Style>
+              </Button.Styles>
+              <Border CornerRadius="8"
+                      ClipToBounds="True"
+                      MaxHeight="400"
+                      Margin="0,4,0,0">
+                <Image Source="{Binding DetailPopupEvent.ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                       Stretch="Uniform" />
+              </Border>
+            </Button>
 
             <Expander Header="{DynamicResource RawJson}"
                       Padding="0"
@@ -1023,6 +1068,83 @@
         </ScrollViewer>
       </Grid>
     </Border>
+  </Panel>
+
+  <!-- Full-size image viewer overlay -->
+  <Panel Background="#80000000"
+         IsVisible="{Binding IsImageViewerOpen}"
+         ZIndex="1100">
+    <Panel.Styles>
+      <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+      </Style>
+      <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+      </Style>
+    </Panel.Styles>
+    <Button Command="{Binding CloseImageViewerCommand}"
+            Background="Transparent"
+            BorderThickness="0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Padding="0">
+      <Border CornerRadius="12"
+              Background="#EAE5DA"
+              Padding="12"
+              MaxWidth="1100"
+              MaxHeight="900"
+              BorderBrush="#CBBFAD"
+              BorderThickness="1"
+              BoxShadow="0 4 24 #60000000"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              PointerPressed="DetailPanel_PointerPressed">
+        <Grid RowDefinitions="Auto,*">
+          <!-- Toolbar -->
+          <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+            <TextBlock Text="Image Viewer"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Foreground="#4A4640"
+                       FontSize="14"/>
+            <!-- Toggle Size Button -->
+            <Button Grid.Column="1"
+                    Classes="Basic"
+                    Command="{Binding ToggleImageSizeCommand}"
+                    Margin="0,0,8,0">
+              <TextBlock Text="{Binding ViewerToggleText}"
+                         FontWeight="Medium"
+                         Foreground="#4A4640"/>
+            </Button>
+            <!-- Close Button -->
+            <Button Grid.Column="2"
+                    Classes="Basic"
+                    Command="{Binding CloseImageViewerCommand}">
+              <TextBlock Text="✕"
+                         FontSize="16"
+                         FontWeight="Bold"
+                         Foreground="#6A6460"/>
+            </Button>
+          </Grid>
+          
+          <!-- Image Content -->
+          <Border Grid.Row="1"
+                  CornerRadius="4"
+                  Background="#F5F3EF"
+                  BorderBrush="#D7CDBB"
+                  BorderThickness="1"
+                  ClipToBounds="True">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+              <Image Source="{Binding ViewerImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                     Stretch="{Binding ViewerImageStretch}"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"/>
+            </ScrollViewer>
+          </Border>
+        </Grid>
+      </Border>
+    </Button>
   </Panel>
   </Panel>
 

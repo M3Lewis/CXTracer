@@ -93,4 +93,8 @@
   <sys:String x:Key="ToastCopied">已复制</sys:String>
   <sys:String x:Key="ToastCopiedContent">内容已复制到剪贴板。</sys:String>
 
+  <!-- Image Viewer -->
+  <sys:String x:Key="ViewerFitWindow">适应窗口</sys:String>
+  <sys:String x:Key="ViewerOriginalSize">原始尺寸</sys:String>
+
 </ResourceDictionary>

@@ -93,4 +93,8 @@
   <sys:String x:Key="ToastCopied">Copied</sys:String>
   <sys:String x:Key="ToastCopiedContent">Copied to clipboard.</sys:String>
 
+  <!-- Image Viewer -->
+  <sys:String x:Key="ViewerFitWindow">Fit Window</sys:String>
+  <sys:String x:Key="ViewerOriginalSize">Original Size</sys:String>
+
 </ResourceDictionary>
