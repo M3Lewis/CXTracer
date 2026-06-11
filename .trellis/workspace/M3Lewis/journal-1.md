@@ -962,3 +962,36 @@ Implemented collapsible event cards, WSL path translation, settings integration,
 ### Next Steps
 
 - None - task complete
+
+
+## Session 28: Split Large Files
+
+**Date**: 2026-06-12
+**Task**: Split Large Files
+**Branch**: `master`
+
+### Summary
+
+Split MainWindowViewModel into partial classes and extracted MainWindow.axaml overlays and templates to reduce file sizes and deduplicate code.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d2ddfc1` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
