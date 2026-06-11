@@ -9,6 +9,7 @@
                  xmlns:models="clr-namespace:CXTracer.Models"
                  xmlns:behaviors="clr-namespace:CXTracer.Behaviors"
                  xmlns:converters="clr-namespace:CXTracer.Converters"
+                 xmlns:views="clr-namespace:CXTracer.Views"
                  x:Class="CXTracer.Views.MainWindow"
                  x:DataType="vm:MainWindowViewModel"
                  mc:Ignorable="d"
@@ -23,6 +24,142 @@
                  BackgroundStyle="Flat">
   <suki:SukiWindow.Resources>
     <converters:ImagePathToBitmapConverter x:Key="ImagePathToBitmapConverter" />
+    <DataTemplate x:Key="EventCardTemplate" x:DataType="models:DisplayEvent">
+      <Border CornerRadius="16"
+              Padding="12"
+              Margin="0,0,0,10"
+              Background="{Binding CardBackground}"
+              BorderBrush="{Binding CardBorder}"
+              BorderThickness="{Binding CardBorderThickness}"
+              PointerPressed="CardBorder_PointerPressed">
+        <StackPanel Spacing="7">
+          <Grid ColumnDefinitions="Auto,*">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <Border CornerRadius="999"
+                      Padding="8,3"
+                      Background="{Binding RoleBadgeBackground}"
+                      VerticalAlignment="Center">
+                <TextBlock Text="{Binding RoleLabel}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{Binding RoleBadgeForeground}"
+                           VerticalAlignment="Center"/>
+              </Border>
+              <Button Classes="roundIconButton"
+                      Command="{Binding ToggleExpandCommand}"
+                      IsVisible="{Binding CanExpand}"
+                      VerticalAlignment="Center"
+                      ToolTip.Tip="Toggle Expand/Collapse"
+                      Width="24"
+                      Height="24"
+                      Padding="0"
+                      Background="Transparent"
+                      BorderThickness="0">
+                <Border Width="20"
+                        Height="20"
+                        CornerRadius="10"
+                        Background="#FFFFFF"
+                        BorderBrush="#E7DCCB"
+                        BorderThickness="1">
+                  <Panel>
+                    <Path Width="8" Height="8" Stretch="Uniform" Fill="#6F655C"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Data="{StaticResource IconChevronDown}"
+                          IsVisible="{Binding !IsExpanded}"/>
+                    <Path Width="8" Height="8" Stretch="Uniform" Fill="#6F655C"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Data="{StaticResource IconChevronUp}"
+                          IsVisible="{Binding IsExpanded}"/>
+                  </Panel>
+                </Border>
+              </Button>
+            </StackPanel>
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="5"
+                        VerticalAlignment="Center">
+              <Border Background="#E8F5E9" BorderBrush="#2E7D32" BorderThickness="1"
+                      CornerRadius="4" Padding="5,1" MinWidth="22"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsVisible="{Binding IsDiff}">
+                <TextBlock Text="{Binding AdditionsCount, StringFormat='+{0}'}"
+                           FontSize="11" Foreground="#2E7D32" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+              <Border Background="#FFEBEE" BorderBrush="#C62828" BorderThickness="1"
+                      CornerRadius="4" Padding="5,1" MinWidth="22"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsVisible="{Binding IsDiff}">
+                <TextBlock Text="{Binding DeletionsCount, StringFormat='-{0}'}"
+                           FontSize="11" Foreground="#C62828" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+              <Border Background="#F3EBE0" BorderBrush="#DDD5C8" BorderThickness="1"
+                      CornerRadius="999" Padding="5,1" MinWidth="22"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsVisible="{Binding ColumnSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding ColumnSequenceText}"
+                           FontSize="11" Foreground="#8A8178" FontWeight="Medium"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+              <Border Background="#EDE5DA" BorderBrush="#DDD5C8" BorderThickness="1"
+                      CornerRadius="999" Padding="5,1" MinWidth="22"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsVisible="{Binding MergedSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding MergedSequenceText}"
+                           FontSize="11" Foreground="#8A8178" FontWeight="Medium"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+              <TextBlock Text="{Binding TimeText}"
+                         FontSize="12" Foreground="#8A8178" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Grid>
+          <TextBlock behaviors:SearchHighlight.Text="{Binding Title}"
+                     behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
+                     FontWeight="Bold"
+                     TextWrapping="Wrap"
+                     Foreground="#37332F"/>
+          <TextBlock Classes="displayText"
+                     behaviors:SearchHighlight.Text="{Binding DisplayText}"
+                     behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
+                     TextWrapping="Wrap"
+                     Foreground="#34302C"
+                     IsVisible="{Binding !IsDiffAndExpanded}"/>
+          <ItemsControl ItemsSource="{Binding DiffLines}"
+                        IsVisible="{Binding IsDiffAndExpanded}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="models:DiffLine">
+                <Border Background="{Binding Background}"
+                        Padding="6,2" Margin="0,1" CornerRadius="4">
+                  <TextBlock behaviors:SearchHighlight.Text="{Binding Text}"
+                             behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
+                             FontFamily="Consolas" FontSize="13"
+                             Foreground="{Binding Foreground}" TextWrapping="Wrap"/>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button Command="{Binding $parent[Window].DataContext.ShowImageViewerCommand}"
+                  CommandParameter="{Binding ImagePath}"
+                  Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand">
+            <Button.Styles>
+              <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+              </Style>
+              <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+              </Style>
+            </Button.Styles>
+            <Border CornerRadius="8" ClipToBounds="True" MaxHeight="300"
+                    IsVisible="{Binding HasImage}" Margin="0,4,0,0">
+              <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
+                     Stretch="Uniform" />
+            </Border>
+          </Button>
+        </StackPanel>
+      </Border>
+    </DataTemplate>
   </suki:SukiWindow.Resources>
   <suki:SukiWindow.Hosts>
     <suki:SukiToastHost Manager="{Binding ToastManager}" />
@@ -125,6 +262,17 @@
     </Style>
     <Style Selector="ListBox.transcriptList ScrollBar:pointerover /template/ Thumb">
       <Setter Property="Background" Value="#D76618" />
+    </Style>
+    <!-- Default display text style (conversation) -->
+    <Style Selector="TextBlock.displayText">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="LineHeight" Value="20"/>
+    </Style>
+    <!-- Execution pane override -->
+    <Style Selector="ListBox.executionTranscript TextBlock.displayText">
+      <Setter Property="FontFamily" Value="Consolas"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="LineHeight" Value="18"/>
     </Style>
   </suki:SukiWindow.Styles>
 
@@ -378,198 +526,7 @@
                 </ItemsPanelTemplate>
               </ListBox.ItemsPanel>
               <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="models:DisplayEvent">
-                  <Border CornerRadius="16"
-                          Padding="12"
-                          Margin="0,0,0,10"
-                          Background="{Binding CardBackground}"
-                          BorderBrush="{Binding CardBorder}"
-                          BorderThickness="{Binding CardBorderThickness}"
-                          PointerPressed="CardBorder_PointerPressed">
-                    <StackPanel Spacing="7">
-                      <Grid ColumnDefinitions="Auto,*">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                          <Border CornerRadius="999"
-                                  Padding="8,3"
-                                  Background="{Binding RoleBadgeBackground}"
-                                  VerticalAlignment="Center">
-                            <TextBlock Text="{Binding RoleLabel}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{Binding RoleBadgeForeground}"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-
-                          <Button Classes="roundIconButton"
-                                  Command="{Binding ToggleExpandCommand}"
-                                  IsVisible="{Binding CanExpand}"
-                                  VerticalAlignment="Center"
-                                  ToolTip.Tip="Toggle Expand/Collapse"
-                                  Width="24"
-                                  Height="24"
-                                  Padding="0"
-                                  Background="Transparent"
-                                  BorderThickness="0">
-                            <Border Width="20"
-                                    Height="20"
-                                    CornerRadius="10"
-                                    Background="#FFFFFF"
-                                    BorderBrush="#E7DCCB"
-                                    BorderThickness="1">
-                              <Panel>
-                                <Path Width="8"
-                                      Height="8"
-                                      Stretch="Uniform"
-                                      Fill="#6F655C"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource IconChevronDown}"
-                                      IsVisible="{Binding !IsExpanded}"/>
-                                <Path Width="8"
-                                      Height="8"
-                                      Stretch="Uniform"
-                                      Fill="#6F655C"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource IconChevronUp}"
-                                      IsVisible="{Binding IsExpanded}"/>
-                              </Panel>
-                            </Border>
-                          </Button>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Right"
-                                    Spacing="5"
-                                    VerticalAlignment="Center">
-                          <Border Background="#E8F5E9"
-                                  BorderBrush="#2E7D32"
-                                  BorderThickness="1"
-                                  CornerRadius="4"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding IsDiff}">
-                            <TextBlock Text="{Binding AdditionsCount, StringFormat='+{0}'}"
-                                       FontSize="11"
-                                       Foreground="#2E7D32"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <Border Background="#FFEBEE"
-                                  BorderBrush="#C62828"
-                                  BorderThickness="1"
-                                  CornerRadius="4"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding IsDiff}">
-                            <TextBlock Text="{Binding DeletionsCount, StringFormat='-{0}'}"
-                                       FontSize="11"
-                                       Foreground="#C62828"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <Border Background="#F3EBE0"
-                                  BorderBrush="#DDD5C8"
-                                  BorderThickness="1"
-                                  CornerRadius="999"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding ColumnSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                            <TextBlock Text="{Binding ColumnSequenceText}"
-                                       FontSize="11"
-                                       Foreground="#8A8178"
-                                       FontWeight="Medium"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <Border Background="#EDE5DA"
-                                  BorderBrush="#DDD5C8"
-                                  BorderThickness="1"
-                                  CornerRadius="999"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding MergedSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                            <TextBlock Text="{Binding MergedSequenceText}"
-                                       FontSize="11"
-                                       Foreground="#8A8178"
-                                       FontWeight="Medium"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <TextBlock Text="{Binding TimeText}"
-                                     FontSize="12"
-                                     Foreground="#8A8178"
-                                     VerticalAlignment="Center"/>
-                        </StackPanel>
-                      </Grid>
-
-                      <TextBlock behaviors:SearchHighlight.Text="{Binding Title}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
-                                 FontWeight="Bold"
-                                 Foreground="#37332F"/>
-
-                      <TextBlock behaviors:SearchHighlight.Text="{Binding DisplayText}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
-                                 TextWrapping="Wrap"
-                                 FontSize="14"
-                                 LineHeight="20"
-                                 Foreground="#34302C"
-                                 IsVisible="{Binding !IsDiffAndExpanded}"/>
-
-                      <ItemsControl ItemsSource="{Binding DiffLines}"
-                                    IsVisible="{Binding IsDiffAndExpanded}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate x:DataType="models:DiffLine">
-                            <Border Background="{Binding Background}"
-                                    Padding="6,2"
-                                    Margin="0,1"
-                                    CornerRadius="4">
-                              <TextBlock behaviors:SearchHighlight.Text="{Binding Text}"
-                                         behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
-                                         FontFamily="Consolas"
-                                         FontSize="13"
-                                         Foreground="{Binding Foreground}"
-                                         TextWrapping="Wrap"/>
-                            </Border>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-
-                      <Button Command="{Binding $parent[Window].DataContext.ShowImageViewerCommand}"
-                              CommandParameter="{Binding ImagePath}"
-                              Background="Transparent"
-                              BorderThickness="0"
-                              Padding="0"
-                              Cursor="Hand">
-                        <Button.Styles>
-                          <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="Transparent" />
-                          </Style>
-                          <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="Transparent" />
-                          </Style>
-                        </Button.Styles>
-                        <Border CornerRadius="8"
-                                ClipToBounds="True"
-                                MaxHeight="300"
-                                IsVisible="{Binding HasImage}"
-                                Margin="0,4,0,0">
-                          <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
-                                 Stretch="Uniform" />
-                        </Border>
-                      </Button>
-                    </StackPanel>
-                  </Border>
-                </DataTemplate>
+                <StaticResource ResourceKey="EventCardTemplate"/>
               </ListBox.ItemTemplate>
             </ListBox>
           </Grid>
@@ -645,7 +602,7 @@
 
             <ListBox x:Name="ExecutionListBox"
                      Grid.Row="1"
-                     Classes="transcriptList"
+                     Classes="transcriptList executionTranscript"
                      ItemsSource="{Binding ExecutionEvents}"
                      SelectionMode="Toggle">
               <ListBox.ItemsPanel>
@@ -654,200 +611,7 @@
                 </ItemsPanelTemplate>
               </ListBox.ItemsPanel>
               <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="models:DisplayEvent">
-                  <Border CornerRadius="16"
-                          Padding="12"
-                          Margin="0,0,0,10"
-                          Background="{Binding CardBackground}"
-                          BorderBrush="{Binding CardBorder}"
-                          BorderThickness="{Binding CardBorderThickness}"
-                          PointerPressed="CardBorder_PointerPressed">
-                    <StackPanel Spacing="7">
-                      <Grid ColumnDefinitions="Auto,*">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                          <Border CornerRadius="999"
-                                  Padding="8,3"
-                                  Background="{Binding RoleBadgeBackground}"
-                                  VerticalAlignment="Center">
-                            <TextBlock Text="{Binding RoleLabel}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{Binding RoleBadgeForeground}"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-
-                          <Button Classes="roundIconButton"
-                                  Command="{Binding ToggleExpandCommand}"
-                                  IsVisible="{Binding CanExpand}"
-                                  VerticalAlignment="Center"
-                                  ToolTip.Tip="Toggle Expand/Collapse"
-                                  Width="24"
-                                  Height="24"
-                                  Padding="0"
-                                  Background="Transparent"
-                                  BorderThickness="0">
-                            <Border Width="20"
-                                    Height="20"
-                                    CornerRadius="10"
-                                    Background="#FFFFFF"
-                                    BorderBrush="#E7DCCB"
-                                    BorderThickness="1">
-                              <Panel>
-                                <Path Width="8"
-                                      Height="8"
-                                      Stretch="Uniform"
-                                      Fill="#6F655C"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource IconChevronDown}"
-                                      IsVisible="{Binding !IsExpanded}"/>
-                                <Path Width="8"
-                                      Height="8"
-                                      Stretch="Uniform"
-                                      Fill="#6F655C"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource IconChevronUp}"
-                                      IsVisible="{Binding IsExpanded}"/>
-                              </Panel>
-                            </Border>
-                          </Button>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Right"
-                                    Spacing="5"
-                                    VerticalAlignment="Center">
-                          <Border Background="#E8F5E9"
-                                  BorderBrush="#2E7D32"
-                                  BorderThickness="1"
-                                  CornerRadius="4"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding IsDiff}">
-                            <TextBlock Text="{Binding AdditionsCount, StringFormat='+{0}'}"
-                                       FontSize="11"
-                                       Foreground="#2E7D32"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <Border Background="#FFEBEE"
-                                  BorderBrush="#C62828"
-                                  BorderThickness="1"
-                                  CornerRadius="4"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding IsDiff}">
-                            <TextBlock Text="{Binding DeletionsCount, StringFormat='-{0}'}"
-                                       FontSize="11"
-                                       Foreground="#C62828"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <Border Background="#F3EBE0"
-                                  BorderBrush="#DDD5C8"
-                                  BorderThickness="1"
-                                  CornerRadius="999"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding ColumnSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                            <TextBlock Text="{Binding ColumnSequenceText}"
-                                       FontSize="11"
-                                       Foreground="#8A8178"
-                                       FontWeight="Medium"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <Border Background="#EDE5DA"
-                                  BorderBrush="#DDD5C8"
-                                  BorderThickness="1"
-                                  CornerRadius="999"
-                                  Padding="5,1"
-                                  MinWidth="22"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsVisible="{Binding MergedSequenceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                            <TextBlock Text="{Binding MergedSequenceText}"
-                                       FontSize="11"
-                                       Foreground="#8A8178"
-                                       FontWeight="Medium"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                          </Border>
-                          <TextBlock Text="{Binding TimeText}"
-                                     FontSize="12"
-                                     Foreground="#8A8178"
-                                     VerticalAlignment="Center"/>
-                        </StackPanel>
-                      </Grid>
-
-                      <TextBlock behaviors:SearchHighlight.Text="{Binding Title}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
-                                 FontWeight="Bold"
-                                 TextWrapping="Wrap"
-                                 Foreground="#37332F"/>
-
-                      <TextBlock behaviors:SearchHighlight.Text="{Binding DisplayText}" behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
-                                 TextWrapping="Wrap"
-                                 FontFamily="Consolas"
-                                 FontSize="13"
-                                 LineHeight="18"
-                                 Foreground="#34302C"
-                                 IsVisible="{Binding !IsDiffAndExpanded}"/>
-
-                      <ItemsControl ItemsSource="{Binding DiffLines}"
-                                    IsVisible="{Binding IsDiffAndExpanded}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate x:DataType="models:DiffLine">
-                            <Border Background="{Binding Background}"
-                                    Padding="6,2"
-                                    Margin="0,1"
-                                    CornerRadius="4">
-                              <TextBlock behaviors:SearchHighlight.Text="{Binding Text}"
-                                         behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
-                                         FontFamily="Consolas"
-                                         FontSize="13"
-                                         Foreground="{Binding Foreground}"
-                                         TextWrapping="Wrap"/>
-                            </Border>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-
-                      <Button Command="{Binding $parent[Window].DataContext.ShowImageViewerCommand}"
-                              CommandParameter="{Binding ImagePath}"
-                              Background="Transparent"
-                              BorderThickness="0"
-                              Padding="0"
-                              Cursor="Hand">
-                        <Button.Styles>
-                          <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="Transparent" />
-                          </Style>
-                          <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="Transparent" />
-                          </Style>
-                        </Button.Styles>
-                        <Border CornerRadius="8"
-                                ClipToBounds="True"
-                                MaxHeight="300"
-                                IsVisible="{Binding HasImage}"
-                                Margin="0,4,0,0">
-                          <Image Source="{Binding ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
-                                 Stretch="Uniform" />
-                        </Border>
-                      </Button>
-                    </StackPanel>
-                  </Border>
-                </DataTemplate>
+                <StaticResource ResourceKey="EventCardTemplate"/>
               </ListBox.ItemTemplate>
             </ListBox>
           </Grid>
@@ -930,222 +694,10 @@
   </Grid>
 
   <!-- Detail popup overlay -->
-  <Panel IsVisible="{Binding IsDetailPopupOpen}"
-         Background="Transparent">
-    <!-- Backdrop -->
-    <Border Background="#80000000"
-            PointerPressed="DetailBackdrop_PointerPressed"/>
-
-    <!-- Content panel -->
-    <Border HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Width="800"
-            MaxHeight="680"
-            CornerRadius="20"
-            Padding="24"
-            Background="{Binding DetailPopupEvent.CardBackground}"
-            BorderBrush="{Binding DetailPopupEvent.CardBorder}"
-            BorderThickness="2"
-            BoxShadow="0 8 32 0 #40000000"
-            PointerPressed="DetailPanel_PointerPressed">
-      <Grid RowDefinitions="Auto,*">
-        <!-- Header -->
-        <Grid ColumnDefinitions="Auto,*,Auto">
-          <Border CornerRadius="999"
-                  Padding="10,4"
-                  Background="{Binding DetailPopupEvent.RoleBadgeBackground}">
-            <TextBlock Text="{Binding DetailPopupEvent.RoleLabel}"
-                       FontSize="13"
-                       FontWeight="SemiBold"
-                       Foreground="{Binding DetailPopupEvent.RoleBadgeForeground}"/>
-          </Border>
-
-          <TextBlock Grid.Column="1"
-                     Text="{Binding DetailPopupEvent.TimeText}"
-                     HorizontalAlignment="Right"
-                     VerticalAlignment="Center"
-                     FontSize="13"
-                     Foreground="#8A8178"
-                     Margin="0,0,8,0"/>
-
-          <Button Grid.Column="2"
-                  Classes="roundIconButton"
-                  Click="DetailClose_Click"
-                  ToolTip.Tip="{DynamicResource Close}">
-            <Border Width="28" Height="28" CornerRadius="14" Background="#1A000000">
-              <TextBlock Text="✕"
-                         FontSize="14"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center"
-                         Foreground="#6A6460"/>
-            </Border>
-          </Button>
-        </Grid>
-
-        <!-- Scrollable body -->
-        <ScrollViewer Grid.Row="1"
-                      Margin="0,14,0,0"
-                      HorizontalScrollBarVisibility="Disabled">
-          <StackPanel Spacing="12">
-            <TextBlock behaviors:SearchHighlight.Text="{Binding DetailPopupEvent.Title}"
-                       behaviors:SearchHighlight.Query="{Binding EventSearchText}"
-                       FontWeight="Bold"
-                       FontSize="16"
-                       TextWrapping="Wrap"
-                       Foreground="#37332F"
-                       IsVisible="{Binding DetailPopupEvent.Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-            <TextBlock behaviors:SearchHighlight.Text="{Binding DetailPopupEvent.Text}"
-                       behaviors:SearchHighlight.Query="{Binding EventSearchText}"
-                       TextWrapping="Wrap"
-                       FontSize="15"
-                       LineHeight="22"
-                       Foreground="#34302C"
-                       IsVisible="{Binding !DetailPopupEvent.IsDiff}"/>
-
-            <ItemsControl ItemsSource="{Binding DetailPopupEvent.DiffLines}"
-                          IsVisible="{Binding DetailPopupEvent.IsDiff}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="models:DiffLine">
-                  <Border Background="{Binding Background}"
-                          Padding="6,2"
-                          Margin="0,1"
-                          CornerRadius="4">
-                    <TextBlock behaviors:SearchHighlight.Text="{Binding Text}"
-                               behaviors:SearchHighlight.Query="{Binding $parent[Window].DataContext.EventSearchText}"
-                               FontFamily="Consolas"
-                               FontSize="13.5"
-                               Foreground="{Binding Foreground}"
-                               TextWrapping="Wrap"/>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <Button Command="{Binding ShowImageViewerCommand}"
-                    CommandParameter="{Binding DetailPopupEvent.ImagePath}"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Padding="0"
-                    Cursor="Hand"
-                    IsVisible="{Binding DetailPopupEvent.HasImage}">
-              <Button.Styles>
-                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="Transparent" />
-                </Style>
-                <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
-                  <Setter Property="Background" Value="Transparent" />
-                </Style>
-              </Button.Styles>
-              <Border CornerRadius="8"
-                      ClipToBounds="True"
-                      MaxHeight="400"
-                      Margin="0,4,0,0">
-                <Image Source="{Binding DetailPopupEvent.ImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
-                       Stretch="Uniform" />
-              </Border>
-            </Button>
-
-            <Expander Header="{DynamicResource RawJson}"
-                      Padding="0"
-                      Margin="0,4,0,0">
-              <Border CornerRadius="10"
-                      Padding="10"
-                      Background="#F7F5EF"
-                      BorderBrush="#E7DCCB"
-                      BorderThickness="1"
-                      MaxHeight="260">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto">
-                  <TextBlock Text="{Binding DetailPopupEvent.FormattedRawJson}"
-                             FontFamily="Consolas"
-                             FontSize="12"
-                             TextWrapping="NoWrap"
-                             Foreground="#4A4640"/>
-                </ScrollViewer>
-              </Border>
-            </Expander>
-          </StackPanel>
-        </ScrollViewer>
-      </Grid>
-    </Border>
-  </Panel>
+  <views:DetailPopupOverlay />
 
   <!-- Full-size image viewer overlay -->
-  <Panel Background="#80000000"
-         IsVisible="{Binding IsImageViewerOpen}"
-         ZIndex="1100">
-    <Panel.Styles>
-      <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="Transparent" />
-      </Style>
-      <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="Transparent" />
-      </Style>
-    </Panel.Styles>
-    <Button Command="{Binding CloseImageViewerCommand}"
-            Background="Transparent"
-            BorderThickness="0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            Padding="0">
-      <Border CornerRadius="12"
-              Background="#EAE5DA"
-              Padding="12"
-              MaxWidth="1100"
-              MaxHeight="900"
-              BorderBrush="#CBBFAD"
-              BorderThickness="1"
-              BoxShadow="0 4 24 #60000000"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center"
-              PointerPressed="DetailPanel_PointerPressed">
-        <Grid RowDefinitions="Auto,*">
-          <!-- Toolbar -->
-          <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
-            <TextBlock Text="Image Viewer"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Foreground="#4A4640"
-                       FontSize="14"/>
-            <!-- Toggle Size Button -->
-            <Button Grid.Column="1"
-                    Classes="Basic"
-                    Command="{Binding ToggleImageSizeCommand}"
-                    Margin="0,0,8,0">
-              <TextBlock Text="{Binding ViewerToggleText}"
-                         FontWeight="Medium"
-                         Foreground="#4A4640"/>
-            </Button>
-            <!-- Close Button -->
-            <Button Grid.Column="2"
-                    Classes="Basic"
-                    Command="{Binding CloseImageViewerCommand}">
-              <TextBlock Text="✕"
-                         FontSize="16"
-                         FontWeight="Bold"
-                         Foreground="#6A6460"/>
-            </Button>
-          </Grid>
-          
-          <!-- Image Content -->
-          <Border Grid.Row="1"
-                  CornerRadius="4"
-                  Background="#F5F3EF"
-                  BorderBrush="#D7CDBB"
-                  BorderThickness="1"
-                  ClipToBounds="True">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Auto">
-              <Image Source="{Binding ViewerImagePath, Converter={StaticResource ImagePathToBitmapConverter}}"
-                     Stretch="{Binding ViewerImageStretch}"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Center"/>
-            </ScrollViewer>
-          </Border>
-        </Grid>
-      </Border>
-    </Button>
-  </Panel>
+  <views:ImageViewerOverlay />
   </Panel>
 
 </suki:SukiWindow>
