@@ -1,0 +1,19 @@
+{
+  "name": "06-11-refactor-displayevent",
+  "title": "Refactor DisplayEvent class",
+  "description": "Clean up DisplayEvent.cs by splitting it into partial classes based on styling and image handling concerns.",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "M3Lewis",
+  "assignee": "M3Lewis",
+  "createdAt": "2026-06-11",
+  "completedAt": "2026-06-11",
+  "branch": null,
+  "base_branch": "master",
+  "worktree_path": null,
+  "pr_url": null,
+  "notes": null
+}
