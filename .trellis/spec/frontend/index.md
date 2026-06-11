@@ -97,6 +97,10 @@ Active atoms live under `./atoms/`. They hold durable, scoped, evidence-backed r
 
 - [Dynamic Localization](./atoms/dynamic-localization.md) - static UI dynamic resources, ViewModel runtime translation lookup, Key/DisplayName decoupling for selectors, and merged dictionary cleanup.
 
+### Architecture & Refactoring
+
+- [File Size Limits](./atoms/file-size-limits.md) - C# file size limit (<= 500 lines) and XAML limit (<= 700 lines) requiring partial class splits and custom overlays.
+
 ## Tech Stack
 
 - Avalonia 12.0.4

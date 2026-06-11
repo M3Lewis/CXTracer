@@ -50,6 +50,7 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 - For settings-window checkbox changes, run the checks in [Settings Checkbox Three-State](./atoms/settings-checkbox-three-state.md) and [Proxy ViewModel Reentrancy](./atoms/proxy-viewmodel-reentrancy.md).
 - For shortcut capture changes, run the checks in [Shortcut Capture Contract](./atoms/shortcut-capture-contract.md).
 - For live-update changes, verify rapid repeated file appends do not duplicate events, and a file append updates the selected session without switching when `PinSelectedSession` is true.
+- Verify that no single C# file exceeds 500 lines and no AXAML file exceeds 700 lines (see [File Size Limits](./atoms/file-size-limits.md)).
 
 ## Avoid
 
@@ -57,3 +58,4 @@ Use this checklist for Avalonia, SukiUI, ViewModel, and AXAML changes.
 - Business behavior in AXAML click handlers.
 - Disabling compiled bindings to bypass errors.
 - New UI that writes to the Codex sessions directory.
+- Growing C# files past 500 lines or AXAML files past 700 lines without refactoring them.
